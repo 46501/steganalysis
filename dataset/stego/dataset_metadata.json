@@ -1,0 +1,122 @@
+{
+    "dummy_0_stego_10.png": {
+        "source_image": "dummy_0.png",
+        "embedding_rate": 0.1,
+        "payload_size_bytes": 153,
+        "method": "Sequential LSB"
+    },
+    "dummy_0_stego_50.png": {
+        "source_image": "dummy_0.png",
+        "embedding_rate": 0.5,
+        "payload_size_bytes": 766,
+        "method": "Sequential LSB"
+    },
+    "dummy_1_stego_10.png": {
+        "source_image": "dummy_1.png",
+        "embedding_rate": 0.1,
+        "payload_size_bytes": 153,
+        "method": "Sequential LSB"
+    },
+    "dummy_1_stego_50.png": {
+        "source_image": "dummy_1.png",
+        "embedding_rate": 0.5,
+        "payload_size_bytes": 766,
+        "method": "Sequential LSB"
+    },
+    "dummy_2_stego_10.png": {
+        "source_image": "dummy_2.png",
+        "embedding_rate": 0.1,
+        "payload_size_bytes": 153,
+        "method": "Sequential LSB"
+    },
+    "dummy_2_stego_50.png": {
+        "source_image": "dummy_2.png",
+        "embedding_rate": 0.5,
+        "payload_size_bytes": 766,
+        "method": "Sequential LSB"
+    },
+    "dummy_3_stego_10.png": {
+        "source_image": "dummy_3.png",
+        "embedding_rate": 0.1,
+        "payload_size_bytes": 153,
+        "method": "Sequential LSB"
+    },
+    "dummy_3_stego_50.png": {
+        "source_image": "dummy_3.png",
+        "embedding_rate": 0.5,
+        "payload_size_bytes": 766,
+        "method": "Sequential LSB"
+    },
+    "dummy_4_stego_10.png": {
+        "source_image": "dummy_4.png",
+        "embedding_rate": 0.1,
+        "payload_size_bytes": 153,
+        "method": "Sequential LSB"
+    },
+    "dummy_4_stego_50.png": {
+        "source_image": "dummy_4.png",
+        "embedding_rate": 0.5,
+        "payload_size_bytes": 766,
+        "method": "Sequential LSB"
+    },
+    "dummy_5_stego_10.png": {
+        "source_image": "dummy_5.png",
+        "embedding_rate": 0.1,
+        "payload_size_bytes": 153,
+        "method": "Sequential LSB"
+    },
+    "dummy_5_stego_50.png": {
+        "source_image": "dummy_5.png",
+        "embedding_rate": 0.5,
+        "payload_size_bytes": 766,
+        "method": "Sequential LSB"
+    },
+    "dummy_6_stego_10.png": {
+        "source_image": "dummy_6.png",
+        "embedding_rate": 0.1,
+        "payload_size_bytes": 153,
+        "method": "Sequential LSB"
+    },
+    "dummy_6_stego_50.png": {
+        "source_image": "dummy_6.png",
+        "embedding_rate": 0.5,
+        "payload_size_bytes": 766,
+        "method": "Sequential LSB"
+    },
+    "dummy_7_stego_10.png": {
+        "source_image": "dummy_7.png",
+        "embedding_rate": 0.1,
+        "payload_size_bytes": 153,
+        "method": "Sequential LSB"
+    },
+    "dummy_7_stego_50.png": {
+        "source_image": "dummy_7.png",
+        "embedding_rate": 0.5,
+        "payload_size_bytes": 766,
+        "method": "Sequential LSB"
+    },
+    "dummy_8_stego_10.png": {
+        "source_image": "dummy_8.png",
+        "embedding_rate": 0.1,
+        "payload_size_bytes": 153,
+        "method": "Sequential LSB"
+    },
+    "dummy_8_stego_50.png": {
+        "source_image": "dummy_8.png",
+        "embedding_rate": 0.5,
+        "payload_size_bytes": 766,
+        "method": "Sequential LSB"
+    },
+    "dummy_9_stego_10.png": {
+        "source_image": "dummy_9.png",
+        "embedding_rate": 0.1,
+        "payload_size_bytes": 153,
+        "method": "Sequential LSB"
+    },
+    "dummy_9_stego_50.png": {
+        "source_image": "dummy_9.png",
+        "embedding_rate": 0.5,
+        "payload_size_bytes": 766,
+        "method": "Sequential LSB"
+    }
+}

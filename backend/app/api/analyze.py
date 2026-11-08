@@ -14,6 +14,7 @@ from ..analysis.noise_analysis import analyze_noise
 from ..analysis.structural import analyze_eof
 from ..ml.features import get_feature_vector
 from ..ml.cnn import StegoCNN
+import base64
 import joblib
 import json
 import torch
@@ -124,7 +125,24 @@ async def analyze_image(file: UploadFile = File(...)):
                     img_tensor = torch.tensor(img_tensor).unsqueeze(0).to(device)
                     
                     prob, saliency = cnn_model.get_saliency_map(img_tensor)
-                    cnn_prediction = {"model": "CNN_v1", "probability": float(prob)}
+                    
+                    # Normalize Saliency Map to 0-255 for rendering
+                    if np.max(saliency) > 0:
+                        saliency_norm = (saliency / np.max(saliency)) * 255.0
+                    else:
+                        saliency_norm = saliency
+                    saliency_img = saliency_norm.astype(np.uint8)
+                    heatmap = cv2.applyColorMap(saliency_img, cv2.COLORMAP_INFERNO)
+                    
+                    # Encode Heatmap to Base64 for direct rendering in Dashboard.jsx
+                    _, buffer = cv2.imencode('.png', heatmap)
+                    heatmap_b64 = base64.b64encode(buffer).decode('utf-8')
+                    
+                    cnn_prediction = {
+                        "model": "CNN_v1",
+                        "probability": float(prob),
+                        "heatmap_base64": heatmap_b64
+                    }
             except Exception as e:
                 cnn_prediction = {"error": str(e)}
         

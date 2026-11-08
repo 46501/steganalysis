@@ -88,11 +88,15 @@ def rs_analysis(img_array: np.ndarray):
     return results
 
 def analyze_rs(file_path: str) -> dict:
-    img = cv2.imread(file_path, cv2.IMREAD_GRAYSCALE) # Convert to grayscale for simpler overall RS
+    img = cv2.imread(file_path, cv2.IMREAD_UNCHANGED)
     if img is None:
         return {"error": "Failed to load image for RS analysis"}
         
     try:
+        # Drop alpha channel if present
+        if len(img.shape) == 3 and img.shape[2] == 4:
+            img = img[:, :, :3]
+            
         stats = rs_analysis(img)
         return {
             "status": "success",

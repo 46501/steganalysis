@@ -8,6 +8,17 @@ from tempfile import NamedTemporaryFile
 
 from ..ml.features import get_feature_vector
 
+# NumPy 1.x / 2.x cross-compatibility shim for pickled models
+import sys
+try:
+    import numpy.core as _np_core
+    if "numpy._core" not in sys.modules:
+        sys.modules["numpy._core"] = _np_core
+        if hasattr(_np_core, "multiarray"):
+            sys.modules["numpy._core.multiarray"] = _np_core.multiarray
+except Exception:
+    pass
+
 router = APIRouter()
 
 MODEL_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "..", "models")

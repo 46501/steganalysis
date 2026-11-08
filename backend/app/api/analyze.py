@@ -21,13 +21,25 @@ import cv2
 
 router = APIRouter()
 
+# NumPy 1.x / 2.x cross-compatibility shim for pickled models
+import sys
+try:
+    import numpy.core as _np_core
+    if "numpy._core" not in sys.modules:
+        sys.modules["numpy._core"] = _np_core
+        if hasattr(_np_core, "multiarray"):
+            sys.modules["numpy._core.multiarray"] = _np_core.multiarray
+except Exception:
+    pass
+
 MODEL_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "..", "models")
 try:
     rf_model = joblib.load(os.path.join(MODEL_DIR, "randomforest_v1.pkl"))
     scaler = joblib.load(os.path.join(MODEL_DIR, "scaler_v1.pkl"))
     with open(os.path.join(MODEL_DIR, "feature_schema.json"), "r") as f:
         feature_schema = json.load(f)
-except:
+except Exception as e:
+    print(f"Warning: Classical ML models failed to load: {e}")
     rf_model = None
     scaler = None
     feature_schema = []

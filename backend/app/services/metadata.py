@@ -1,14 +1,26 @@
 import os
+import hashlib
 from PIL import Image
 from PIL.ExifTags import TAGS
 
 def extract_metadata(file_path: str, original_filename: str) -> dict:
     """
-    Extract basic and EXIF metadata from an image safely.
+    Extract basic and EXIF metadata from an image safely, including SHA-256 digest.
     """
+    # Calculate SHA-256 for forensic integrity
+    sha256_hash = hashlib.sha256()
+    try:
+        with open(file_path, "rb") as f:
+            for byte_block in iter(lambda: f.read(65536), b""):
+                sha256_hash.update(byte_block)
+        file_sha256 = sha256_hash.hexdigest()
+    except Exception:
+        file_sha256 = ""
+
     metadata = {
         "filename": original_filename,
-        "file_size_bytes": os.path.getsize(file_path),
+        "sha256": file_sha256,
+        "file_size_bytes": os.path.getsize(file_path) if os.path.exists(file_path) else 0,
         "format": "Unknown",
         "mode": "Unknown",
         "width": 0,

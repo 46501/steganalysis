@@ -144,13 +144,14 @@ async def analyze_image(file: UploadFile = File(...)):
             valid_signals += 1
             chi_suspicious = False
             for ch, res in chi_square_results["stats"].items():
+                p_val = res.get("p_value", 0.0)
                 if res.get("suspicion") == "Suspicious":
                     risk_score += 30
-                    supporting_evidence.append(f"Chi-square p-value is extremely low on channel {ch}, confirming statistical disruption.")
+                    supporting_evidence.append(f"Chi-square PoV equalization detected on channel {ch} (p-value: {p_val:.3f}), indicating LSB bit substitution.")
                     chi_suspicious = True
                 elif res.get("suspicion") == "Moderate":
                     risk_score += 10
-                    supporting_evidence.append(f"Chi-square p-value is moderately low on channel {ch}.")
+                    supporting_evidence.append(f"Chi-square statistics show moderate PoV equalization on channel {ch} (p-value: {p_val:.3f}).")
                     chi_suspicious = True
             
             if not chi_suspicious:

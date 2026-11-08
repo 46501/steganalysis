@@ -28,25 +28,28 @@ def chi_square_attack(img_array: np.ndarray):
         expected = []
         
         for i in range(128):
-            h2i = hist[2*i]
-            h2i1 = hist[2*i+1]
+            h2i = int(hist[2*i])
+            h2i1 = int(hist[2*i+1])
             pair_sum = h2i + h2i1
             
             if pair_sum > 0:
-                observed.append(h2i)
-                expected.append(pair_sum / 2.0)
+                expected_val = pair_sum / 2.0
+                observed.extend([float(h2i), float(h2i1)])
+                expected.extend([expected_val, expected_val])
                 
         if len(observed) == 0:
-            results[ch_name] = {"p_value": 1.0, "statistic": 0.0, "suspicion": "Normal"}
+            results[ch_name] = {"p_value": 0.0, "statistic": 0.0, "suspicion": "Normal"}
             continue
             
-        # Calculate chi-square
+        # Calculate chi-square goodness of fit
         stat, p_val = chisquare(f_obs=observed, f_exp=expected)
         
-        # Interpret
-        if p_val < 0.01:
+        # Interpret according to Westfeld & Pfitzmann (1999) PoVs Steganalysis:
+        # Equalized pairs caused by LSB substitution yield small chi-square and p-value near 1.0.
+        # Natural variations yield large chi-square and low p-value (rejecting equalization).
+        if p_val >= 0.95:
             suspicion = "Suspicious"
-        elif p_val < 0.05:
+        elif p_val >= 0.50:
             suspicion = "Moderate"
         else:
             suspicion = "Normal"

@@ -1,0 +1,72 @@
+# Environment & Secrets
+.env
+.env.*
+!.env.example
+
+# Python Virtual Environments
+venv/
+.venv/
+env/
+backend/venv/
+
+# Python Cache & Bytecode
+__pycache__/
+*.py[cod]
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+*.egg-info/
+
+# Node Dependencies & Package Manager Logs
+node_modules/
+frontend/node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.eslintcache
+
+# Frontend & Distribution Builds
+dist/
+build/
+frontend/dist/
+frontend/build/
+
+# Datasets & Raw Media
+dataset/
+data/
+*.zip
+*.tar.gz
+
+# Model Checkpoints & Large Binaries
+*.pth
+*.pt
+*.pkl
+*.h5
+*.onnx
+models/*.pth
+models/*.pt
+models/*.pkl
+models/*.h5
+models/*.onnx
+!models/*.json
+
+# Database Files
+*.db
+*.sqlite3
+database/*.db
+database/*.sqlite3
+
+# IDE & Editor Files
+.vscode/
+.idea/
+*.swp
+
+# OS Generated Files & Logs
+.DS_Store
+Thumbs.db
+*.log
+

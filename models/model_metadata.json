@@ -1,0 +1,86 @@
+{
+    "LogisticRegression": {
+        "accuracy": 0.6666666666666666,
+        "precision": 0.75,
+        "recall": 0.75,
+        "f1": 0.75,
+        "roc_auc": 0.875
+    },
+    "SVM": {
+        "accuracy": 0.6666666666666666,
+        "precision": 0.6666666666666666,
+        "recall": 1.0,
+        "f1": 0.8,
+        "roc_auc": 0.25
+    },
+    "RandomForest": {
+        "accuracy": 0.8333333333333334,
+        "precision": 0.8,
+        "recall": 1.0,
+        "f1": 0.8888888888888888,
+        "roc_auc": 0.875,
+        "top_features": [
+            {
+                "feature": "lsb_R_bit0_balance",
+                "importance": 0.18751870836073614
+            },
+            {
+                "feature": "lsb_R_bit0_entropy",
+                "importance": 0.1010670956937112
+            },
+            {
+                "feature": "lsb_B_bit0_entropy",
+                "importance": 0.10105608471308751
+            },
+            {
+                "feature": "lsb_B_bit0_balance",
+                "importance": 0.07016055217715433
+            },
+            {
+                "feature": "lsb_G_bit0_entropy",
+                "importance": 0.05630560618309402
+            },
+            {
+                "feature": "lsb_G_bit0_balance",
+                "importance": 0.051279473602581796
+            },
+            {
+                "feature": "rs_G_Sm",
+                "importance": 0.04606356391593029
+            },
+            {
+                "feature": "rs_G_Rm",
+                "importance": 0.03907847704931898
+            },
+            {
+                "feature": "rs_R_Sm",
+                "importance": 0.03713034207280323
+            },
+            {
+                "feature": "residual_variance",
+                "importance": 0.026417880373840123
+            }
+        ]
+    },
+    "CNN": {
+        "accuracy": 0.6666666666666666,
+        "precision": 0.6666666666666666,
+        "recall": 1.0,
+        "f1": 0.8,
+        "roc_auc": 0.375,
+        "train_losses": [
+            0.7117056647936503,
+            0.6735988259315491,
+            0.6606020331382751,
+            0.6442492206891378,
+            0.642142673333486
+        ],
+        "val_losses": [
+            0.7069883942604065,
+            0.6996763348579407,
+            0.6870548129081726,
+            0.6724620461463928,
+            0.6589627861976624
+        ]
+    }
+}

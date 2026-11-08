@@ -8,7 +8,7 @@ export default function About() {
       <header className="text-center space-y-4 mb-12">
         <h1 className="text-4xl font-bold tracking-tight text-white glow-text">Methodology & About</h1>
         <p className="text-textMuted text-lg">
-          Understanding the science behind StegoDetect AI
+          Understanding the science behind StegoShield AI
         </p>
       </header>
 
@@ -43,7 +43,7 @@ export default function About() {
           <BarChart className="text-warning" /> Statistical Steganalysis
         </h2>
         <p className="text-textMain leading-relaxed">
-          While visually identical, modifying LSBs destroys the natural statistical properties of an image. StegoDetect AI uses multiple statistical attacks:
+          While visually identical, modifying LSBs destroys the natural statistical properties of an image. StegoShield AI uses multiple statistical attacks:
         </p>
         <ul className="list-disc list-inside space-y-2 text-textMuted ml-4">
           <li><strong>Chi-Square Attack:</strong> Analyzes Pairs of Values (PoVs). Natural images have specific frequencies for adjacent colors. LSB embedding equalizes these frequencies, dropping the Chi-Square p-value to near zero.</li>
@@ -56,7 +56,7 @@ export default function About() {
           <Cpu className="text-primary" /> Machine Learning & CNN
         </h2>
         <p className="text-textMain leading-relaxed">
-          Attackers use advanced algorithms to bypass classical statistical tests. To counter this, StegoDetect AI employs Artificial Intelligence.
+          Attackers use advanced algorithms to bypass classical statistical tests. To counter this, StegoShield AI employs Artificial Intelligence.
         </p>
         <div className="space-y-4 mt-4">
           <div>
@@ -75,7 +75,7 @@ export default function About() {
           <Activity /> Limitations & Disclaimer
         </h2>
         <p className="text-textMain leading-relaxed">
-          StegoDetect AI is a demonstration of forensic capabilities. Current model performance is based on a limited synthetic development dataset and should not be interpreted as real-world forensic accuracy for legal or critical security purposes.
+          StegoShield AI is a demonstration of forensic capabilities. Current model performance is based on a limited synthetic development dataset and should not be interpreted as real-world forensic accuracy for legal or critical security purposes.
         </p>
         <p className="text-textMuted">
           Additionally, highly compressed images (e.g., WhatsApp images) naturally destroy LSB data, making LSB-based steganography impossible but also rendering some statistical tests inconclusive.

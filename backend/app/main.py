@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from .api import analyze, stego, ml, history, compare, cnn
 
 app = FastAPI(
-    title="StegoDetect AI API",
+    title="StegoShield AI API",
     description="Backend API for Image Steganalysis & Digital Forensics Platform",
     version="1.0.0"
 )
@@ -27,7 +27,7 @@ app.include_router(history.router, prefix="/api/history", tags=["History & Repor
 
 @app.get("/api/health")
 async def health_check():
-    return {"status": "ok", "message": "StegoDetect AI API is running."}
+    return {"status": "ok", "message": "StegoShield AI API is running."}
 
 if __name__ == "__main__":
     import uvicorn

@@ -1,4 +1,4 @@
-﻿venv/
+venv/
 .venv/
 backend/venv/
 env/
@@ -32,3 +32,27 @@ Thumbs.db
 *.log
 database/*.db
 database/*.sqlite3
+
+# Datasets & Media (Requirement: Never upload datasets)
+dataset/
+data/
+*.zip
+*.tar.gz
+dataset/**/*.png
+dataset/**/*.jpg
+dataset/**/*.jpeg
+
+# Model Checkpoints & Large Binaries (Requirement: Never upload large model checkpoints)
+*.pth
+*.pt
+*.pkl
+*.h5
+*.onnx
+models/*.pth
+models/*.pt
+models/*.pkl
+models/*.h5
+models/*.onnx
+!models/*.json
+
+

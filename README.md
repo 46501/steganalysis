@@ -1,8 +1,8 @@
-# StegoDetect AI 
+# StegoShield AI 
 
 **Advanced Image Steganalysis & Digital Forensics Platform**
 
-StegoDetect AI is a comprehensive, local-first portfolio project designed to identify hidden steganographic data within images. It features a complete pipeline combining classical digital forensics, statistical heuristics, and modern machine learning approaches.
+StegoShield AI is a comprehensive, local-first portfolio project designed to identify hidden steganographic data within images. It features a complete pipeline combining classical digital forensics, statistical heuristics, and modern machine learning approaches.
 
 ---
 

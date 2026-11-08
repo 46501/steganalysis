@@ -30,7 +30,7 @@ function Layout({ children }) {
           <div className="p-2 bg-gradient-to-br from-primary to-neonPurple rounded-lg shadow-[0_0_15px_rgba(139,92,246,0.4)]">
             <Shield className="text-white w-6 h-6" />
           </div>
-          <h1 className="text-xl font-bold tracking-tight text-white glow-text">StegoDetect AI</h1>
+          <h1 className="text-xl font-bold tracking-tight text-white glow-text">StegoShield AI</h1>
         </div>
         
         <nav className="flex-1 p-4 space-y-2 mt-4">

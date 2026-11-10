@@ -1,72 +1,103 @@
-# Environment & Secrets
+# ==========================================
+# Steganalysis Project .gitignore
+# ==========================================
+
+# Environments & Secret Configurations
 .env
-.env.*
+.env.local
+.env.*.local
+*.env
 !.env.example
+!backend/.env.example
 
-# Python Virtual Environments
-venv/
-.venv/
-env/
-backend/venv/
-
-# Python Cache & Bytecode
+# Python
 __pycache__/
 *.py[cod]
-*.pyc
-*.pyo
-*.pyd
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+.venv/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Testing & Coverage
 .pytest_cache/
-.mypy_cache/
 .coverage
 htmlcov/
-*.egg-info/
+.tox/
+.nox/
+coverage.xml
+*.cover
 
-# Node Dependencies & Package Manager Logs
+# Model Checkpoints & Large Weights
+*.pt
+*.pth
+*.ckpt
+*.bin
+*.onnx
+*.h5
+*.pb
+*.tflite
+backend/app/ml/weights/*
+!backend/app/ml/weights/.gitkeep
+
+# Temporary Storage & Uploads
+storage/*
+!storage/.gitkeep
+backend/storage/*
+!backend/storage/.gitkeep
+uploads/
+temp/
+*.log
+
+# Databases & Local persistence
+*.sqlite
+*.sqlite3
+*.db
+data/
+postgres-data/
+
+# Node.js & Frontend Build Outputs
 node_modules/
 frontend/node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-.eslintcache
-
-# Frontend & Distribution Builds
-dist/
-build/
+pnpm-debug.log*
+lerna-debug.log*
+.pnpm-debug.log*
 frontend/dist/
-frontend/build/
+frontend/dist-ssr/
+frontend/.vite/
+*.local
 
-# Datasets & Raw Media
-dataset/
-data/
-*.zip
-*.tar.gz
-
-# Model Checkpoints & Large Binaries
-*.pth
-*.pt
-*.pkl
-*.h5
-*.onnx
-models/*.pth
-models/*.pt
-models/*.pkl
-models/*.h5
-models/*.onnx
-!models/*.json
-
-# Database Files
-*.db
-*.sqlite3
-database/*.db
-database/*.sqlite3
-
-# IDE & Editor Files
+# Editors and Operating Systems
 .vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
 .idea/
-*.swp
-
-# OS Generated Files & Logs
+*.sublime-workspace
+*.sublime-project
 .DS_Store
 Thumbs.db
-*.log
+Desktop.ini
 

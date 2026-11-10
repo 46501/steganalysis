@@ -1,34 +1,52 @@
+"""FastAPI Main Application Entry Point."""
+
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from .api import analyze, stego, ml, history, compare, cnn
+
+from app.api.v1.router import api_router
+from app.core.config import settings
+from app.ml.inference import engine
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Initializes ML engine and database connections on startup."""
+    print(f"[*] Starting {settings.PROJECT_NAME} v{settings.VERSION}")
+    print(f"[*] Initializing PyTorch SRNet on device: {engine.device}...")
+    engine.load_model()
+    print("[*] SRNet initialization complete.")
+    yield
+    print("[*] Shutting down application...")
+
 
 app = FastAPI(
-    title="StegoShield AI API",
-    description="Backend API for Image Steganalysis & Digital Forensics Platform",
-    version="1.0.0"
+    title=settings.PROJECT_NAME,
+    version=settings.VERSION,
+    lifespan=lifespan,
+    docs_url="/docs",
+    redoc_url="/redoc",
 )
 
-# Configure CORS
+# Cross-Origin Resource Sharing (CORS)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allow all origins for development
+    allow_origins=settings.CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Include Routers
-app.include_router(analyze.router, prefix="/api", tags=["Analysis"])
-app.include_router(compare.router, prefix="/api", tags=["Compare"])
-app.include_router(stego.router, prefix="/api/stego", tags=["Steganography Playground"])
-app.include_router(ml.router, prefix="/api/ml", tags=["Machine Learning"])
-app.include_router(cnn.router, prefix="/api/cnn", tags=["CNN Model"])
-app.include_router(history.router, prefix="/api/history", tags=["History & Reports"])
+# Register API v1 Router
+app.include_router(api_router, prefix=settings.API_V1_STR)
 
-@app.get("/api/health")
-async def health_check():
-    return {"status": "ok", "message": "StegoShield AI API is running."}
 
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run("app.main:app", host="0.0.0.0", port=8000, reload=True)
+@app.get("/", tags=["Root"])
+async def root():
+    return {
+        "project": settings.PROJECT_NAME,
+        "version": settings.VERSION,
+        "docs": "/docs",
+        "health": f"{settings.API_V1_STR}/health",
+    }
+

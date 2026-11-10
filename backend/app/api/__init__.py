@@ -1,1 +1,2 @@
-# API Package initialization
+"""API Package."""
+

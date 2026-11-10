@@ -13,7 +13,7 @@ export default function Navbar({ activeTab, setActiveTab }) {
         if (isMounted) {
           setHealthStatus({
             online: data.status === 'healthy',
-            model: data.model?.active_model || 'StegoNet-Lite',
+            model: data.model?.active_model || 'StegoNet-Lite (Experimental Baseline)',
             db: data.database?.type || 'Local Storage',
           });
         }

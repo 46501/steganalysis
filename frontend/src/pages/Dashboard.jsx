@@ -79,15 +79,15 @@ export default function Dashboard({ setActiveTab }) {
         <div>
           <div className="flex items-center gap-2 mb-1">
             <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
-              Steganalysis Control Center
+              Steganalysis Research & Evaluation Center
             </span>
-            <span className="text-xs text-gray-400">• BOSSbase 1.01 Evaluation Suite</span>
+            <span className="text-xs text-gray-400">• BOSSbase 1.01 S-UNIWARD 0.4 bpp</span>
           </div>
           <h1 className="text-2xl lg:text-3xl font-extrabold text-white tracking-tight">
-            Deep Residual Steganalysis Dashboard
+            Digital Image Steganalysis Research Platform
           </h1>
           <p className="text-sm text-gray-400 mt-1 max-w-2xl">
-            Real-time inspection of digital image payloads embedded via content-adaptive steganography (S-UNIWARD @ 0.4 bpp). Powered by PyTorch residual neural architectures.
+            Academic demonstration platform for digital image steganography (S-UNIWARD @ 0.4 bpp). Features an experimental StegoNet-Lite CPU baseline and full PyTorch SRNet research architecture.
           </p>
         </div>
 
@@ -121,28 +121,28 @@ export default function Dashboard({ setActiveTab }) {
         {/* Stego Detections */}
         <div className="p-5 rounded-xl bg-gray-900/80 border border-gray-800 hover:border-rose-900/40 transition">
           <div className="flex items-center justify-between text-gray-400">
-            <span className="text-xs font-semibold uppercase tracking-wider">Stego Detections</span>
+            <span className="text-xs font-semibold uppercase tracking-wider">Model Flagged (Stego)</span>
             <div className="p-2 rounded-lg bg-rose-500/10 text-rose-400">
               <AlertTriangle className="w-5 h-5" />
             </div>
           </div>
           <div className="text-3xl font-bold text-rose-400 mt-3">{stats.stegoDetections}</div>
           <span className="text-xs text-gray-500 mt-2 block">
-            Hidden payloads intercepted
+            Baseline detections (experimental)
           </span>
         </div>
 
         {/* Cover Verified */}
         <div className="p-5 rounded-xl bg-gray-900/80 border border-gray-800 hover:border-emerald-900/40 transition">
           <div className="flex items-center justify-between text-gray-400">
-            <span className="text-xs font-semibold uppercase tracking-wider">Clean Covers</span>
+            <span className="text-xs font-semibold uppercase tracking-wider">Model Verified (Cover)</span>
             <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-400">
               <ShieldCheck className="w-5 h-5" />
             </div>
           </div>
           <div className="text-3xl font-bold text-emerald-400 mt-3">{stats.coverVerified}</div>
           <span className="text-xs text-gray-500 mt-2 block">
-            Natural unperturbed images
+            Baseline classifications (experimental)
           </span>
         </div>
 
@@ -175,25 +175,25 @@ export default function Dashboard({ setActiveTab }) {
               <Cpu className="w-5 h-5 text-cyan-400" />
             </div>
             <h3 className="text-lg font-bold text-white mt-2">
-              {systemHealth?.model?.active_model || 'StegoNet-Lite'}
+              {systemHealth?.model?.active_model || 'StegoNet-Lite (Experimental Baseline)'}
             </h3>
             <p className="text-xs text-gray-400 mt-2 leading-relaxed">
-              Compact 4-stage residual network with high-pass spatial residual extraction prefilter, optimized for real-time CPU evaluation.
+              Compact 4-stage residual network engineered for CPU execution and pipeline demonstration. Note: Content-adaptive S-UNIWARD steganography requires deep unpooled architectures (SRNet) for reliable classification.
             </p>
           </div>
 
           <div className="mt-5 pt-4 border-t border-gray-800 space-y-2 text-xs">
             <div className="flex justify-between text-gray-400">
-              <span>Weights Status:</span>
-              <span className="text-emerald-400 font-medium">Trained (S-UNIWARD 0.4bpp)</span>
+              <span>Model Classification:</span>
+              <span className="text-amber-400 font-medium">Experimental Baseline</span>
             </div>
             <div className="flex justify-between text-gray-400">
               <span>Execution Device:</span>
-              <span className="text-gray-200 font-mono">PyTorch CPU (8 Cores)</span>
+              <span className="text-gray-200 font-mono">PyTorch CPU</span>
             </div>
             <div className="flex justify-between text-gray-400">
               <span>Parameters:</span>
-              <span className="text-gray-200 font-mono">~302,834 params</span>
+              <span className="text-gray-200 font-mono">~304,220 params</span>
             </div>
           </div>
         </div>
@@ -244,22 +244,22 @@ export default function Dashboard({ setActiveTab }) {
               SRNet (Boroumand et al. 2018)
             </h3>
             <p className="text-xs text-gray-400 mt-2 leading-relaxed">
-              Deep 12-layer residual network published in IEEE TIFS. Features unpooled residual layers (Type 1-2) and stride-2 average-pooled skip connections (Type 3-4).
+              Deep 12-layer residual network (39 layers total) published in IEEE TIFS. Features unpooled residual layers (Type 1-2) to preserve subtle ±1 embedding noise. Fully implemented in PyTorch; full GPU cluster training (500k steps, ~360 GPU hrs) is pending.
             </p>
           </div>
 
           <div className="mt-5 pt-4 border-t border-gray-800 space-y-2 text-xs">
             <div className="flex justify-between text-gray-400">
-              <span>Architecture Layers:</span>
-              <span className="text-purple-300 font-mono">12 Residual Layers</span>
+              <span>Architecture Depth:</span>
+              <span className="text-purple-300 font-mono">39 Layers (12 Blocks)</span>
             </div>
             <div className="flex justify-between text-gray-400">
-              <span>Full Training Cost:</span>
-              <span className="text-amber-400 font-mono">~360 hrs CPU / 12 hrs GPU</span>
+              <span>Full GPU Training:</span>
+              <span className="text-amber-400 font-mono">500,000 Steps (~360 GPU hrs)</span>
             </div>
             <div className="flex justify-between text-gray-400">
-              <span>Codebase Status:</span>
-              <span className="text-emerald-400 font-medium">Fully Implemented & Tested</span>
+              <span>Implementation Status:</span>
+              <span className="text-emerald-400 font-medium">Fully Implemented & Unit-Tested</span>
             </div>
           </div>
         </div>

@@ -46,7 +46,7 @@ class SteganalysisInferenceEngine:
         """
         if model_choice == "srnet":
             self.model = Srnet()
-            self.active_model_name = "SRNet (12-Layer Deep Residual)"
+            self.active_model_name = "SRNet (Research Architecture - Training Pending)"
             if self.srnet_weights_path.is_file():
                 state_dict = torch.load(self.srnet_weights_path, map_location=self.device)
                 self.model.load_state_dict(state_dict)
@@ -55,7 +55,7 @@ class SteganalysisInferenceEngine:
                 self.is_trained_weights = False
         else:
             self.model = StegoNetLite()
-            self.active_model_name = "StegoNet-Lite (Demonstration Baseline)"
+            self.active_model_name = "StegoNet-Lite (Experimental Baseline)"
             if self.stegonet_weights_path.is_file():
                 state_dict = torch.load(self.stegonet_weights_path, map_location=self.device)
                 self.model.load_state_dict(state_dict)
@@ -71,17 +71,17 @@ class SteganalysisInferenceEngine:
         """Constructs an interpretable forensic rationale based on residual energy and model verdict."""
         if verdict == "Stego":
             return (
-                f"Steganographic payload detected (confidence {confidence:.1%}). "
-                f"Spatial high-pass residual energy is elevated ({residual_energy:.2f}), "
-                f"exhibiting characteristic high-frequency disturbance patterns in textured regions "
-                f"consistent with S-UNIWARD ±1 wavelet embedding."
+                f"Model classified as Stego (posterior probability {confidence:.1%}). "
+                f"Auxiliary spatial high-pass residual energy is measured at {residual_energy:.2f}. "
+                f"Note: Residual energy reflects local texture gradients; across arbitrary single images, "
+                f"natural scene variance dominates stego perturbations (requiring paired reference comparison for attribution)."
             )
         else:
             return (
-                f"Cover image verified clean (confidence {confidence:.1%}). "
-                f"Spatial high-pass residual energy ({residual_energy:.2f}) conforms to expected "
-                f"natural camera sensor noise and smooth spatial gradients without directional "
-                f"steganographic perturbation."
+                f"Model classified as Cover (posterior probability {confidence:.1%}). "
+                f"Auxiliary spatial high-pass residual energy is measured at {residual_energy:.2f}. "
+                f"Note: Residual energy reflects local texture gradients; across arbitrary single images, "
+                f"natural scene variance dominates stego perturbations (requiring paired reference comparison for attribution)."
             )
 
     @torch.no_grad()

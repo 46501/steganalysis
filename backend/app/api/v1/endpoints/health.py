@@ -30,7 +30,7 @@ async def check_health() -> HealthStatusResponse:
             weights_path=str(engine.stegonet_weights_path if "StegoNet" in engine.active_model_name else engine.srnet_weights_path),
             device=str(engine.device),
             cuda_available=torch.cuda.is_available(),
-            research_model="SRNet (12-Layer Deep Residual Network, Boroumand et al. 2018)",
+            research_model="SRNet (Implemented PyTorch Architecture - GPU Training Pending)",
         ),
         dataset=DatasetSummary(
             name="BOSSbase 1.01",

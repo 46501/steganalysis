@@ -18,9 +18,11 @@ import {
   Eye,
   Sliders,
   Split,
+  ZoomIn,
 } from 'lucide-react';
 import { steganalysisApi } from '../services/api';
 import ForensicReportModal from '../components/analysis/ForensicReportModal';
+import PixelLoupeMagnifier from '../components/analysis/PixelLoupeMagnifier';
 
 export default function Detector({ initialFile = null }) {
   const [file, setFile] = useState(null);
@@ -655,6 +657,17 @@ export default function Detector({ initialFile = null }) {
                   Amplified Diff (×50)
                 </button>
               )}
+              <button
+                onClick={() => setVisualTab('loupe')}
+                className={`px-3 py-1.5 rounded-lg font-medium transition flex items-center gap-1.5 ${
+                  visualTab === 'loupe'
+                    ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-sm'
+                    : 'text-gray-400 hover:text-white'
+                }`}
+              >
+                <ZoomIn className="w-3.5 h-3.5 text-emerald-400" />
+                <span>8× Pixel Loupe</span>
+              </button>
             </div>
           </div>
 
@@ -848,8 +861,27 @@ export default function Detector({ initialFile = null }) {
                     </div>
                   </div>
                 )}
+                <div className="pt-2">
+                  <button
+                    onClick={() => setVisualTab('loupe')}
+                    className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-300 text-xs font-semibold transition"
+                  >
+                    <ZoomIn className="w-3.5 h-3.5" />
+                    <span>Open 8× Pixel Micro-Loupe at Discrete Perturbation Clusters</span>
+                  </button>
+                </div>
               </div>
             </div>
+          )}
+
+          {/* Tab 4: Synchronized 8x Pixel Loupe Lens */}
+          {visualTab === 'loupe' && (
+            <PixelLoupeMagnifier
+              coverSrc="/samples/sample_cover.png"
+              stegoSrc={result.diff_map_b64 ? (file?.name?.includes('stego') ? previewUrl : '/samples/sample_stego.png') : (previewUrl || '/samples/sample_stego.png')}
+              currentSrc={previewUrl}
+              isPaired={Boolean(result.diff_map_b64 || file?.name?.includes('5001'))}
+            />
           )}
         </div>
       )}

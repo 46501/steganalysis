@@ -72,6 +72,26 @@ export const steganalysisApi = {
     const response = await apiClient.delete('/history');
     return response.data;
   },
+
+  embedSecretMessage: async (file, secretText, algorithm = 'lsb_replace') => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('secret_text', secretText);
+    formData.append('algorithm', algorithm);
+    const response = await apiClient.post('/stego/embed', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return response.data;
+  },
+
+  extractSecretMessage: async (file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await apiClient.post('/stego/extract', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return response.data;
+  },
 };
 
 export default apiClient;

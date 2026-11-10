@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   UploadCloud,
   FileImage,
@@ -22,7 +22,7 @@ import {
 import { steganalysisApi } from '../services/api';
 import ForensicReportModal from '../components/analysis/ForensicReportModal';
 
-export default function Detector() {
+export default function Detector({ initialFile = null }) {
   const [file, setFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
   const [modelChoice, setModelChoice] = useState('stegonet_lite');
@@ -39,6 +39,12 @@ export default function Detector() {
   const [isReportOpen, setIsReportOpen] = useState(false);
 
   const fileInputRef = useRef(null);
+
+  useEffect(() => {
+    if (initialFile) {
+      handleFileSelect(initialFile);
+    }
+  }, [initialFile]);
 
   const handleFileSelect = (selectedFile) => {
     if (!selectedFile) return;

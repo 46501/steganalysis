@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ShieldCheck, Activity, Search, History, BookOpen, Server, CheckCircle2, AlertCircle } from 'lucide-react';
+import { ShieldCheck, Activity, Search, History, BookOpen, Server, CheckCircle2, AlertCircle, Lock } from 'lucide-react';
 import { steganalysisApi } from '../../services/api';
 
 export default function Navbar({ activeTab, setActiveTab }) {
@@ -35,6 +35,7 @@ export default function Navbar({ activeTab, setActiveTab }) {
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: Activity },
     { id: 'detector', label: 'Steganalysis Detector', icon: Search },
+    { id: 'stego-studio', label: 'Stego Studio', icon: Lock },
     { id: 'history', label: 'Scan Archive', icon: History },
     { id: 'model-info', label: 'Architecture & Research', icon: BookOpen },
   ];

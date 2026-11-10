@@ -11,6 +11,7 @@ Tests:
 
 import io
 import json
+import base64
 from pathlib import Path
 import numpy as np
 from PIL import Image
@@ -216,4 +217,68 @@ def test_colab_notebook_validity():
         nb_data = json.load(f)
     assert nb_data["nbformat"] >= 4
     assert len(nb_data["cells"]) >= 10
+
+
+def test_steganography_studio_embed_and_extract(client):
+    """Verifies end-to-end secret message embedding and extraction."""
+    from app.services.embedding_service import SteganographyStudioService
+
+    # 1. Create a synthetic 128x128 cover image
+    cover_img = Image.fromarray(np.full((128, 128), 128, dtype=np.uint8))
+    cover_buf = io.BytesIO()
+    cover_img.save(cover_buf, format="PNG")
+    cover_bytes = cover_buf.getvalue()
+
+    secret = "StegoShield AI Secret Message: 2026 Verification Test!"
+
+    # 2. Embed using LSB Replacement
+    res_replace = SteganographyStudioService.embed_secret_message(
+        image_bytes=cover_bytes,
+        secret_text=secret,
+        algorithm="lsb_replace",
+    )
+    assert res_replace["payload_bytes"] == len(secret.encode("utf-8"))
+    assert res_replace["modified_pixel_count"] > 0
+    assert res_replace["stego_image_b64"].startswith("data:image/png;base64,")
+
+    # 3. Decode base64 to bytes and extract
+    raw_b64 = res_replace["stego_image_b64"].split(",", 1)[1]
+    stego_bytes = base64.b64decode(raw_b64)
+    extracted = SteganographyStudioService.extract_secret_message(stego_bytes)
+    assert extracted["success"] is True
+    assert extracted["secret_text"] == secret
+
+    # 4. Embed using LSB Matching (±1)
+    res_matching = SteganographyStudioService.embed_secret_message(
+        image_bytes=cover_bytes,
+        secret_text=secret,
+        algorithm="lsb_matching",
+    )
+    raw_b64_matching = res_matching["stego_image_b64"].split(",", 1)[1]
+    stego_bytes_matching = base64.b64decode(raw_b64_matching)
+    extracted_matching = SteganographyStudioService.extract_secret_message(stego_bytes_matching)
+    assert extracted_matching["secret_text"] == secret
+
+    # 5. Test API endpoints
+    cover_buf.seek(0)
+    api_embed_resp = client.post(
+        "/api/v1/stego/embed",
+        files={"file": ("cover.png", cover_buf, "image/png")},
+        data={"secret_text": "Classified Project Payload", "algorithm": "lsb_replace"},
+    )
+    assert api_embed_resp.status_code == 200
+    embed_data = api_embed_resp.json()
+    assert "stego_image_b64" in embed_data
+    assert embed_data["payload_bytes"] > 0
+
+    # Extract via API
+    stego_stream = io.BytesIO(base64.b64decode(embed_data["stego_image_b64"].split(",", 1)[1]))
+    api_extract_resp = client.post(
+        "/api/v1/stego/extract",
+        files={"file": ("stego.png", stego_stream, "image/png")},
+    )
+    assert api_extract_resp.status_code == 200
+    extract_data = api_extract_resp.json()
+    assert extract_data["secret_text"] == "Classified Project Payload"
+
 

@@ -181,3 +181,4 @@ class SteganographyStudioService:
             "total_pixels_scanned": 32 + needed_bits,
             "status": "Message recovered with 100% bit-fidelity",
         }
+

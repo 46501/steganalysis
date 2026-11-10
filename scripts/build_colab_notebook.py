@@ -578,3 +578,4 @@ with open(out_path, "w", encoding="utf-8") as f:
     json.dump(notebook, f, indent=2)
 
 print(f"Successfully generated {out_path} ({out_path.stat().st_size} bytes)")
+

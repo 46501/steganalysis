@@ -20,7 +20,7 @@ try:
 
         # File Upload Constraints
         MAX_UPLOAD_SIZE_MB: int = 25
-        ALLOWED_EXTENSIONS: List[str] = ["png", "bmp", "pgm", "jpg", "jpeg"]
+        ALLOWED_EXTENSIONS: List[str] = ["png", "bmp", "pgm", "jpg", "jpeg", "webp", "ppm"]
 
         # CORS
         CORS_ORIGINS: List[str] = [
@@ -58,7 +58,7 @@ except ImportError:
         SRNET_WEIGHTS_PATH: str = os.getenv("SRNET_WEIGHTS_PATH", "app/ml/weights/srnet_weights.pth")
 
         MAX_UPLOAD_SIZE_MB: int = 25
-        ALLOWED_EXTENSIONS: List[str] = ["png", "bmp", "pgm", "jpg", "jpeg"]
+        ALLOWED_EXTENSIONS: List[str] = ["png", "bmp", "pgm", "jpg", "jpeg", "webp", "ppm"]
 
         CORS_ORIGINS: List[str] = [
             "http://localhost:5173",

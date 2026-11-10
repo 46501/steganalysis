@@ -19,18 +19,14 @@ export const steganalysisApi = {
     if (modelName) {
       formData.append('model_name', modelName);
     }
-    const response = await apiClient.post('/analyze', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
+    const response = await apiClient.post('/analyze', formData);
     return response.data;
   },
 
   analyzeBatch: async (files) => {
     const formData = new FormData();
     files.forEach((file) => formData.append('files', file));
-    const response = await apiClient.post('/batch', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
+    const response = await apiClient.post('/batch', formData);
     return response.data;
   },
 
@@ -38,18 +34,14 @@ export const steganalysisApi = {
     const formData = new FormData();
     formData.append('cover_file', coverFile);
     formData.append('stego_file', stegoFile);
-    const response = await apiClient.post('/analyze/compare', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
+    const response = await apiClient.post('/analyze/compare', formData);
     return response.data;
   },
 
   extractBitplane: async (file, plane = 0) => {
     const formData = new FormData();
     formData.append('file', file);
-    const response = await apiClient.post(`/analyze/bitplane?plane=${plane}`, formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
+    const response = await apiClient.post(`/analyze/bitplane?plane=${plane}`, formData);
     return response.data;
   },
 
@@ -78,18 +70,14 @@ export const steganalysisApi = {
     formData.append('file', file);
     formData.append('secret_text', secretText);
     formData.append('algorithm', algorithm);
-    const response = await apiClient.post('/stego/embed', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
+    const response = await apiClient.post('/stego/embed', formData);
     return response.data;
   },
 
   extractSecretMessage: async (file) => {
     const formData = new FormData();
     formData.append('file', file);
-    const response = await apiClient.post('/stego/extract', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
+    const response = await apiClient.post('/stego/extract', formData);
     return response.data;
   },
 };

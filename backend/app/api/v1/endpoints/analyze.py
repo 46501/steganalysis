@@ -1,7 +1,8 @@
 """Single and paired image steganalysis endpoints."""
 
+import logging
 from typing import Optional
-from fastapi import APIRouter, Depends, File, Form, Query, UploadFile
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile, status
 import numpy as np
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -12,6 +13,7 @@ from app.services.image_service import ImageService
 from app.services.steganalysis_service import SteganalysisService
 from app.services.visual_service import VisualForensicsService
 
+logger = logging.getLogger("stego.analyze_endpoint")
 router = APIRouter()
 
 
@@ -26,17 +28,36 @@ async def analyze_image(
     Returns class prediction ('Cover' vs 'Stego'), confidence scores,
     and high-pass spatial residual forensic explanation with visual artifacts.
     """
-    filename, file_hash, content, tensor, metadata = await ImageService.process_upload(file)
-    result = await SteganalysisService.analyze_tensor(
-        filename=filename,
-        file_hash=file_hash,
-        file_size=len(content),
-        tensor=tensor,
-        metadata=metadata,
-        model_name=model_name,
-        db=db,
-    )
-    return result
+    try:
+        filename, file_hash, content, tensor, metadata = await ImageService.process_upload(file)
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Image upload validation failed: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Uploaded image is corrupt or unreadable: {str(e)}",
+        )
+
+    try:
+        result = await SteganalysisService.analyze_tensor(
+            filename=filename,
+            file_hash=file_hash,
+            file_size=len(content),
+            tensor=tensor,
+            metadata=metadata,
+            model_name=model_name,
+            db=db,
+        )
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Steganalysis execution failure: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Forensic engine analysis failed: {str(e)}",
+        )
 
 
 @router.post("/compare", response_model=PairComparisonResponse)

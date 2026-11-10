@@ -122,11 +122,14 @@ export default function Detector({ initialFile = null }) {
         setVisualTab('heatmap');
       }
     } catch (err) {
-      console.error(err);
-      setError(
-        err.response?.data?.detail ||
-          'Steganalysis inspection failed. Ensure backend API is active.'
-      );
+      console.error('Steganalysis scan failed:', err);
+      const detailMsg =
+        typeof err.response?.data?.detail === 'string'
+          ? err.response.data.detail
+          : err.response?.data?.message ||
+            err.message ||
+            'Steganalysis inspection failed. Ensure backend API is active.';
+      setError(detailMsg);
     } finally {
       setIsAnalyzing(false);
     }

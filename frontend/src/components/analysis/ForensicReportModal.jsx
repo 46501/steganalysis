@@ -242,3 +242,4 @@ export default function ForensicReportModal({ isOpen, onClose, reportData, previ
     </div>
   );
 }
+

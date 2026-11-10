@@ -80,3 +80,4 @@ async def extract_secret_message(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Extraction error: {str(e)}",
         )
+

@@ -649,3 +649,4 @@ export default function StegoStudio({ onSendToDetector }) {
     </div>
   );
 }
+

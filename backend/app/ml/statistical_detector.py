@@ -81,3 +81,4 @@ class StatisticalForensicsDetector:
             "spam_markov_diag_dominance": round(diag_weight, 4),
             "chi_square_pov_statistic": round(chi_square_val, 4),
         }
+

@@ -128,3 +128,4 @@ def compute_spatial_residual_energy(tensor: torch.Tensor) -> float:
         energy = float(torch.mean(residuals ** 2).item())
 
     return round(energy, 4)
+

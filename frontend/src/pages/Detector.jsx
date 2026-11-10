@@ -510,6 +510,33 @@ export default function Detector() {
                     </div>
                   </div>
 
+                  {/* Classical Statistical Forensics Card (Phase 2) */}
+                  {result.statistical_metrics && (
+                    <div className="p-4 rounded-xl bg-gray-950/70 border border-gray-800 space-y-2">
+                      <div className="flex items-center justify-between text-xs font-semibold text-gray-300">
+                        <span className="flex items-center gap-1.5">
+                          <Activity className="w-3.5 h-3.5 text-cyan-400" />
+                          <span>Statistical Heuristics (SPAM & Spatial Differentials)</span>
+                        </span>
+                        <span className="text-[10px] font-mono text-gray-500">Deterministics</span>
+                      </div>
+                      <div className="grid grid-cols-3 gap-2 text-[11px] font-mono pt-1">
+                        <div className="p-2 rounded-lg bg-gray-900/60 border border-gray-800/80">
+                          <span className="text-gray-500 block text-[10px]">LSB Entropy</span>
+                          <span className="text-white font-bold block">{result.statistical_metrics.lsb_shannon_entropy}</span>
+                        </div>
+                        <div className="p-2 rounded-lg bg-gray-900/60 border border-gray-800/80">
+                          <span className="text-gray-500 block text-[10px]">Gradient Var</span>
+                          <span className="text-cyan-400 font-bold block">{result.statistical_metrics.spatial_gradient_variance?.toFixed(1)}</span>
+                        </div>
+                        <div className="p-2 rounded-lg bg-gray-900/60 border border-gray-800/80">
+                          <span className="text-gray-500 block text-[10px]">SPAM Diag</span>
+                          <span className="text-purple-300 font-bold block">{result.statistical_metrics.spam_markov_diag_dominance}</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Scientific Rationale Card */}
                   <div className="p-4 rounded-xl bg-gray-950/80 border border-gray-800 text-xs space-y-1.5">
                     <div className="flex items-center gap-1.5 text-gray-300 font-semibold text-[11px]">

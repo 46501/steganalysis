@@ -8,6 +8,7 @@ from PIL import Image
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.ml.inference import engine
+from app.ml.statistical_detector import StatisticalForensicsDetector
 from app.models.scan import ScanRecord
 from app.schemas.analysis import AnalysisResultResponse, ImageMetadata
 from app.services.visual_service import VisualForensicsService
@@ -31,10 +32,11 @@ class SteganalysisService:
         prediction = engine.predict(tensor, model_name=model_name)
         duration_ms = (time.perf_counter() - start_time) * 1000.0
 
-        # Generate visual forensics artifacts
+        # Generate visual forensics artifacts & statistical metrics
         arr = tensor.squeeze().cpu().numpy().astype(np.uint8)
         residual_heatmap_b64 = VisualForensicsService.generate_residual_heatmap(arr)
         bitplane_0_b64 = VisualForensicsService.generate_bitplane(arr, 0)
+        statistical_metrics = StatisticalForensicsDetector.extract_metrics(arr)
 
         # Check for benchmark sample pair reference
         diff_map_b64 = None
@@ -95,6 +97,7 @@ class SteganalysisService:
             bitplane_0_b64=bitplane_0_b64,
             diff_map_b64=diff_map_b64,
             diff_stats=diff_stats,
+            statistical_metrics=statistical_metrics,
             created_at=scan_record.created_at if scan_record else None,
             metadata=ImageMetadata(**metadata) if metadata else None,
         )

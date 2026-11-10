@@ -31,6 +31,7 @@ class AnalysisResultResponse(BaseModel):
     bitplane_0_b64: Optional[str] = None
     diff_map_b64: Optional[str] = None
     diff_stats: Optional[dict] = None
+    statistical_metrics: Optional[dict] = None
     created_at: Optional[datetime] = None
     metadata: Optional[ImageMetadata] = None
 

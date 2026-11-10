@@ -179,3 +179,16 @@ def test_compare_pair_endpoint(client):
     assert "cover_heatmap_b64" in data
     assert "diff_stats" in data
     assert data["diff_stats"]["modified_pixels"] == 64 * 64
+
+
+def test_statistical_forensics_detector():
+    """Verifies classical statistical forensics feature extraction."""
+    from app.ml.statistical_detector import StatisticalForensicsDetector
+
+    arr = np.random.randint(0, 256, (64, 64), dtype=np.uint8)
+    metrics = StatisticalForensicsDetector.extract_metrics(arr)
+    assert "lsb_shannon_entropy" in metrics
+    assert "laplacian_residual_variance" in metrics
+    assert "spatial_gradient_variance" in metrics
+    assert "spam_markov_diag_dominance" in metrics
+    assert 0.0 <= metrics["lsb_shannon_entropy"] <= 1.0

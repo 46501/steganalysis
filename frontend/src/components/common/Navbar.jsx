@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { ShieldCheck, Activity, Search, History, BookOpen, Server, CheckCircle2, AlertCircle, Lock, GraduationCap } from 'lucide-react';
 import { steganalysisApi } from '../../services/api';
 
-export default function Navbar({ activeTab, setActiveTab, onOpenVivaTour }) {
+export default function Navbar({ activeTab, setActiveTab, onOpenVivaTour, onOpenCommandPalette }) {
   const [healthStatus, setHealthStatus] = useState({ online: false, model: '', db: '' });
 
   useEffect(() => {
@@ -86,7 +86,18 @@ export default function Navbar({ activeTab, setActiveTab, onOpenVivaTour }) {
         </nav>
 
         {/* Right Action & Backend Indicator */}
-        <div className="flex items-center space-x-3">
+        <div className="flex items-center space-x-2.5">
+          {onOpenCommandPalette && (
+            <button
+              onClick={onOpenCommandPalette}
+              className="hidden md:flex items-center space-x-1.5 px-2.5 py-1.5 rounded-lg text-xs bg-gray-900/90 hover:bg-gray-800 text-gray-400 hover:text-gray-200 border border-gray-800 hover:border-gray-700 transition"
+              title="Press Ctrl+K or Cmd+K to open Command Palette"
+            >
+              <Search className="w-3.5 h-3.5 text-gray-400" />
+              <span className="font-mono text-[10px] text-gray-400">⌘K</span>
+            </button>
+          )}
+
           {onOpenVivaTour && (
             <button
               onClick={onOpenVivaTour}

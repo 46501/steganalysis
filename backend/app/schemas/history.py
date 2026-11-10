@@ -33,3 +33,25 @@ class PaginatedHistoryResponse(BaseModel):
     limit: int
     offset: int
     items: List[ScanHistoryItem]
+
+
+class EvidenceArchiveRequest(BaseModel):
+    id: Optional[int] = None
+    case_number: Optional[str] = None
+    filename: str
+    file_hash: str
+    file_size_bytes: Optional[int] = 0
+    image_format: Optional[str] = "PNG"
+    verdict: str
+    confidence: float
+    cover_probability: float
+    stego_probability: float
+    residual_energy: Optional[float] = None
+    execution_time_ms: Optional[float] = 0.0
+    device: Optional[str] = "cpu"
+    model_name: Optional[str] = "StegoNet-Lite"
+    forensic_explanation: Optional[str] = None
+    residual_heatmap_b64: Optional[str] = None
+    bitplane_0_b64: Optional[str] = None
+    fft_spectrum_b64: Optional[str] = None
+    diff_map_b64: Optional[str] = None

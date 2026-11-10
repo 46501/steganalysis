@@ -308,4 +308,69 @@ def test_batch_benchmark_endpoint(client):
     assert "total_execution_time_ms" in data
 
 
+def test_evidence_archive_service_and_endpoints(client):
+    """Verifies NIST/ISO-27037 digital evidence archive zip generation and endpoints."""
+    import zipfile
+    from app.services.evidence_service import DigitalEvidenceArchiveService
+
+    # 1. Test direct service generation
+    case_data = {
+        "id": 42,
+        "filename": "suspect_image_001.png",
+        "file_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "file_size_bytes": 262144,
+        "image_format": "PNG",
+        "verdict": "Stego",
+        "confidence": 0.984,
+        "cover_probability": 0.016,
+        "stego_probability": 0.984,
+        "residual_energy": 853.70,
+        "model_name": "StegoNet-Lite",
+        "device": "cpu",
+        "forensic_explanation": "Test evidence verification archive.",
+    }
+
+    dummy_b64 = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
+    artifacts = {
+        "residual_heatmap_b64": dummy_b64,
+        "bitplane_0_b64": dummy_b64,
+        "fft_spectrum_b64": dummy_b64,
+    }
+
+    zip_bytes = DigitalEvidenceArchiveService.generate_evidence_archive_zip(case_data, artifacts)
+    assert len(zip_bytes) > 0
+    assert zipfile.is_zipfile(io.BytesIO(zip_bytes))
+
+    with zipfile.ZipFile(io.BytesIO(zip_bytes), "r") as z:
+        names = z.namelist()
+        assert "evidence_manifest.json" in names
+        assert "forensic_certificate.html" in names
+        assert "README_CHAIN_OF_CUSTODY.txt" in names
+        assert "evidence_artifacts/residual_heatmap.png" in names
+        manifest_data = json.loads(z.read("evidence_manifest.json"))
+        assert manifest_data["case_number"] == "STEGO-CASE-000042"
+        assert manifest_data["primary_evidence_carrier"]["filename"] == "suspect_image_001.png"
+
+    # 2. Test POST /api/v1/history/evidence-archive endpoint
+    post_resp = client.post(
+        "/api/v1/history/evidence-archive",
+        json={
+            "id": 101,
+            "filename": "live_test.png",
+            "file_hash": "a" * 64,
+            "verdict": "Cover",
+            "confidence": 0.95,
+            "cover_probability": 0.95,
+            "stego_probability": 0.05,
+            "residual_energy": 851.79,
+            "residual_heatmap_b64": dummy_b64,
+        },
+    )
+    assert post_resp.status_code == 200
+    assert post_resp.headers["content-type"] == "application/zip"
+    assert "evidence_archive_STEGO-CASE-000101.zip" in post_resp.headers.get("content-disposition", "")
+    assert zipfile.is_zipfile(io.BytesIO(post_resp.content))
+
+
+
 

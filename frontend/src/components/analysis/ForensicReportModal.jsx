@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   FileText,
   Printer,
@@ -9,9 +9,13 @@ import {
   Clock,
   CheckCircle2,
   Cpu,
+  Archive,
+  Download,
 } from 'lucide-react';
+import { steganalysisApi } from '../../services/api';
 
 export default function ForensicReportModal({ isOpen, onClose, reportData, previewUrl }) {
+  const [isExporting, setIsExporting] = useState(false);
   if (!isOpen || !reportData) return null;
 
   const isStego = reportData.verdict === 'Stego';
@@ -22,6 +26,26 @@ export default function ForensicReportModal({ isOpen, onClose, reportData, previ
 
   const handlePrint = () => {
     window.print();
+  };
+
+  const handleDownloadArchive = async () => {
+    setIsExporting(true);
+    try {
+      const blob = await steganalysisApi.exportLiveEvidenceArchive(reportData);
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `evidence_archive_${caseId}.zip`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Failed to export evidence archive:', err);
+      alert('Could not export evidence archive. Ensure backend server is reachable.');
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   return (
@@ -35,7 +59,16 @@ export default function ForensicReportModal({ isOpen, onClose, reportData, previ
               Official Digital Forensics Case Report
             </span>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <button
+              onClick={handleDownloadArchive}
+              disabled={isExporting}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-semibold transition shadow-md shadow-purple-600/25 disabled:opacity-50"
+              title="Download ISO/IEC 27037 & NIST SP 800-86 Compliant Digital Evidence Package"
+            >
+              <Archive className="w-3.5 h-3.5" />
+              <span>{isExporting ? 'Packaging...' : 'Export NIST Archive (.zip)'}</span>
+            </button>
             <button
               onClick={handlePrint}
               className="flex items-center gap-2 px-3.5 py-1.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-semibold transition shadow-md shadow-cyan-600/30"

@@ -14,6 +14,7 @@ import {
   Clock,
   Layers,
   FileText,
+  Archive,
 } from 'lucide-react';
 import { steganalysisApi } from '../services/api';
 
@@ -65,6 +66,22 @@ export default function History() {
       setSelectedRecord(null);
     } catch (err) {
       alert('Failed to clear scan history');
+    }
+  };
+
+  const handleDownloadArchive = async (recordId) => {
+    try {
+      const blob = await steganalysisApi.downloadEvidenceArchive(recordId);
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `evidence_archive_CASE_${recordId}.zip`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      alert('Failed to download digital evidence archive');
     }
   };
 
@@ -289,6 +306,13 @@ export default function History() {
                       <td className="py-3 px-4 text-right whitespace-nowrap">
                         <div className="flex items-center justify-end gap-1.5">
                           <button
+                            onClick={() => handleDownloadArchive(r.id)}
+                            className="p-1.5 rounded-lg bg-gray-800 hover:bg-purple-500/20 text-gray-400 hover:text-purple-400 transition"
+                            title="Download NIST/ISO-27037 Evidence Package (.zip)"
+                          >
+                            <Archive className="w-3.5 h-3.5" />
+                          </button>
+                          <button
                             onClick={() => setSelectedRecord(r)}
                             className="p-1.5 rounded-lg bg-gray-800 hover:bg-cyan-500/20 text-gray-400 hover:text-cyan-400 transition"
                             title="Inspect Details"
@@ -392,12 +416,19 @@ export default function History() {
               </div>
             </div>
 
-            <div className="pt-2">
+            <div className="pt-2 flex items-center gap-2">
+              <button
+                onClick={() => handleDownloadArchive(selectedRecord.id)}
+                className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-semibold text-xs transition flex items-center justify-center gap-1.5 shadow-md shadow-purple-600/20"
+              >
+                <Archive className="w-3.5 h-3.5" />
+                <span>Export NIST Archive (.zip)</span>
+              </button>
               <button
                 onClick={() => setSelectedRecord(null)}
-                className="w-full py-2.5 rounded-xl bg-gray-800 hover:bg-gray-700 text-white font-medium text-xs transition"
+                className="px-5 py-2.5 rounded-xl bg-gray-800 hover:bg-gray-700 text-white font-medium text-xs transition"
               >
-                Close Report
+                Close
               </button>
             </div>
           </div>

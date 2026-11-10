@@ -1,13 +1,14 @@
 """Scan history retrieval and management endpoints."""
 
 from typing import Optional
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from sqlalchemy import delete, desc, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.models.scan import ScanRecord
-from app.schemas.history import PaginatedHistoryResponse, ScanHistoryItem
+from app.schemas.history import EvidenceArchiveRequest, PaginatedHistoryResponse, ScanHistoryItem
+from app.services.evidence_service import DigitalEvidenceArchiveService
 
 router = APIRouter()
 
@@ -106,6 +107,101 @@ async def get_forensic_case_report(
             "compliance": "ISO/IEC 27037 Digital Evidence Admissibility Guidelines",
         },
     }
+
+
+@router.get("/{record_id}/evidence-archive")
+async def export_evidence_archive_by_id(
+    record_id: int,
+    db: AsyncSession = Depends(get_db),
+):
+    """Generates and streams an ISO/IEC 27037 compliant .zip digital evidence package for a recorded scan."""
+    stmt = select(ScanRecord).where(ScanRecord.id == record_id)
+    result = await db.execute(stmt)
+    record = result.scalar_one_or_none()
+
+    if not record:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Scan record with ID {record_id} not found",
+        )
+
+    case_id = f"STEGO-CASE-{record.id:06d}"
+    case_data = {
+        "id": record.id,
+        "case_number": case_id,
+        "filename": record.filename,
+        "file_hash": record.file_hash,
+        "file_size_bytes": record.file_size_bytes,
+        "image_format": record.image_format,
+        "verdict": record.verdict,
+        "confidence": record.confidence,
+        "cover_probability": record.cover_probability,
+        "stego_probability": record.stego_probability,
+        "residual_energy": record.residual_energy,
+        "execution_time_ms": record.execution_time_ms,
+        "device": record.device_used,
+        "model_name": record.model_name,
+        "forensic_explanation": record.forensic_explanation,
+    }
+
+    zip_bytes = DigitalEvidenceArchiveService.generate_evidence_archive_zip(case_data)
+    return Response(
+        content=zip_bytes,
+        media_type="application/zip",
+        headers={
+            "Content-Disposition": f'attachment; filename="evidence_archive_{case_id}.zip"',
+            "Access-Control-Expose-Headers": "Content-Disposition",
+        },
+    )
+
+
+@router.post("/evidence-archive")
+async def export_live_evidence_archive(
+    req: EvidenceArchiveRequest,
+):
+    """
+    Generates and streams an ISO/IEC 27037 compliant .zip digital evidence package
+    from live analysis results, packaging certificates, visual heatmaps, bitplane, and FFT spectra.
+    """
+    case_id = req.case_number or f"STEGO-CASE-{req.id or 1:06d}"
+    case_data = {
+        "id": req.id or 1,
+        "case_number": case_id,
+        "filename": req.filename,
+        "file_hash": req.file_hash,
+        "file_size_bytes": req.file_size_bytes,
+        "image_format": req.image_format,
+        "verdict": req.verdict,
+        "confidence": req.confidence,
+        "cover_probability": req.cover_probability,
+        "stego_probability": req.stego_probability,
+        "residual_energy": req.residual_energy,
+        "execution_time_ms": req.execution_time_ms,
+        "device": req.device,
+        "model_name": req.model_name,
+        "forensic_explanation": req.forensic_explanation,
+    }
+
+    artifacts = {
+        "residual_heatmap_b64": req.residual_heatmap_b64,
+        "bitplane_0_b64": req.bitplane_0_b64,
+        "fft_spectrum_b64": req.fft_spectrum_b64,
+        "diff_map_b64": req.diff_map_b64,
+    }
+
+    zip_bytes = DigitalEvidenceArchiveService.generate_evidence_archive_zip(
+        case_data=case_data,
+        artifacts_b64=artifacts,
+    )
+
+    return Response(
+        content=zip_bytes,
+        media_type="application/zip",
+        headers={
+            "Content-Disposition": f'attachment; filename="evidence_archive_{case_id}.zip"',
+            "Access-Control-Expose-Headers": "Content-Disposition",
+        },
+    )
 
 
 @router.delete("/{record_id}", status_code=status.HTTP_200_OK)

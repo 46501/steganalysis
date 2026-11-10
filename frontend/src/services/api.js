@@ -60,6 +60,20 @@ export const steganalysisApi = {
     return response.data;
   },
 
+  downloadEvidenceArchive: async (recordId) => {
+    const response = await apiClient.get(`/history/${recordId}/evidence-archive`, {
+      responseType: 'blob',
+    });
+    return response.data;
+  },
+
+  exportLiveEvidenceArchive: async (analysisData) => {
+    const response = await apiClient.post('/history/evidence-archive', analysisData, {
+      responseType: 'blob',
+    });
+    return response.data;
+  },
+
   deleteHistoryItem: async (recordId) => {
     const response = await apiClient.delete(`/history/${recordId}`);
     return response.data;

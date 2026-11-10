@@ -57,6 +57,16 @@ coverage.xml
 *.tflite
 backend/app/ml/weights/*
 !backend/app/ml/weights/.gitkeep
+backend/checkpoints/*
+!backend/checkpoints/.gitkeep
+backend/logs/*
+!backend/logs/.gitkeep
+
+# Dataset and Raw Images
+dataset/
+dataset/**
+*.pgm
+*.mat
 
 # Temporary Storage & Uploads
 storage/*

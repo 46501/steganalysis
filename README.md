@@ -58,6 +58,27 @@ SRNet (Spatial Rich Model-based Deep Residual Network) is specifically tailored 
 
 ---
 
+## 🏋️‍♂️ SRNet Model Training Pipeline
+
+The repository includes a complete, production-grade PyTorch training pipeline for SRNet on 512x512 PGM cover-stego pairs:
+
+- **Dataset Loader**: Direct P5 binary PGM reading, 512x512 native input, float32 normalization to `[0.0, 1.0]`, and balanced paired mini-batch collation (50/50 cover/stego in every batch to eliminate BatchNorm covariate bias).
+- **Optimization**: Adamax optimizer ($\beta_1=0.9, \beta_2=0.999$, initial $\text{lr}=0.001$), StepLR decay ($10\times$ every 30 epochs), and Negative Log-Likelihood loss (`NLLLoss`).
+- **Resilience**: Atomic checkpointing (`best_checkpoint.pt`, `latest_checkpoint.pt`), resume-from-checkpoint capability, early stopping, and isolated test split evaluation.
+- **Documentation**: See [docs/training_guide.md](file:///D:/Stego/docs/training_guide.md) for full commands, GPU setup, and configuration flags.
+
+Quick verification smoke test:
+```powershell
+python backend/training/train.py --smoke-test
+```
+
+Full training execution:
+```powershell
+python backend/training/train.py --epochs 50 --lr 0.001
+```
+
+---
+
 ## 🔒 Security & Privacy
 
 - All model weight files (`*.pth`, `*.pt`), local environment credentials (`.env`), and temporary upload caches are strictly excluded via `.gitignore`.

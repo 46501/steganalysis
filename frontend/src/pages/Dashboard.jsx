@@ -10,10 +10,11 @@ import {
   Clock,
   Sparkles,
   CheckCircle,
+  GraduationCap,
 } from 'lucide-react';
 import { steganalysisApi } from '../services/api';
 
-export default function Dashboard({ setActiveTab }) {
+export default function Dashboard({ setActiveTab, onOpenVivaTour }) {
   const [stats, setStats] = useState({
     totalScans: 0,
     stegoDetections: 0,
@@ -91,14 +92,27 @@ export default function Dashboard({ setActiveTab }) {
           </p>
         </div>
 
-        <button
-          onClick={() => setActiveTab('detector')}
-          className="flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white rounded-xl text-sm font-semibold transition-all shadow-lg shadow-cyan-600/25 hover:shadow-cyan-500/35 hover:scale-[1.02]"
-        >
-          <Sparkles className="w-4 h-4" />
-          <span>Launch Stego Detector</span>
-          <ArrowRight className="w-4 h-4 ml-1" />
-        </button>
+        <div className="flex flex-wrap items-center gap-3">
+          {onOpenVivaTour && (
+            <button
+              onClick={onOpenVivaTour}
+              className="flex items-center gap-2 px-4 py-3 bg-purple-950/60 hover:bg-purple-900/70 text-purple-200 border border-purple-500/40 hover:border-purple-300 rounded-xl text-sm font-semibold transition-all shadow-lg shadow-purple-950/30 hover:scale-[1.02]"
+              title="Interactive Examiner Viva Presentation & Defense Guide"
+            >
+              <GraduationCap className="w-4 h-4 text-purple-300" />
+              <span>Viva Defense Tour</span>
+            </button>
+          )}
+
+          <button
+            onClick={() => setActiveTab('detector')}
+            className="flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white rounded-xl text-sm font-semibold transition-all shadow-lg shadow-cyan-600/25 hover:shadow-cyan-500/35 hover:scale-[1.02]"
+          >
+            <Sparkles className="w-4 h-4" />
+            <span>Launch Stego Detector</span>
+            <ArrowRight className="w-4 h-4 ml-1" />
+          </button>
+        </div>
       </div>
 
       {/* Metrics Cards Grid */}

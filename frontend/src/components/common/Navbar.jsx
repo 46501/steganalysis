@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { ShieldCheck, Activity, Search, History, BookOpen, Server, CheckCircle2, AlertCircle, Lock } from 'lucide-react';
+import { ShieldCheck, Activity, Search, History, BookOpen, Server, CheckCircle2, AlertCircle, Lock, GraduationCap } from 'lucide-react';
 import { steganalysisApi } from '../../services/api';
 
-export default function Navbar({ activeTab, setActiveTab }) {
+export default function Navbar({ activeTab, setActiveTab, onOpenVivaTour }) {
   const [healthStatus, setHealthStatus] = useState({ online: false, model: '', db: '' });
 
   useEffect(() => {
@@ -85,24 +85,38 @@ export default function Navbar({ activeTab, setActiveTab }) {
           })}
         </nav>
 
-        {/* Live Backend Connection Indicator */}
-        <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-full bg-gray-900 border border-gray-800 text-xs">
-          {healthStatus.online ? (
-            <>
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-              </span>
-              <span className="text-emerald-400 font-medium">PyTorch Online</span>
-              <span className="text-gray-600">|</span>
-              <span className="text-gray-400 font-mono text-[11px]">{healthStatus.db}</span>
-            </>
-          ) : (
-            <>
-              <span className="h-2 w-2 rounded-full bg-rose-500"></span>
-              <span className="text-rose-400 font-medium">Connecting...</span>
-            </>
+        {/* Right Action & Backend Indicator */}
+        <div className="flex items-center space-x-3">
+          {onOpenVivaTour && (
+            <button
+              onClick={onOpenVivaTour}
+              className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-gradient-to-r from-purple-900/50 to-indigo-900/50 hover:from-purple-800/60 hover:to-indigo-800/60 text-purple-200 border border-purple-500/40 hover:border-purple-300 transition-all shadow-sm shadow-purple-900/20"
+              title="Interactive Examiner Viva Presentation & Defense Guide"
+            >
+              <GraduationCap className="w-4 h-4 text-purple-300" />
+              <span className="hidden sm:inline">Viva Defense Tour</span>
+            </button>
           )}
+
+          {/* Live Backend Connection Indicator */}
+          <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-full bg-gray-900 border border-gray-800 text-xs">
+            {healthStatus.online ? (
+              <>
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                </span>
+                <span className="text-emerald-400 font-medium">PyTorch Online</span>
+                <span className="text-gray-600">|</span>
+                <span className="text-gray-400 font-mono text-[11px]">{healthStatus.db}</span>
+              </>
+            ) : (
+              <>
+                <span className="h-2 w-2 rounded-full bg-rose-500"></span>
+                <span className="text-rose-400 font-medium">Connecting...</span>
+              </>
+            )}
+          </div>
         </div>
       </div>
     </header>

@@ -109,3 +109,58 @@ class VisualForensicsService:
         }
         return b64_png, stats
 
+    @classmethod
+    def generate_fft_spectrum(cls, arr: np.ndarray) -> Tuple[str, Dict]:
+        """
+        Computes 2D Fast Fourier Transform (2D FFT) Power Spectrum.
+        Center-shifts DC component and displays logarithmic magnitude with
+        high-frequency spectral energy distribution metrics.
+        """
+        arr_f = arr.astype(np.float32)
+        h, w = arr_f.shape
+
+        # 2D FFT and zero-frequency center shift
+        f = np.fft.fft2(arr_f)
+        fshift = np.fft.fftshift(f)
+        mag = np.abs(fshift)
+        log_mag = np.log1p(mag)
+
+        # Normalize to [0, 255]
+        min_v = float(np.min(log_mag))
+        max_v = float(np.max(log_mag))
+        norm = ((log_mag - min_v) / (max_v - min_v + 1e-9) * 255.0).astype(np.uint8)
+
+        # Forensic Spectral Colormap:
+        # DC Center Peak -> Bright Gold / Amber
+        # Mid Frequencies -> Electric Cyan
+        # High Frequency Outliers -> Deep Indigo / Purple
+        norm_f = norm.astype(np.float32) / 255.0
+        rgb = np.zeros((h, w, 3), dtype=np.uint8)
+        rgb[:, :, 0] = np.clip(norm_f * 260.0 - 20.0, 15.0, 255.0).astype(np.uint8)
+        rgb[:, :, 1] = np.clip(np.sin(norm_f * np.pi) * 220.0, 10.0, 230.0).astype(np.uint8)
+        rgb[:, :, 2] = np.clip((1.0 - norm_f) * 190.0 + 30.0, 25.0, 220.0).astype(np.uint8)
+
+        # Radial High-Frequency Energy Ratio Calculation
+        cy, cx = h // 2, w // 2
+        Y, X = np.ogrid[:h, :w]
+        dist = np.sqrt((X - cx) ** 2 + (Y - cy) ** 2)
+        cutoff = 0.5 * min(cx, cy)
+        power = mag ** 2
+        total_power = float(np.sum(power)) + 1e-9
+        hf_power = float(np.sum(power[dist >= cutoff]))
+        hf_ratio = round((hf_power / total_power) * 100.0, 3)
+
+        # Spectral entropy
+        p = power.flatten() / total_power
+        p_safe = p[p > 1e-12]
+        spectral_entropy = round(float(-np.sum(p_safe * np.log2(p_safe))), 4)
+
+        b64_png = cls._array_to_b64_png(rgb)
+        stats = {
+            "hf_spectral_energy_percent": hf_ratio,
+            "spectral_entropy": spectral_entropy,
+            "dc_peak_magnitude": round(float(mag[cy, cx]), 1),
+            "cutoff_radius_px": int(cutoff),
+        }
+        return b64_png, stats
+

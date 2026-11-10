@@ -32,6 +32,8 @@ class AnalysisResultResponse(BaseModel):
     diff_map_b64: Optional[str] = None
     diff_stats: Optional[dict] = None
     statistical_metrics: Optional[dict] = None
+    fft_spectrum_b64: Optional[str] = None
+    fft_stats: Optional[dict] = None
     created_at: Optional[datetime] = None
     metadata: Optional[ImageMetadata] = None
 

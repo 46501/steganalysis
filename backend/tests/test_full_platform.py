@@ -282,3 +282,16 @@ def test_steganography_studio_embed_and_extract(client):
     assert extract_data["secret_text"] == "Classified Project Payload"
 
 
+def test_fft_spectrum_service():
+    """Verifies 2D FFT Power Spectrum generation and spectral metrics."""
+    from app.services.visual_service import VisualForensicsService
+
+    arr = np.random.randint(0, 256, (64, 64), dtype=np.uint8)
+    fft_b64, stats = VisualForensicsService.generate_fft_spectrum(arr)
+    assert fft_b64.startswith("data:image/png;base64,")
+    assert "hf_spectral_energy_percent" in stats
+    assert "spectral_entropy" in stats
+    assert 0.0 <= stats["hf_spectral_energy_percent"] <= 100.0
+    assert stats["spectral_entropy"] > 0.0
+
+

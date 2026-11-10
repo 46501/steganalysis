@@ -52,9 +52,11 @@ class SteganalysisService:
 
         duration_ms = (time.perf_counter() - start_time) * 1000.0
 
-        # 2. Extract 2D Grayscale Array for Visual & Statistical Forensics
+        # 2. Extract 2D Grayscale Array for Visual, Frequency & Statistical Forensics
         residual_heatmap_b64 = None
         bitplane_0_b64 = None
+        fft_spectrum_b64 = None
+        fft_stats = None
         statistical_metrics = None
         try:
             arr = tensor.squeeze().cpu().numpy().astype(np.uint8)
@@ -68,6 +70,7 @@ class SteganalysisService:
             if arr.ndim == 2 and arr.shape[0] >= 4 and arr.shape[1] >= 4:
                 residual_heatmap_b64 = VisualForensicsService.generate_residual_heatmap(arr)
                 bitplane_0_b64 = VisualForensicsService.generate_bitplane(arr, 0)
+                fft_spectrum_b64, fft_stats = VisualForensicsService.generate_fft_spectrum(arr)
                 statistical_metrics = StatisticalForensicsDetector.extract_metrics(arr)
         except Exception as e:
             logger.warning(f"Visual forensics / statistical metric calculation skipped: {e}")
@@ -139,6 +142,8 @@ class SteganalysisService:
             diff_map_b64=diff_map_b64,
             diff_stats=diff_stats,
             statistical_metrics=statistical_metrics,
+            fft_spectrum_b64=fft_spectrum_b64,
+            fft_stats=fft_stats,
             created_at=scan_record.created_at if scan_record else None,
             metadata=ImageMetadata(**metadata) if metadata else None,
         )

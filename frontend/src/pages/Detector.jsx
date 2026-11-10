@@ -621,6 +621,18 @@ export default function Detector({ initialFile = null }) {
               >
                 Residual Heatmap
               </button>
+              {result.fft_spectrum_b64 && (
+                <button
+                  onClick={() => setVisualTab('fft')}
+                  className={`px-3 py-1.5 rounded-lg font-medium transition ${
+                    visualTab === 'fft'
+                      ? 'bg-purple-500/20 text-purple-300 border border-purple-500/40 shadow-sm'
+                      : 'text-gray-400 hover:text-white'
+                  }`}
+                >
+                  2D FFT Spectrum
+                </button>
+              )}
               <button
                 onClick={() => setVisualTab('bitplane')}
                 className={`px-3 py-1.5 rounded-lg font-medium transition ${
@@ -681,6 +693,54 @@ export default function Detector({ initialFile = null }) {
                   <div className="flex justify-between text-gray-400">
                     <span>Color Scale:</span>
                     <span className="text-amber-400">Gold/Red = High Variance, Navy = Smooth</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Tab: 2D FFT Spectrum */}
+          {visualTab === 'fft' && result.fft_spectrum_b64 && (
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
+              <div className="md:col-span-5 flex justify-center">
+                <div className="w-64 h-64 rounded-xl overflow-hidden border border-purple-800/80 bg-black/60 shadow-xl relative group">
+                  <img
+                    src={result.fft_spectrum_b64}
+                    alt="2D FFT Power Spectrum"
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute top-2 left-2 px-2 py-0.5 rounded bg-black/70 text-[10px] text-purple-300 font-mono border border-purple-800">
+                    2D FFT Log Magnitude Spectrum
+                  </div>
+                  <div className="absolute bottom-2 right-2 px-2 py-0.5 rounded bg-black/70 text-[9px] text-gray-400 font-mono">
+                    DC Center Shifted (u=0, v=0)
+                  </div>
+                </div>
+              </div>
+              <div className="md:col-span-7 space-y-3 text-xs">
+                <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                  <Activity className="w-4 h-4 text-purple-400" />
+                  <span>2D Discrete Fourier Transform (FFT) Magnitude Distribution</span>
+                </h4>
+                <p className="text-gray-300 leading-relaxed">
+                  This frequency-domain visualization illustrates the spatial power spectrum log(1 + |F(u, v)|). While natural photographic scenes concentrate energy almost exclusively at the low-frequency DC center (bright gold core), steganographic perturbations disperse high-frequency residual energy toward the outer spectral perimeter.
+                </p>
+                <div className="p-3 rounded-xl bg-gray-950/70 border border-gray-800 font-mono text-[11px] space-y-1">
+                  <div className="flex justify-between text-gray-400">
+                    <span>High-Frequency Spectral Energy Ratio:</span>
+                    <span className="text-purple-400 font-bold">{result.fft_stats?.hf_spectral_energy_percent ?? '--'}%</span>
+                  </div>
+                  <div className="flex justify-between text-gray-400">
+                    <span>Spectral Entropy (Frequency Dispersion):</span>
+                    <span className="text-cyan-400 font-bold">{result.fft_stats?.spectral_entropy ?? '--'}</span>
+                  </div>
+                  <div className="flex justify-between text-gray-400">
+                    <span>DC Peak Core Magnitude:</span>
+                    <span className="text-amber-400 font-bold">{result.fft_stats?.dc_peak_magnitude?.toLocaleString() ?? '--'}</span>
+                  </div>
+                  <div className="flex justify-between text-gray-400">
+                    <span>High-Frequency Cutoff Boundary:</span>
+                    <span className="text-gray-300">r ≥ {result.fft_stats?.cutoff_radius_px ?? 128} px (Radial High-Pass)</span>
                   </div>
                 </div>
               </div>

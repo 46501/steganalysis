@@ -19,12 +19,15 @@ import {
   Sliders,
   Split,
   ZoomIn,
+  FolderArchive,
 } from 'lucide-react';
 import { steganalysisApi } from '../services/api';
 import ForensicReportModal from '../components/analysis/ForensicReportModal';
 import PixelLoupeMagnifier from '../components/analysis/PixelLoupeMagnifier';
+import BatchTriageWorkstation from '../components/analysis/BatchTriageWorkstation';
 
 export default function Detector({ initialFile = null }) {
+  const [detectionMode, setDetectionMode] = useState('single'); // 'single' | 'batch'
   const [file, setFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
   const [modelChoice, setModelChoice] = useState('stegonet_lite');
@@ -168,7 +171,37 @@ export default function Detector({ initialFile = null }) {
         </p>
       </div>
 
-      {/* Preset Sample Quick-Pick Bar (College Demo Accelerator) */}
+      {/* Workspace Mode Switcher */}
+      <div className="flex items-center gap-2 p-1.5 rounded-xl bg-gray-900 border border-gray-800 w-fit">
+        <button
+          onClick={() => setDetectionMode('single')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition ${
+            detectionMode === 'single'
+              ? 'bg-cyan-600/30 text-cyan-300 border border-cyan-500/40 shadow-sm'
+              : 'text-gray-400 hover:text-white'
+          }`}
+        >
+          <FileImage className="w-4 h-4 text-cyan-400" />
+          <span>Single Image Inspection</span>
+        </button>
+        <button
+          onClick={() => setDetectionMode('batch')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition ${
+            detectionMode === 'batch'
+              ? 'bg-indigo-600/30 text-indigo-300 border border-indigo-500/40 shadow-sm'
+              : 'text-gray-400 hover:text-white'
+          }`}
+        >
+          <FolderArchive className="w-4 h-4 text-indigo-400" />
+          <span>Batch Evidence Triage (10–50 Images)</span>
+        </button>
+      </div>
+
+      {detectionMode === 'batch' ? (
+        <BatchTriageWorkstation />
+      ) : (
+        <>
+          {/* Preset Sample Quick-Pick Bar (College Demo Accelerator) */}
       <div className="space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-4 p-4 rounded-xl bg-gray-900/90 border border-gray-800">
           <div className="flex items-center gap-2">
@@ -885,6 +918,8 @@ export default function Detector({ initialFile = null }) {
           )}
         </div>
       )}
+    </>
+  )}
 
       {/* Forensic Examination Certificate Modal (Phase 3) */}
       <ForensicReportModal

@@ -258,3 +258,4 @@ export default function VivaTourModal({ isOpen, onClose, onNavigateTab }) {
     </div>
   );
 }
+

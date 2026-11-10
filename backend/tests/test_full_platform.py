@@ -295,3 +295,17 @@ def test_fft_spectrum_service():
     assert stats["spectral_entropy"] > 0.0
 
 
+def test_batch_benchmark_endpoint(client):
+    """Verifies batch evidence triage endpoint with benchmark samples."""
+    resp = client.post("/api/v1/batch/benchmark?count_per_class=2")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert "total_processed" in data
+    assert data["total_processed"] >= 2
+    assert "stego_count" in data
+    assert "cover_count" in data
+    assert len(data["results"]) == data["total_processed"]
+    assert "total_execution_time_ms" in data
+
+
+

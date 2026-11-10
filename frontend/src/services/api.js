@@ -30,6 +30,11 @@ export const steganalysisApi = {
     return response.data;
   },
 
+  analyzeBenchmarkBatch: async (countPerClass = 5) => {
+    const response = await apiClient.post(`/batch/benchmark?count_per_class=${countPerClass}`);
+    return response.data;
+  },
+
   comparePair: async (coverFile, stegoFile) => {
     const formData = new FormData();
     formData.append('cover_file', coverFile);

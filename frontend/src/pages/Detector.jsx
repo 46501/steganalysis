@@ -26,6 +26,7 @@ import ForensicReportModal from '../components/analysis/ForensicReportModal';
 import PixelLoupeMagnifier from '../components/analysis/PixelLoupeMagnifier';
 import BatchTriageWorkstation from '../components/analysis/BatchTriageWorkstation';
 import ComparisonWipeSlider from '../components/analysis/ComparisonWipeSlider';
+import ForensicScanningHUD from '../components/analysis/ForensicScanningHUD';
 
 export default function Detector({ initialFile = null }) {
   const [detectionMode, setDetectionMode] = useState('single'); // 'single' | 'batch'
@@ -308,7 +309,18 @@ export default function Detector({ initialFile = null }) {
                     alt="Preview"
                     className="w-full h-full object-cover"
                   />
-                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition flex items-center justify-center text-xs text-white font-medium">
+                  {/* Laser Scanline HUD Overlay when analyzing */}
+                  {isAnalyzing && (
+                    <>
+                      <div className="absolute inset-0 bg-cyan-950/20 z-10 pointer-events-none"></div>
+                      <div className="absolute inset-0 bg-[radial-gradient(#22d3ee_1px,transparent_1px)] [background-size:12px_12px] opacity-30 z-10 pointer-events-none"></div>
+                      <div className="absolute left-0 right-0 h-1 bg-gradient-to-r from-transparent via-cyan-400 to-transparent shadow-[0_0_15px_#22d3ee] animate-laser-scan pointer-events-none z-20"></div>
+                      <div className="absolute top-2 left-2 px-1.5 py-0.5 rounded bg-black/80 text-[8px] font-mono text-cyan-300 border border-cyan-800 z-20 animate-pulse">
+                        SCANNING TENSOR
+                      </div>
+                    </>
+                  )}
+                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition flex items-center justify-center text-xs text-white font-medium z-30">
                     Click to Change Image
                   </div>
                 </div>
@@ -483,17 +495,10 @@ export default function Detector({ initialFile = null }) {
               )}
 
               {isAnalyzing && (
-                <div className="py-24 text-center space-y-4">
-                  <div className="relative w-16 h-16 mx-auto">
-                    <div className="absolute inset-0 rounded-full border-4 border-cyan-500/20 border-t-cyan-400 animate-spin"></div>
-                  </div>
-                  <div>
-                    <p className="text-sm font-semibold text-white">Extracting Spatial Residuals</p>
-                    <p className="text-xs text-gray-400 mt-1 font-mono">
-                      Computing 3x3 Laplacian variance & residual tensor forward pass...
-                    </p>
-                  </div>
-                </div>
+                <ForensicScanningHUD
+                  filename={file?.name}
+                  modelChoice={modelChoice}
+                />
               )}
 
               {result && !isAnalyzing && (

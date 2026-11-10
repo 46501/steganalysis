@@ -20,10 +20,11 @@ class SteganalysisService:
         file_size: int,
         tensor,
         metadata: dict,
-        db: Optional[AsyncSession] = None
+        model_name: Optional[str] = None,
+        db: Optional[AsyncSession] = None,
     ) -> AnalysisResultResponse:
         start_time = time.perf_counter()
-        prediction = engine.predict(tensor)
+        prediction = engine.predict(tensor, model_name=model_name)
         duration_ms = (time.perf_counter() - start_time) * 1000.0
 
         scan_record = None
@@ -42,6 +43,9 @@ class SteganalysisService:
                 execution_time_ms=duration_ms,
                 device_used=prediction["device"],
                 is_trained_weights=prediction["is_trained_weights"],
+                model_name=prediction["model_name"],
+                residual_energy=prediction["residual_energy"],
+                forensic_explanation=prediction["forensic_explanation"],
             )
             try:
                 db.add(scan_record)
@@ -63,7 +67,9 @@ class SteganalysisService:
             execution_time_ms=round(duration_ms, 2),
             device=prediction["device"],
             is_trained_weights=prediction["is_trained_weights"],
+            model_name=prediction["model_name"],
+            residual_energy=prediction["residual_energy"],
+            forensic_explanation=prediction["forensic_explanation"],
             created_at=scan_record.created_at if scan_record else None,
             metadata=ImageMetadata(**metadata) if metadata else None,
         )
-

@@ -1,6 +1,6 @@
 """SQLAlchemy Declarative Base and Common Mixins."""
 
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy import DateTime, Integer
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
@@ -13,5 +13,9 @@ class Base(DeclarativeBase):
 class TimestampMixin:
     """Common timestamp mixin for entity auditing."""
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True, index=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False, index=True)
-
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime,
+        default=lambda: datetime.now(timezone.utc),
+        nullable=False,
+        index=True,
+    )

@@ -1,0 +1,100 @@
+{
+  "image_1": {
+    "cover": "1.pgm",
+    "resolution": "512x512",
+    "octave": {
+      "elapsed_sec": 5.194,
+      "cost_min": 1.6873,
+      "cost_max": 118210.83,
+      "cost_mean": 59.3371,
+      "cost_median": 18.4953,
+      "lambda": 0.166059,
+      "achieved_entropy_bits": 104791.54,
+      "achieved_payload_bpp": 0.399748,
+      "payload_error_bpp": 0.000252,
+      "total_changes": 24995,
+      "change_rate": 0.0953,
+      "plus_changes": 12417,
+      "minus_changes": 12578,
+      "max_abs_diff": 1,
+      "boundary_255_violations": 0,
+      "boundary_0_violations": 0
+    },
+    "python": {
+      "elapsed_sec": 1.701,
+      "cost_min": 1.6082,
+      "cost_max": 118210.9,
+      "cost_mean": 58.4881,
+      "cost_median": 18.559,
+      "lambda": 0.164687,
+      "achieved_entropy_bits": 104857.39,
+      "achieved_payload_bpp": 0.399999,
+      "payload_error_bpp": 1e-06,
+      "total_changes": 25283,
+      "change_rate": 0.0964,
+      "plus_changes": 12659,
+      "minus_changes": 12624,
+      "max_abs_diff": 1,
+      "boundary_255_violations": 0,
+      "boundary_0_violations": 0
+    },
+    "comparison": {
+      "lambda_difference": 0.001371,
+      "cost_mean_diff_abs": 0.849007,
+      "cost_mean_diff_rel_percent": 1.430819,
+      "entropy_diff_bits": 65.85,
+      "change_rate_diff": 0.0011,
+      "both_satisfy_ternary": true,
+      "both_satisfy_boundaries": true
+    }
+  },
+  "image_2": {
+    "cover": "2.pgm",
+    "resolution": "512x512",
+    "octave": {
+      "elapsed_sec": 7.883,
+      "cost_min": 2.7842,
+      "cost_max": 137413.0,
+      "cost_mean": 181.0788,
+      "cost_median": 89.4348,
+      "lambda": 0.058144,
+      "achieved_entropy_bits": 104909.56,
+      "achieved_payload_bpp": 0.400198,
+      "payload_error_bpp": 0.000198,
+      "total_changes": 26168,
+      "change_rate": 0.0998,
+      "plus_changes": 13082,
+      "minus_changes": 13086,
+      "max_abs_diff": 1,
+      "boundary_255_violations": 0,
+      "boundary_0_violations": 0
+    },
+    "python": {
+      "elapsed_sec": 1.88,
+      "cost_min": 2.7842,
+      "cost_max": 137412.99,
+      "cost_mean": 182.1598,
+      "cost_median": 90.1581,
+      "lambda": 0.057578,
+      "achieved_entropy_bits": 104856.75,
+      "achieved_payload_bpp": 0.399997,
+      "payload_error_bpp": 3e-06,
+      "total_changes": 26286,
+      "change_rate": 0.1003,
+      "plus_changes": 13073,
+      "minus_changes": 13213,
+      "max_abs_diff": 1,
+      "boundary_255_violations": 0,
+      "boundary_0_violations": 0
+    },
+    "comparison": {
+      "lambda_difference": 0.000567,
+      "cost_mean_diff_abs": 1.080952,
+      "cost_mean_diff_rel_percent": 0.596951,
+      "entropy_diff_bits": 52.81,
+      "change_rate_diff": 0.0005,
+      "both_satisfy_ternary": true,
+      "both_satisfy_boundaries": true
+    }
+  }
+}

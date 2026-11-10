@@ -13,9 +13,12 @@ export const steganalysisApi = {
     return response.data;
   },
 
-  analyzeImage: async (file) => {
+  analyzeImage: async (file, modelName = null) => {
     const formData = new FormData();
     formData.append('file', file);
+    if (modelName) {
+      formData.append('model_name', modelName);
+    }
     const response = await apiClient.post('/analyze', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
@@ -35,7 +38,21 @@ export const steganalysisApi = {
     const response = await apiClient.get('/history', { params });
     return response.data;
   },
+
+  getHistoryItem: async (recordId) => {
+    const response = await apiClient.get(`/history/${recordId}`);
+    return response.data;
+  },
+
+  deleteHistoryItem: async (recordId) => {
+    const response = await apiClient.delete(`/history/${recordId}`);
+    return response.data;
+  },
+
+  clearAllHistory: async () => {
+    const response = await apiClient.delete('/history');
+    return response.data;
+  },
 };
 
 export default apiClient;
-

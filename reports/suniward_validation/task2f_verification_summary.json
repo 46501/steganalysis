@@ -1,0 +1,104 @@
+{
+  "image_1": {
+    "image": "1.pgm",
+    "resolution": "512x512",
+    "distortion_costs": {
+      "octave_rhoP_mean": 57.550042,
+      "python_rhoP_mean": 57.582492,
+      "relative_mean_diff_percent": 0.05638583,
+      "octave_min": 1.6873,
+      "python_min": 1.721,
+      "octave_median": 18.4953,
+      "python_median": 18.5193,
+      "octave_max": 118210.83,
+      "python_max": 118210.89
+    },
+    "lambda_solver": {
+      "octave_lambda": 0.166059,
+      "python_lambda": 0.165582,
+      "lambda_diff": 0.00047684
+    },
+    "achieved_entropy": {
+      "target_bpp": 0.4,
+      "octave_entropy_bpp": 0.399748,
+      "python_entropy_bpp": 0.400055,
+      "entropy_diff_bpp": 0.00030694
+    },
+    "probability_distributions": {
+      "p_plus_max_abs_diff": 0.009519038584992479,
+      "p_plus_mean_abs_diff": 0.000552796030329161,
+      "p_zero_max_abs_diff": 0.019038077169984735,
+      "p_zero_mean_abs_diff": 0.0011134400276023434
+    },
+    "embedding_simulation": {
+      "seed": 100001,
+      "sha256": "2db520585ba8d7d4f9291011025e47d470f24f60c573d0e4f658331a4bc19805",
+      "is_deterministic_and_reproducible": true,
+      "max_abs_delta": 1,
+      "is_ternary_satisfied": true,
+      "overflow_255_count": 0,
+      "underflow_0_count": 0,
+      "is_boundary_satisfied": true,
+      "total_changes": 25331,
+      "change_rate": 0.0966,
+      "expected_change_rate": 0.0964,
+      "plus_changes": 12611,
+      "minus_changes": 12720
+    },
+    "performance": {
+      "cost_time_sec": 0.247,
+      "lambda_time_sec": 1.541
+    }
+  },
+  "image_2": {
+    "image": "2.pgm",
+    "resolution": "512x512",
+    "distortion_costs": {
+      "octave_rhoP_mean": 181.078812,
+      "python_rhoP_mean": 181.078812,
+      "relative_mean_diff_percent": 2e-08,
+      "octave_min": 2.7842,
+      "python_min": 2.7842,
+      "octave_median": 89.4348,
+      "python_median": 89.4348,
+      "octave_max": 137413.0,
+      "python_max": 137412.99
+    },
+    "lambda_solver": {
+      "octave_lambda": 0.058144,
+      "python_lambda": 0.058144,
+      "lambda_diff": 0.0
+    },
+    "achieved_entropy": {
+      "target_bpp": 0.4,
+      "octave_entropy_bpp": 0.400198,
+      "python_entropy_bpp": 0.400198,
+      "entropy_diff_bpp": 0.0
+    },
+    "probability_distributions": {
+      "p_plus_max_abs_diff": 6.430433963089399e-11,
+      "p_plus_mean_abs_diff": 4.73720986893684e-14,
+      "p_zero_max_abs_diff": 1.2860867926178798e-10,
+      "p_zero_mean_abs_diff": 9.474366223438874e-14
+    },
+    "embedding_simulation": {
+      "seed": 100002,
+      "sha256": "a0271df0111bf99d739aa7a04eeb0c54605fca983e7c555361c6bf1bf7d6aefb",
+      "is_deterministic_and_reproducible": true,
+      "max_abs_delta": 1,
+      "is_ternary_satisfied": true,
+      "overflow_255_count": 0,
+      "underflow_0_count": 0,
+      "is_boundary_satisfied": true,
+      "total_changes": 26198,
+      "change_rate": 0.0999,
+      "expected_change_rate": 0.1004,
+      "plus_changes": 13103,
+      "minus_changes": 13095
+    },
+    "performance": {
+      "cost_time_sec": 0.245,
+      "lambda_time_sec": 1.911
+    }
+  }
+}

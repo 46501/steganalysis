@@ -24,6 +24,9 @@ class AnalysisResultResponse(BaseModel):
     execution_time_ms: float
     device: str
     is_trained_weights: bool
+    model_name: str = "StegoNet-Lite"
+    residual_energy: Optional[float] = None
+    forensic_explanation: Optional[str] = None
     created_at: Optional[datetime] = None
     metadata: Optional[ImageMetadata] = None
 
@@ -34,4 +37,3 @@ class BatchAnalysisResponse(BaseModel):
     cover_count: int
     total_execution_time_ms: float
     results: List[AnalysisResultResponse]
-

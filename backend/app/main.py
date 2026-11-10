@@ -6,6 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.v1.router import api_router
 from app.core.config import settings
+from app.core.database import ACTIVE_DB_TYPE, init_db
 from app.ml.inference import engine
 
 
@@ -13,9 +14,11 @@ from app.ml.inference import engine
 async def lifespan(app: FastAPI):
     """Initializes ML engine and database connections on startup."""
     print(f"[*] Starting {settings.PROJECT_NAME} v{settings.VERSION}")
-    print(f"[*] Initializing PyTorch SRNet on device: {engine.device}...")
+    print(f"[*] Initializing database ({ACTIVE_DB_TYPE})...")
+    await init_db()
+    print(f"[*] Initializing PyTorch Steganalysis Engine on device: {engine.device}...")
     engine.load_model()
-    print("[*] SRNet initialization complete.")
+    print(f"[*] Steganalysis Engine initialized: {engine.active_model_name}")
     yield
     print("[*] Shutting down application...")
 

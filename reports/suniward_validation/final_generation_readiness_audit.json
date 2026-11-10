@@ -1,0 +1,157 @@
+{
+  "metadata": {
+    "timestamp": "2026-11-10T15:20:39",
+    "python_version": "3.14.4 (tags/v3.14.4:23116f9, Apr  7 2026, 14:10:54) [MSC v.1944 64 bit (AMD64)]",
+    "numpy_version": "2.4.1",
+    "scipy_version": "scipy",
+    "octave_version": "GNU Octave 9.4.0 (x86_64-w64-mingw32)"
+  },
+  "images": {
+    "image_1": {
+      "image": "1.pgm",
+      "resolution": "512x512",
+      "part_a_algorithm": {
+        "residual_max_diffs": [
+          1.7108536809473662e-13,
+          2.5579538487363607e-13,
+          7.893685705084863e-14
+        ],
+        "rhoP_octave_mean": 57.550042,
+        "rhoP_python_mean": 57.582492,
+        "rhoP_mean_diff_percent": 0.056386,
+        "rhoP_max_abs_diff": 0.5691153720133286,
+        "rhoP_mean_abs_diff": 0.10382262346349677,
+        "rhoM_octave_mean": 59.337129,
+        "rhoM_python_mean": 59.369137,
+        "rhoM_mean_diff_percent": 0.053943,
+        "rhoM_max_abs_diff": 0.5691153720133286,
+        "rhoM_mean_abs_diff": 0.10391971648484491,
+        "saturated_255_pixels": 85523,
+        "saturated_0_pixels": 0
+      },
+      "part_b_lambda_prob": {
+        "octave_lambda": 0.166059,
+        "python_lambda": 0.165582,
+        "lambda_abs_diff": 0.00047684,
+        "octave_entropy_bpp": 0.399748,
+        "python_entropy_bpp": 0.400055,
+        "entropy_diff_bpp": 0.00030694,
+        "pP_max_diff": 0.009519038584992479,
+        "pP_mean_diff": 0.000552796030329161,
+        "pP_99th_percentile_diff": 0.004733953170700075,
+        "p0_max_diff": 0.019038077169984735,
+        "p0_mean_diff": 0.0011134400276023434,
+        "p0_99th_percentile_diff": 0.009475629752747766,
+        "expected_change_rate_oct": 0.0963,
+        "expected_change_rate_py": 0.0964
+      },
+      "part_c_decisions": {
+        "seed": 100001,
+        "shared_rand_sha256": "191fe2933c4d548fcfb599ddf3db83109233dea84b3f0c9925275dbcfb721121",
+        "decision_agreement_percent": 99.8417,
+        "decision_disagreement_count": 415,
+        "stego_oct_sim_changes": 25317,
+        "stego_py_sim_changes": 25331,
+        "stego_oct_sim_rate": 0.0966,
+        "stego_py_sim_rate": 0.0966,
+        "max_pixel_delta_between_stegos": 2,
+        "sha256_oct_sim": "f7156c5a652f4820646326c05215c7763bdb9d3112b95d7acc606377b6cb6dab",
+        "sha256_py_sim": "2db520585ba8d7d4f9291011025e47d470f24f60c573d0e4f658331a4bc19805",
+        "is_ternary_satisfied_oct": true,
+        "is_ternary_satisfied_py": true,
+        "boundary_satisfied_oct": true,
+        "boundary_satisfied_py": true
+      },
+      "part_d_reproducibility": {
+        "run1_sha256": "2db520585ba8d7d4f9291011025e47d470f24f60c573d0e4f658331a4bc19805",
+        "run2_sha256": "2db520585ba8d7d4f9291011025e47d470f24f60c573d0e4f658331a4bc19805",
+        "is_deterministic_and_reproducible": true,
+        "duration_total_sec": 1.413
+      }
+    },
+    "image_2": {
+      "image": "2.pgm",
+      "resolution": "512x512",
+      "part_a_algorithm": {
+        "residual_max_diffs": [
+          8.683331831349506e-14,
+          8.526512829121202e-14,
+          4.873879078104437e-14
+        ],
+        "rhoP_octave_mean": 181.078812,
+        "rhoP_python_mean": 181.078812,
+        "rhoP_mean_diff_percent": 0.0,
+        "rhoP_max_abs_diff": 0.0008637206628918648,
+        "rhoP_mean_abs_diff": 5.6009129339630936e-08,
+        "rhoM_octave_mean": 181.079753,
+        "rhoM_python_mean": 181.079753,
+        "rhoM_mean_diff_percent": 0.0,
+        "rhoM_max_abs_diff": 0.0008637206628918648,
+        "rhoM_mean_abs_diff": 5.600955602713783e-08,
+        "saturated_255_pixels": 0,
+        "saturated_0_pixels": 2
+      },
+      "part_b_lambda_prob": {
+        "octave_lambda": 0.058144,
+        "python_lambda": 0.058144,
+        "lambda_abs_diff": 0.0,
+        "octave_entropy_bpp": 0.400198,
+        "python_entropy_bpp": 0.400198,
+        "entropy_diff_bpp": 0.0,
+        "pP_max_diff": 6.430433963089399e-11,
+        "pP_mean_diff": 4.73720986893684e-14,
+        "pP_99th_percentile_diff": 6.990141798723929e-13,
+        "p0_max_diff": 1.2860867926178798e-10,
+        "p0_mean_diff": 9.474366223438874e-14,
+        "p0_99th_percentile_diff": 1.3979928326079971e-12,
+        "expected_change_rate_oct": 0.1004,
+        "expected_change_rate_py": 0.1004
+      },
+      "part_c_decisions": {
+        "seed": 100002,
+        "shared_rand_sha256": "e5c6a7f5a4f6da1b0a9a58d4718adba432d9a47ce1f217764969332acbbd0683",
+        "decision_agreement_percent": 100.0,
+        "decision_disagreement_count": 0,
+        "stego_oct_sim_changes": 26198,
+        "stego_py_sim_changes": 26198,
+        "stego_oct_sim_rate": 0.0999,
+        "stego_py_sim_rate": 0.0999,
+        "max_pixel_delta_between_stegos": 0,
+        "sha256_oct_sim": "a0271df0111bf99d739aa7a04eeb0c54605fca983e7c555361c6bf1bf7d6aefb",
+        "sha256_py_sim": "a0271df0111bf99d739aa7a04eeb0c54605fca983e7c555361c6bf1bf7d6aefb",
+        "is_ternary_satisfied_oct": true,
+        "is_ternary_satisfied_py": true,
+        "boundary_satisfied_oct": true,
+        "boundary_satisfied_py": true
+      },
+      "part_d_reproducibility": {
+        "run1_sha256": "a0271df0111bf99d739aa7a04eeb0c54605fca983e7c555361c6bf1bf7d6aefb",
+        "run2_sha256": "a0271df0111bf99d739aa7a04eeb0c54605fca983e7c555361c6bf1bf7d6aefb",
+        "is_deterministic_and_reproducible": true,
+        "duration_total_sec": 1.686
+      }
+    }
+  },
+  "performance": {
+    "avg_seconds_per_image": 1.55,
+    "workers_configured": 8,
+    "cpu_count": 8,
+    "throughput_images_per_sec": 5.16,
+    "estimated_10000_duration_minutes": 32.3,
+    "estimated_10000_duration_hours": 0.54,
+    "memory_per_process_mb_estimate": 80.0,
+    "total_worker_memory_mb_estimate": 640.0
+  },
+  "safety_audit": {
+    "train_stego_count": 68,
+    "train_cover_count": 76,
+    "val_stego_count": 0,
+    "test_stego_count": 0,
+    "raw_bossbase_count": 10000,
+    "all_68_stego_preserved": true,
+    "all_76_covers_preserved": true,
+    "raw_10000_preserved": true,
+    "matlab_suniward_m_last_modified": "2013-02-15 01:50:05",
+    "matlab_suniward_m_size": 6867
+  }
+}

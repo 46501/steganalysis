@@ -26,4 +26,7 @@ class ScanRecord(Base, TimestampMixin):
     execution_time_ms: Mapped[float] = mapped_column(Float, nullable=False)
     device_used: Mapped[str] = mapped_column(String(32), default="cpu")
     is_trained_weights: Mapped[bool] = mapped_column(Boolean, default=False)
+    model_name: Mapped[str] = mapped_column(String(64), nullable=True, default="StegoNet-Lite")
+    residual_energy: Mapped[float] = mapped_column(Float, nullable=True, default=0.0)
+    forensic_explanation: Mapped[str] = mapped_column(String(1024), nullable=True)
 

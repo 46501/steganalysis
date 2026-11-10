@@ -2,7 +2,7 @@
 
 from datetime import datetime
 from typing import List, Optional
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 
 class ScanHistoryItem(BaseModel):
@@ -19,10 +19,13 @@ class ScanHistoryItem(BaseModel):
     confidence: float
     execution_time_ms: float
     device_used: str
+    is_trained_weights: Optional[bool] = False
+    model_name: Optional[str] = None
+    residual_energy: Optional[float] = None
+    forensic_explanation: Optional[str] = None
     created_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class PaginatedHistoryResponse(BaseModel):
@@ -30,4 +33,3 @@ class PaginatedHistoryResponse(BaseModel):
     limit: int
     offset: int
     items: List[ScanHistoryItem]
-

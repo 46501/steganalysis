@@ -87,7 +87,7 @@ class SteganalysisInferenceEngine:
     @torch.no_grad()
     def predict(self, tensor: torch.Tensor, model_name: Optional[str] = None) -> Dict:
         """
-        Runs inference on an input tensor of shape (1, 1, 256, 256).
+        Runs inference on an input tensor of shape (1, 1, H, W).
         Returns classification verdict, probabilities, confidence score, and forensic explanation.
         """
         # Switch model if requested
@@ -98,9 +98,22 @@ class SteganalysisInferenceEngine:
             self.load_model(target_model)
 
         tensor = tensor.to(self.device)
+        # Compute residual energy on full uncropped resolution
         residual_energy = compute_spatial_residual_energy(tensor)
 
-        log_probs = self.model(tensor)
+        # Prepare normalized input tensor for neural network
+        model_input = tensor.clone()
+        if model_input.max() > 1.0:
+            model_input = model_input / 255.0
+
+        # Center-crop to 256x256 if larger, matching training geometry
+        _, _, h, w = model_input.shape
+        if h > 256 or w > 256:
+            left = (w - 256) // 2
+            top = (h - 256) // 2
+            model_input = model_input[:, :, top : top + 256, left : left + 256]
+
+        log_probs = self.model(model_input)
         probs = torch.exp(log_probs).squeeze(0)
 
         cover_prob = float(probs[0].item())

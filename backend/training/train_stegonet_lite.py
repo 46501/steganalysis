@@ -1,7 +1,7 @@
 """
 Training script for StegoNet-Lite demonstration baseline on S-UNIWARD 0.4 bpp.
 
-Executes rapid, reproducible CPU training on a representative subset of BOSSbase pairs,
+Executes rapid, reproducible in-memory CPU training on a representative subset of BOSSbase pairs,
 producing a trained checkpoint for live project demonstration.
 """
 
@@ -16,7 +16,7 @@ import numpy as np
 from PIL import Image
 import torch
 import torch.nn as nn
-from torch.utils.data import DataLoader, Dataset
+from torch.utils.data import DataLoader, TensorDataset
 
 from app.ml.stegonet_lite import StegoNetLite
 
@@ -24,67 +24,77 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(me
 logger = logging.getLogger("stegonet_lite_train")
 
 
-class StegoSubsetDataset(Dataset):
-    """Loads matched cover and stego image pairs from processed dataset splits."""
+def load_in_memory_data(
+    cover_dir: Path,
+    stego_dir: Path,
+    max_pairs: int = 100,
+    crop_size: int = 256,
+) -> Tuple[torch.Tensor, torch.Tensor]:
+    """Loads matched cover and stego pairs directly into memory as normalized tensors."""
+    cover_files = sorted(list(cover_dir.glob("*.pgm")))[:max_pairs]
+    stego_files = sorted(list(stego_dir.glob("*.pgm")))[:max_pairs]
 
-    def __init__(self, cover_dir: Path, stego_dir: Path, max_pairs: int = 100, crop_size: int = 256) -> None:
-        self.crop_size = crop_size
-        cover_files = sorted(list(cover_dir.glob("*.pgm")))[:max_pairs]
-        stego_files = sorted(list(stego_dir.glob("*.pgm")))[:max_pairs]
+    images: List[np.ndarray] = []
+    labels: List[int] = []
 
-        self.samples: List[Tuple[Path, int]] = []
-        for c_file, s_file in zip(cover_files, stego_files):
-            self.samples.append((c_file, 0))  # Cover = 0
-            self.samples.append((s_file, 1))  # Stego = 1
-
-    def __len__(self) -> int:
-        return len(self.samples)
-
-    def __getitem__(self, idx: int) -> Tuple[torch.Tensor, int]:
-        file_path, label = self.samples[idx]
-        with Image.open(file_path) as img:
-            # Crop to target dimensions
+    for c_path, s_path in zip(cover_files, stego_files):
+        # Cover
+        with Image.open(c_path) as img:
             w, h = img.size
-            if w > self.crop_size or h > self.crop_size:
-                left = (w - self.crop_size) // 2
-                top = (h - self.crop_size) // 2
-                img = img.crop((left, top, left + self.crop_size, top + self.crop_size))
-            arr = np.array(img, dtype=np.float32)
+            if w > crop_size or h > crop_size:
+                left = (w - crop_size) // 2
+                top = (h - crop_size) // 2
+                img = img.crop((left, top, left + crop_size, top + crop_size))
+            images.append(np.array(img, dtype=np.float32) / 255.0)
+            labels.append(0)
 
-        tensor = torch.from_numpy(arr).unsqueeze(0)  # Shape: (1, H, W)
-        return tensor, label
+        # Stego
+        with Image.open(s_path) as img:
+            w, h = img.size
+            if w > crop_size or h > crop_size:
+                left = (w - crop_size) // 2
+                top = (h - crop_size) // 2
+                img = img.crop((left, top, left + crop_size, top + crop_size))
+            images.append(np.array(img, dtype=np.float32) / 255.0)
+            labels.append(1)
+
+    X = torch.from_numpy(np.stack(images)).unsqueeze(1)
+    Y = torch.tensor(labels, dtype=torch.long)
+    return X, Y
 
 
-def evaluate(model: nn.Module, loader: DataLoader, device: torch.device) -> Dict[str, float]:
-    """Evaluates model accuracy, precision, recall, and loss on a dataset."""
+def evaluate_tensors(
+    model: nn.Module,
+    X_test: torch.Tensor,
+    Y_test: torch.Tensor,
+    batch_size: int = 16,
+) -> Dict[str, float]:
+    """Evaluates model performance and computes full confusion matrix."""
     model.eval()
     criterion = nn.NLLLoss()
+    total = len(Y_test)
     total_loss = 0.0
-    correct = 0
-    total = 0
 
-    true_positives = 0
-    false_positives = 0
-    false_negatives = 0
-
+    preds_list = []
     with torch.no_grad():
-        for tensors, labels in loader:
-            tensors, labels = tensors.to(device), labels.to(device)
-            outputs = model(tensors)
-            loss = criterion(outputs, labels)
-            total_loss += loss.item() * tensors.size(0)
+        for i in range(0, total, batch_size):
+            bx = X_test[i : i + batch_size]
+            by = Y_test[i : i + batch_size]
+            out = model(bx)
+            loss = criterion(out, by)
+            total_loss += loss.item() * len(bx)
+            preds_list.append(out.argmax(dim=1))
 
-            preds = torch.argmax(outputs, dim=1)
-            correct += (preds == labels).sum().item()
-            total += labels.size(0)
+    preds = torch.cat(preds_list, dim=0)
 
-            true_positives += ((preds == 1) & (labels == 1)).sum().item()
-            false_positives += ((preds == 1) & (labels == 0)).sum().item()
-            false_negatives += ((preds == 0) & (labels == 1)).sum().item()
+    tp = int(((preds == 1) & (Y_test == 1)).sum().item())
+    tn = int(((preds == 0) & (Y_test == 0)).sum().item())
+    fp = int(((preds == 1) & (Y_test == 0)).sum().item())
+    fn = int(((preds == 0) & (Y_test == 1)).sum().item())
 
-    accuracy = correct / total if total > 0 else 0.0
-    precision = true_positives / (true_positives + false_positives) if (true_positives + false_positives) > 0 else 0.0
-    recall = true_positives / (true_positives + false_negatives) if (true_positives + false_negatives) > 0 else 0.0
+    accuracy = (tp + tn) / total if total > 0 else 0.0
+    precision = tp / (tp + fp) if (tp + fp) > 0 else 0.0
+    recall = tp / (tp + fn) if (tp + fn) > 0 else 0.0
     f1 = (2 * precision * recall) / (precision + recall) if (precision + recall) > 0 else 0.0
     avg_loss = total_loss / total if total > 0 else 0.0
 
@@ -94,6 +104,10 @@ def evaluate(model: nn.Module, loader: DataLoader, device: torch.device) -> Dict
         "recall": round(recall, 4),
         "f1_score": round(f1, 4),
         "loss": round(avg_loss, 4),
+        "true_positives": tp,
+        "true_negatives": tn,
+        "false_positives": fp,
+        "false_negatives": fn,
         "total_eval_samples": total,
     }
 
@@ -103,8 +117,8 @@ def train_stegonet_lite(
     output_dir: str = "D:/Stego/backend/app/ml/weights",
     num_train_pairs: int = 100,
     num_val_pairs: int = 50,
-    epochs: int = 3,
-    batch_size: int = 8,
+    epochs: int = 35,
+    batch_size: int = 16,
     lr: float = 0.001,
 ) -> Dict:
     """Trains StegoNet-Lite demonstration model and saves weights and metrics."""
@@ -119,13 +133,11 @@ def train_stegonet_lite(
     test_cover = Path(dataset_dir) / "test" / "cover"
     test_stego = Path(dataset_dir) / "test" / "stego"
 
-    logger.info(f"Loading {num_train_pairs} train pairs ({num_train_pairs * 2} images)...")
-    train_dataset = StegoSubsetDataset(train_cover, train_stego, max_pairs=num_train_pairs)
-    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+    logger.info(f"Loading {num_train_pairs} train pairs ({num_train_pairs * 2} images) into memory...")
+    X_train, Y_train = load_in_memory_data(train_cover, train_stego, max_pairs=num_train_pairs)
 
-    logger.info(f"Loading {num_val_pairs} evaluation pairs ({num_val_pairs * 2} images)...")
-    test_dataset = StegoSubsetDataset(test_cover, test_stego, max_pairs=num_val_pairs)
-    test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
+    logger.info(f"Loading {num_val_pairs} evaluation pairs ({num_val_pairs * 2} images) into memory...")
+    X_test, Y_test = load_in_memory_data(test_cover, test_stego, max_pairs=num_val_pairs)
 
     model = StegoNetLite().to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=1e-4)
@@ -135,43 +147,38 @@ def train_stegonet_lite(
     out_path.mkdir(parents=True, exist_ok=True)
 
     start_time = time.time()
-    history = []
+    num_train_samples = len(X_train)
 
     for epoch in range(1, epochs + 1):
         model.train()
+        perm = torch.randperm(num_train_samples)
         epoch_loss = 0.0
         correct = 0
-        total = 0
 
-        for batch_idx, (images, targets) in enumerate(train_loader):
-            images, targets = images.to(device), targets.to(device)
+        for i in range(0, num_train_samples, batch_size):
+            idx = perm[i : i + batch_size]
+            bx, by = X_train[idx], Y_train[idx]
             optimizer.zero_grad()
-            outputs = model(images)
-            loss = criterion(outputs, targets)
+            out = model(bx)
+            loss = criterion(out, by)
             loss.backward()
             optimizer.step()
 
-            epoch_loss += loss.item() * images.size(0)
-            preds = torch.argmax(outputs, dim=1)
-            correct += (preds == targets).sum().item()
-            total += targets.size(0)
+            epoch_loss += loss.item() * len(bx)
+            correct += (out.argmax(dim=1) == by).sum().item()
 
-        train_acc = correct / total
-        train_loss = epoch_loss / total
-        logger.info(f"Epoch [{epoch}/{epochs}] - Loss: {train_loss:.4f} - Accuracy: {train_acc:.4f}")
+        train_acc = correct / num_train_samples
+        train_loss = epoch_loss / num_train_samples
 
-        eval_metrics = evaluate(model, test_loader, device)
-        logger.info(f"  -> Test Eval: Acc={eval_metrics['accuracy']:.4f}, F1={eval_metrics['f1_score']:.4f}")
-
-        history.append({
-            "epoch": epoch,
-            "train_loss": round(train_loss, 4),
-            "train_accuracy": round(train_acc, 4),
-            **eval_metrics,
-        })
+        if epoch % 5 == 0 or epoch == epochs or epoch == 1:
+            logger.info(f"Epoch [{epoch:02d}/{epochs}] - Loss: {train_loss:.4f} - Train Acc: {train_acc:.4f}")
 
     elapsed_s = time.time() - start_time
     logger.info(f"Training completed in {elapsed_s:.2f}s")
+
+    # Evaluate on untouched test set
+    eval_metrics = evaluate_tensors(model, X_test, Y_test, batch_size=batch_size)
+    logger.info(f"Test Set Evaluation: Acc={eval_metrics['accuracy']:.4f}, F1={eval_metrics['f1_score']:.4f}")
 
     # Save weights
     weights_path = out_path / "stegonet_lite_demo.pt"
@@ -202,8 +209,7 @@ def train_stegonet_lite(
             "device": "CPU",
             "training_duration_seconds": round(elapsed_s, 2),
         },
-        "final_evaluation": history[-1],
-        "training_history": history,
+        "test_set_evaluation": eval_metrics,
         "demonstration_note": (
             "Demonstration baseline trained on CPU for live presentation. "
             "Primary research architecture (SRNet 12-layer deep residual network) "
@@ -223,8 +229,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Train StegoNet-Lite on S-UNIWARD dataset subset")
     parser.add_argument("--num_train_pairs", type=int, default=100)
     parser.add_argument("--num_val_pairs", type=int, default=50)
-    parser.add_argument("--epochs", type=int, default=3)
-    parser.add_argument("--batch_size", type=int, default=8)
+    parser.add_argument("--epochs", type=int, default=35)
+    parser.add_argument("--batch_size", type=int, default=16)
     parser.add_argument("--lr", type=float, default=0.001)
     args = parser.parse_args()
 
@@ -235,4 +241,3 @@ if __name__ == "__main__":
         batch_size=args.batch_size,
         lr=args.lr,
     )
-

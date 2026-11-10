@@ -130,14 +130,14 @@ def train_stegonet_lite(
 
     train_cover = Path(dataset_dir) / "train" / "cover"
     train_stego = Path(dataset_dir) / "train" / "stego"
-    test_cover = Path(dataset_dir) / "test" / "cover"
-    test_stego = Path(dataset_dir) / "test" / "stego"
+    val_cover = Path(dataset_dir) / "val" / "cover"
+    val_stego = Path(dataset_dir) / "val" / "stego"
 
     logger.info(f"Loading {num_train_pairs} train pairs ({num_train_pairs * 2} images) into memory...")
     X_train, Y_train = load_in_memory_data(train_cover, train_stego, max_pairs=num_train_pairs)
 
-    logger.info(f"Loading {num_val_pairs} evaluation pairs ({num_val_pairs * 2} images) into memory...")
-    X_test, Y_test = load_in_memory_data(test_cover, test_stego, max_pairs=num_val_pairs)
+    logger.info(f"Loading {num_val_pairs} validation pairs ({num_val_pairs * 2} images) into memory...")
+    X_val, Y_val = load_in_memory_data(val_cover, val_stego, max_pairs=num_val_pairs)
 
     model = StegoNetLite().to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=1e-4)
@@ -176,9 +176,9 @@ def train_stegonet_lite(
     elapsed_s = time.time() - start_time
     logger.info(f"Training completed in {elapsed_s:.2f}s")
 
-    # Evaluate on untouched test set
-    eval_metrics = evaluate_tensors(model, X_test, Y_test, batch_size=batch_size)
-    logger.info(f"Test Set Evaluation: Acc={eval_metrics['accuracy']:.4f}, F1={eval_metrics['f1_score']:.4f}")
+    # Evaluate on validation set
+    eval_metrics = evaluate_tensors(model, X_val, Y_val, batch_size=batch_size)
+    logger.info(f"Validation Set Evaluation: Acc={eval_metrics['accuracy']:.4f}, F1={eval_metrics['f1_score']:.4f}")
 
     # Save weights
     weights_path = out_path / "stegonet_lite_demo.pt"
@@ -201,15 +201,15 @@ def train_stegonet_lite(
             "dataset": "S-UNIWARD 0.4 bpp (BOSSbase 1.01)",
             "train_pairs": num_train_pairs,
             "train_images": num_train_pairs * 2,
-            "test_pairs": num_val_pairs,
-            "test_images": num_val_pairs * 2,
+            "val_pairs": num_val_pairs,
+            "val_images": num_val_pairs * 2,
             "epochs": epochs,
             "batch_size": batch_size,
             "learning_rate": lr,
             "device": "CPU",
             "training_duration_seconds": round(elapsed_s, 2),
         },
-        "test_set_evaluation": eval_metrics,
+        "validation_set_evaluation": eval_metrics,
         "demonstration_note": (
             "Demonstration baseline trained on CPU for live presentation. "
             "Primary research architecture (SRNet 12-layer deep residual network) "

@@ -34,6 +34,25 @@ export const steganalysisApi = {
     return response.data;
   },
 
+  comparePair: async (coverFile, stegoFile) => {
+    const formData = new FormData();
+    formData.append('cover_file', coverFile);
+    formData.append('stego_file', stegoFile);
+    const response = await apiClient.post('/analyze/compare', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return response.data;
+  },
+
+  extractBitplane: async (file, plane = 0) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await apiClient.post(`/analyze/bitplane?plane=${plane}`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return response.data;
+  },
+
   getHistory: async (params = {}) => {
     const response = await apiClient.get('/history', { params });
     return response.data;

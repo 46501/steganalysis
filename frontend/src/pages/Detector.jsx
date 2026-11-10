@@ -15,6 +15,9 @@ import {
   Layers,
   Sparkles,
   RefreshCw,
+  Eye,
+  Sliders,
+  Split,
 } from 'lucide-react';
 import { steganalysisApi } from '../services/api';
 
@@ -27,12 +30,21 @@ export default function Detector() {
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
 
+  // Visual Forensics State
+  const [visualTab, setVisualTab] = useState('heatmap'); // 'heatmap' | 'bitplane' | 'diff'
+  const [selectedBitplane, setSelectedBitplane] = useState(0);
+  const [bitplaneCache, setBitplaneCache] = useState({});
+  const [isLoadingBitplane, setIsLoadingBitplane] = useState(false);
+
   const fileInputRef = useRef(null);
 
   const handleFileSelect = (selectedFile) => {
     if (!selectedFile) return;
     setError(null);
     setResult(null);
+    setBitplaneCache({});
+    setSelectedBitplane(0);
+    setVisualTab('heatmap');
     setFile(selectedFile);
 
     // If browser supports preview (png, jpg, webp, bmp)
@@ -41,6 +53,23 @@ export default function Detector() {
       setPreviewUrl(url);
     } else {
       setPreviewUrl(null);
+    }
+  };
+
+  const handleBitplaneChange = async (plane) => {
+    setSelectedBitplane(plane);
+    if (!file) return;
+    if (plane === 0 && result?.bitplane_0_b64) return;
+    if (bitplaneCache[plane]) return;
+
+    setIsLoadingBitplane(true);
+    try {
+      const res = await steganalysisApi.extractBitplane(file, plane);
+      setBitplaneCache((prev) => ({ ...prev, [plane]: res.image_b64 }));
+    } catch (e) {
+      console.error('Failed to extract bitplane:', e);
+    } finally {
+      setIsLoadingBitplane(false);
     }
   };
 
@@ -76,6 +105,14 @@ export default function Detector() {
     try {
       const res = await steganalysisApi.analyzeImage(file, modelChoice);
       setResult(res);
+      if (res.bitplane_0_b64) {
+        setBitplaneCache({ 0: res.bitplane_0_b64 });
+      }
+      if (res.diff_map_b64) {
+        setVisualTab('diff');
+      } else {
+        setVisualTab('heatmap');
+      }
     } catch (err) {
       console.error(err);
       setError(
@@ -92,6 +129,9 @@ export default function Detector() {
     setPreviewUrl(null);
     setResult(null);
     setError(null);
+    setBitplaneCache({});
+    setSelectedBitplane(0);
+    setVisualTab('heatmap');
   };
 
   const isStego = result?.verdict === 'Stego';
@@ -503,6 +543,208 @@ export default function Detector() {
           </div>
         </div>
       </div>
+
+      {/* Interactive Visual Forensics Studio */}
+      {result && (
+        <div className="p-6 rounded-2xl bg-gray-900/90 border border-gray-800 shadow-xl space-y-6 animate-fadeIn">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-gray-800 pb-4">
+            <div>
+              <div className="flex items-center gap-2">
+                <Eye className="w-5 h-5 text-cyan-400" />
+                <h3 className="text-base font-bold text-white">Interactive Visual Forensics Studio</h3>
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-950 text-cyan-400 border border-cyan-800">
+                  Real-Time Artifact Analysis
+                </span>
+              </div>
+              <p className="text-xs text-gray-400 mt-1">
+                Inspect high-pass residual energy heatmaps, bit-plane noise slices, and amplified perturbation maps.
+              </p>
+            </div>
+
+            {/* Visual Tabs */}
+            <div className="flex items-center gap-1.5 p-1 rounded-xl bg-gray-950 border border-gray-800 text-xs">
+              <button
+                onClick={() => setVisualTab('heatmap')}
+                className={`px-3 py-1.5 rounded-lg font-medium transition ${
+                  visualTab === 'heatmap'
+                    ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-sm'
+                    : 'text-gray-400 hover:text-white'
+                }`}
+              >
+                Residual Heatmap
+              </button>
+              <button
+                onClick={() => setVisualTab('bitplane')}
+                className={`px-3 py-1.5 rounded-lg font-medium transition ${
+                  visualTab === 'bitplane'
+                    ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-sm'
+                    : 'text-gray-400 hover:text-white'
+                }`}
+              >
+                Bit-Plane Slicer
+              </button>
+              {result.diff_map_b64 && (
+                <button
+                  onClick={() => setVisualTab('diff')}
+                  className={`px-3 py-1.5 rounded-lg font-medium transition ${
+                    visualTab === 'diff'
+                      ? 'bg-rose-500/20 text-rose-300 border border-rose-500/40 shadow-sm'
+                      : 'text-gray-400 hover:text-white'
+                  }`}
+                >
+                  Amplified Diff (×50)
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Tab 1: Residual Heatmap */}
+          {visualTab === 'heatmap' && (
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
+              <div className="md:col-span-5 flex justify-center">
+                <div className="w-64 h-64 rounded-xl overflow-hidden border border-gray-700 bg-black/60 shadow-xl relative group">
+                  <img
+                    src={result.residual_heatmap_b64 || previewUrl}
+                    alt="Residual Heatmap"
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute top-2 left-2 px-2 py-0.5 rounded bg-black/70 text-[10px] text-cyan-300 font-mono border border-cyan-800">
+                    Laplacian Noise Variance
+                  </div>
+                </div>
+              </div>
+              <div className="md:col-span-7 space-y-3 text-xs">
+                <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                  <Activity className="w-4 h-4 text-cyan-400" />
+                  <span>High-Pass Spatial Residual Distribution</span>
+                </h4>
+                <p className="text-gray-300 leading-relaxed">
+                  This heatmap visualizes high-frequency spatial variation extracted via a discrete 3×3 Laplacian filter kernel. S-UNIWARD content-adaptive steganography embeds payload selectively inside regions of high residual energy (bright golden/amber textures) while avoiding smooth low-residual regions (deep blue sky/flat gradients).
+                </p>
+                <div className="p-3 rounded-xl bg-gray-950/70 border border-gray-800 font-mono text-[11px] space-y-1">
+                  <div className="flex justify-between text-gray-400">
+                    <span>Measured Image Residual Energy:</span>
+                    <span className="text-cyan-400 font-bold">{result.residual_energy?.toFixed(2) || '--'} σr²</span>
+                  </div>
+                  <div className="flex justify-between text-gray-400">
+                    <span>Filtering Kernel:</span>
+                    <span className="text-gray-300">3×3 Discrete Laplacian (Second Derivative)</span>
+                  </div>
+                  <div className="flex justify-between text-gray-400">
+                    <span>Color Scale:</span>
+                    <span className="text-amber-400">Gold/Red = High Variance, Navy = Smooth</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Tab 2: Bit-Plane Slicer */}
+          {visualTab === 'bitplane' && (
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
+              <div className="md:col-span-5 flex justify-center">
+                <div className="w-64 h-64 rounded-xl overflow-hidden border border-gray-700 bg-black/60 shadow-xl relative group">
+                  <img
+                    src={bitplaneCache[selectedBitplane] || (selectedBitplane === 0 ? result.bitplane_0_b64 : previewUrl)}
+                    alt={`Bit-Plane ${selectedBitplane}`}
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute top-2 left-2 px-2 py-0.5 rounded bg-black/70 text-[10px] text-cyan-300 font-mono border border-cyan-800">
+                    Bit Plane {selectedBitplane} ({selectedBitplane === 0 ? 'LSB' : selectedBitplane === 7 ? 'MSB' : `Bit ${selectedBitplane}`})
+                  </div>
+                </div>
+              </div>
+              <div className="md:col-span-7 space-y-4 text-xs">
+                <div>
+                  <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                    <Sliders className="w-4 h-4 text-cyan-400" />
+                    <span>Bit-Plane Noise Slicer (Planes 0 to 7)</span>
+                  </h4>
+                  <p className="text-gray-300 mt-1 leading-relaxed">
+                    Slide between bit planes to inspect image entropy. Most Significant Bits (Planes 5–7) carry visual scene structures. In contrast, the Least Significant Bit (Plane 0) exposes subtle steganographic high-frequency noise.
+                  </p>
+                </div>
+
+                {/* Interactive Slider & Buttons */}
+                <div className="space-y-2 p-3.5 rounded-xl bg-gray-950/70 border border-gray-800">
+                  <div className="flex justify-between items-center text-xs font-mono">
+                    <span className="text-gray-400">Selected Bit Plane:</span>
+                    <span className="text-cyan-400 font-bold">
+                      Plane {selectedBitplane} {selectedBitplane === 0 ? '(Least Significant Bit / LSB)' : selectedBitplane === 7 ? '(Most Significant Bit / MSB)' : ''}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1.5 pt-1">
+                    {[0, 1, 2, 3, 4, 5, 6, 7].map((p) => (
+                      <button
+                        key={p}
+                        onClick={() => handleBitplaneChange(p)}
+                        disabled={isLoadingBitplane}
+                        className={`flex-1 py-1.5 rounded text-[11px] font-mono font-bold transition ${
+                          selectedBitplane === p
+                            ? 'bg-cyan-500 text-gray-950 shadow'
+                            : 'bg-gray-800 hover:bg-gray-700 text-gray-300'
+                        }`}
+                      >
+                        B{p}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Tab 3: Amplified Perturbation Map */}
+          {visualTab === 'diff' && result.diff_map_b64 && (
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
+              <div className="md:col-span-5 flex justify-center">
+                <div className="w-64 h-64 rounded-xl overflow-hidden border border-gray-700 bg-black/60 shadow-xl relative group">
+                  <img
+                    src={result.diff_map_b64}
+                    alt="Amplified Perturbation Map"
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute top-2 left-2 px-2 py-0.5 rounded bg-black/70 text-[10px] text-rose-300 font-mono border border-rose-800">
+                    Amplified Diff (±1 Perturbations)
+                  </div>
+                </div>
+              </div>
+              <div className="md:col-span-7 space-y-3 text-xs">
+                <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                  <Split className="w-4 h-4 text-rose-400" />
+                  <span>Bit-Accurate Ternary Perturbation Map (+1 / -1)</span>
+                </h4>
+                <p className="text-gray-300 leading-relaxed">
+                  Direct pixel-by-pixel subtraction against matching cover baseline. Amplified color key:
+                  <span className="text-emerald-400 font-semibold ml-1">Green = +1 Pixel Alteration</span>,
+                  <span className="text-rose-400 font-semibold ml-1">Red = -1 Pixel Alteration</span>,
+                  <span className="text-gray-500 font-semibold ml-1">Dark = Unaltered Pixel</span>.
+                </p>
+                {result.diff_stats && (
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px] font-mono pt-1">
+                    <div className="p-2 rounded-lg bg-gray-950/70 border border-gray-800">
+                      <span className="text-gray-500 block text-[10px]">Total Altered</span>
+                      <span className="text-white font-bold block">{result.diff_stats.modified_pixels?.toLocaleString()} px</span>
+                    </div>
+                    <div className="p-2 rounded-lg bg-gray-950/70 border border-gray-800">
+                      <span className="text-gray-500 block text-[10px]">Change Rate</span>
+                      <span className="text-cyan-400 font-bold block">{result.diff_stats.change_rate_percent}%</span>
+                    </div>
+                    <div className="p-2 rounded-lg bg-gray-950/70 border border-gray-800">
+                      <span className="text-emerald-400 block text-[10px]">+1 Pixels</span>
+                      <span className="text-emerald-400 font-bold block">{result.diff_stats.plus_one_count?.toLocaleString()}</span>
+                    </div>
+                    <div className="p-2 rounded-lg bg-gray-950/70 border border-gray-800">
+                      <span className="text-rose-400 block text-[10px]">-1 Pixels</span>
+                      <span className="text-rose-400 font-bold block">{result.diff_stats.minus_one_count?.toLocaleString()}</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

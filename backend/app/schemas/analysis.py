@@ -27,8 +27,28 @@ class AnalysisResultResponse(BaseModel):
     model_name: str = "StegoNet-Lite"
     residual_energy: Optional[float] = None
     forensic_explanation: Optional[str] = None
+    residual_heatmap_b64: Optional[str] = None
+    bitplane_0_b64: Optional[str] = None
+    diff_map_b64: Optional[str] = None
+    diff_stats: Optional[dict] = None
     created_at: Optional[datetime] = None
     metadata: Optional[ImageMetadata] = None
+
+
+class PairComparisonResponse(BaseModel):
+    cover_filename: str
+    stego_filename: str
+    cover_hash: str
+    stego_hash: str
+    cover_residual_energy: float
+    stego_residual_energy: float
+    residual_energy_delta: float
+    diff_stats: dict
+    diff_map_b64: str
+    cover_heatmap_b64: str
+    stego_heatmap_b64: str
+    cover_bitplane_0_b64: str
+    stego_bitplane_0_b64: str
 
 
 class BatchAnalysisResponse(BaseModel):

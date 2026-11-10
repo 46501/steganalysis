@@ -129,3 +129,53 @@ def test_history_endpoints_lifecycle(client):
         # Verify it is deleted
         get_deleted = client.get(f"/api/v1/history/{record_id}")
         assert get_deleted.status_code == 404
+
+
+def test_visual_forensics_service():
+    """Verifies generation of bitplane, residual heatmap, and amplified diff maps."""
+    from app.services.visual_service import VisualForensicsService
+
+    c_arr = np.full((64, 64), 128, dtype=np.uint8)
+    s_arr = c_arr.copy()
+    s_arr[10, 10] = 129  # +1 change
+    s_arr[20, 20] = 127  # -1 change
+
+    # Bit-plane
+    bp = VisualForensicsService.generate_bitplane(c_arr, 0)
+    assert bp.startswith("data:image/png;base64,")
+
+    # Heatmap
+    heat = VisualForensicsService.generate_residual_heatmap(c_arr)
+    assert heat.startswith("data:image/png;base64,")
+
+    # Amplified diff
+    diff_b64, stats = VisualForensicsService.generate_amplified_diff(c_arr, s_arr)
+    assert diff_b64.startswith("data:image/png;base64,")
+    assert stats["modified_pixels"] == 2
+    assert stats["plus_one_count"] == 1
+    assert stats["minus_one_count"] == 1
+
+
+def test_compare_pair_endpoint(client):
+    """Tests the /api/v1/analyze/compare endpoint with two synthetic images."""
+    im1 = Image.fromarray(np.full((64, 64), 120, dtype=np.uint8))
+    im2 = Image.fromarray(np.full((64, 64), 121, dtype=np.uint8))
+    b1, b2 = io.BytesIO(), io.BytesIO()
+    im1.save(b1, format="PNG")
+    im2.save(b2, format="PNG")
+    b1.seek(0)
+    b2.seek(0)
+
+    resp = client.post(
+        "/api/v1/analyze/compare",
+        files={
+            "cover_file": ("c.png", b1, "image/png"),
+            "stego_file": ("s.png", b2, "image/png"),
+        },
+    )
+    assert resp.status_code == 200
+    data = resp.json()
+    assert "diff_map_b64" in data
+    assert "cover_heatmap_b64" in data
+    assert "diff_stats" in data
+    assert data["diff_stats"]["modified_pixels"] == 64 * 64

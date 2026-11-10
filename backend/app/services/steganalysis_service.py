@@ -1,16 +1,20 @@
 """High-level Steganalysis pipeline service."""
 
 import time
+from pathlib import Path
 from typing import Optional
+import numpy as np
+from PIL import Image
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.ml.inference import engine
 from app.models.scan import ScanRecord
 from app.schemas.analysis import AnalysisResultResponse, ImageMetadata
+from app.services.visual_service import VisualForensicsService
 
 
 class SteganalysisService:
-    """Orchestrates the analysis pipeline, timing, and database persistence."""
+    """Orchestrates the analysis pipeline, timing, visual forensics, and database persistence."""
 
     @classmethod
     async def analyze_tensor(
@@ -26,6 +30,23 @@ class SteganalysisService:
         start_time = time.perf_counter()
         prediction = engine.predict(tensor, model_name=model_name)
         duration_ms = (time.perf_counter() - start_time) * 1000.0
+
+        # Generate visual forensics artifacts
+        arr = tensor.squeeze().cpu().numpy().astype(np.uint8)
+        residual_heatmap_b64 = VisualForensicsService.generate_residual_heatmap(arr)
+        bitplane_0_b64 = VisualForensicsService.generate_bitplane(arr, 0)
+
+        # Check for benchmark sample pair reference
+        diff_map_b64 = None
+        diff_stats = None
+        cover_ref = Path("D:/Stego/dataset/processed/S-UNIWARD_0.4bpp/test/cover/5001.pgm")
+        if "5001" in filename and cover_ref.is_file():
+            try:
+                with Image.open(cover_ref) as c_im:
+                    c_arr = np.array(c_im.convert("L"), dtype=np.uint8)
+                diff_map_b64, diff_stats = VisualForensicsService.generate_amplified_diff(c_arr, arr)
+            except Exception:
+                diff_map_b64, diff_stats = None, None
 
         scan_record = None
         if db is not None:
@@ -70,6 +91,10 @@ class SteganalysisService:
             model_name=prediction["model_name"],
             residual_energy=prediction["residual_energy"],
             forensic_explanation=prediction["forensic_explanation"],
+            residual_heatmap_b64=residual_heatmap_b64,
+            bitplane_0_b64=bitplane_0_b64,
+            diff_map_b64=diff_map_b64,
+            diff_stats=diff_stats,
             created_at=scan_record.created_at if scan_record else None,
             metadata=ImageMetadata(**metadata) if metadata else None,
         )

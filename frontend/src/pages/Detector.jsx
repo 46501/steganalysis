@@ -20,6 +20,7 @@ import {
   Split,
   ZoomIn,
   FolderArchive,
+  BarChart2,
 } from 'lucide-react';
 import { steganalysisApi } from '../services/api';
 import ForensicReportModal from '../components/analysis/ForensicReportModal';
@@ -27,6 +28,7 @@ import PixelLoupeMagnifier from '../components/analysis/PixelLoupeMagnifier';
 import BatchTriageWorkstation from '../components/analysis/BatchTriageWorkstation';
 import ComparisonWipeSlider from '../components/analysis/ComparisonWipeSlider';
 import ForensicScanningHUD from '../components/analysis/ForensicScanningHUD';
+import PixelHistogramChart from '../components/analysis/PixelHistogramChart';
 
 export default function Detector({ initialFile = null }) {
   const [detectionMode, setDetectionMode] = useState('single'); // 'single' | 'batch'
@@ -675,6 +677,17 @@ export default function Detector({ initialFile = null }) {
                 </button>
               )}
               <button
+                onClick={() => setVisualTab('histogram')}
+                className={`px-3 py-1.5 rounded-lg font-medium transition flex items-center gap-1.5 ${
+                  visualTab === 'histogram'
+                    ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-sm'
+                    : 'text-gray-400 hover:text-white'
+                }`}
+              >
+                <BarChart2 className="w-3.5 h-3.5 text-cyan-400" />
+                <span>Pixel Histogram</span>
+              </button>
+              <button
                 onClick={() => setVisualTab('bitplane')}
                 className={`px-3 py-1.5 rounded-lg font-medium transition ${
                   visualTab === 'bitplane'
@@ -942,6 +955,15 @@ export default function Detector({ initialFile = null }) {
               diffMapSrc={result.diff_map_b64}
               coverSrc="/samples/sample_cover.png"
               stegoSrc={result.diff_map_b64 ? (file?.name?.includes('stego') ? previewUrl : '/samples/sample_stego.png') : (previewUrl || '/samples/sample_stego.png')}
+              isPaired={Boolean(result.diff_map_b64 || file?.name?.includes('5001'))}
+            />
+          )}
+
+          {/* Tab 6: 256-Bin Pixel Histogram & Gradient Spectrum */}
+          {visualTab === 'histogram' && (
+            <PixelHistogramChart
+              imageSrc={previewUrl || (file?.name?.includes('cover') ? '/samples/sample_cover.png' : '/samples/sample_stego.png')}
+              coverSrc="/samples/sample_cover.png"
               isPaired={Boolean(result.diff_map_b64 || file?.name?.includes('5001'))}
             />
           )}

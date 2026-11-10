@@ -20,6 +20,7 @@ import {
   Split,
 } from 'lucide-react';
 import { steganalysisApi } from '../services/api';
+import ForensicReportModal from '../components/analysis/ForensicReportModal';
 
 export default function Detector() {
   const [file, setFile] = useState(null);
@@ -35,6 +36,7 @@ export default function Detector() {
   const [selectedBitplane, setSelectedBitplane] = useState(0);
   const [bitplaneCache, setBitplaneCache] = useState({});
   const [isLoadingBitplane, setIsLoadingBitplane] = useState(false);
+  const [isReportOpen, setIsReportOpen] = useState(false);
 
   const fileInputRef = useRef(null);
 
@@ -407,9 +409,19 @@ export default function Detector() {
                   <h3 className="text-base font-bold text-white">Forensic Inspection Report</h3>
                 </div>
                 {result && (
-                  <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-gray-800 text-gray-400">
-                    ID #{result.id || 'LIVE'}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setIsReportOpen(true)}
+                      className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-cyan-600/20 hover:bg-cyan-600/30 text-cyan-300 border border-cyan-500/40 text-[11px] font-semibold transition"
+                      title="Open Official Case Report"
+                    >
+                      <FileText className="w-3.5 h-3.5" />
+                      <span>Forensic Certificate</span>
+                    </button>
+                    <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-gray-800 text-gray-400">
+                      ID #{result.id || 'LIVE'}
+                    </span>
+                  </div>
                 )}
               </div>
 
@@ -772,6 +784,14 @@ export default function Detector() {
           )}
         </div>
       )}
+
+      {/* Forensic Examination Certificate Modal (Phase 3) */}
+      <ForensicReportModal
+        isOpen={isReportOpen}
+        onClose={() => setIsReportOpen(false)}
+        reportData={result}
+        previewUrl={previewUrl}
+      />
     </div>
   );
 }

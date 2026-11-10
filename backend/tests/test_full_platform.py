@@ -122,6 +122,18 @@ def test_history_endpoints_lifecycle(client):
         assert detail_data["filename"] == "history_lifecycle_test.png"
         assert detail_data["residual_energy"] is not None
 
+        # Phase 3: Forensic Case Report endpoint verification
+        report_resp = client.get(f"/api/v1/history/{record_id}/report")
+        assert report_resp.status_code == 200
+        report_data = report_resp.json()
+        assert "case_number" in report_data
+        assert "evidence_profile" in report_data
+        assert "forensic_verdict" in report_data
+        assert report_data["case_number"].startswith("STEGO-CASE-")
+        assert report_data["evidence_profile"]["filename"] == "history_lifecycle_test.png"
+        assert "file_hash_sha256" in report_data["evidence_profile"]
+        assert "chain_of_custody_verification" in report_data
+
         # 4. Delete the test record
         del_resp = client.delete(f"/api/v1/history/{record_id}")
         assert del_resp.status_code == 200

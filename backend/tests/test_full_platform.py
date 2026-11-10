@@ -10,6 +10,8 @@ Tests:
 """
 
 import io
+import json
+from pathlib import Path
 import numpy as np
 from PIL import Image
 import pytest
@@ -204,3 +206,14 @@ def test_statistical_forensics_detector():
     assert "spatial_gradient_variance" in metrics
     assert "spam_markov_diag_dominance" in metrics
     assert 0.0 <= metrics["lsb_shannon_entropy"] <= 1.0
+
+
+def test_colab_notebook_validity():
+    """Verifies that the Google Colab GPU training notebook is present and valid JSON."""
+    nb_path = Path(__file__).resolve().parent.parent.parent / "notebooks" / "train_srnet_colab.ipynb"
+    assert nb_path.exists(), f"Notebook not found at {nb_path}"
+    with open(nb_path, "r", encoding="utf-8") as f:
+        nb_data = json.load(f)
+    assert nb_data["nbformat"] >= 4
+    assert len(nb_data["cells"]) >= 10
+

@@ -25,6 +25,7 @@ import { steganalysisApi } from '../services/api';
 import ForensicReportModal from '../components/analysis/ForensicReportModal';
 import PixelLoupeMagnifier from '../components/analysis/PixelLoupeMagnifier';
 import BatchTriageWorkstation from '../components/analysis/BatchTriageWorkstation';
+import ComparisonWipeSlider from '../components/analysis/ComparisonWipeSlider';
 
 export default function Detector({ initialFile = null }) {
   const [detectionMode, setDetectionMode] = useState('single'); // 'single' | 'batch'
@@ -701,6 +702,17 @@ export default function Detector({ initialFile = null }) {
                 <ZoomIn className="w-3.5 h-3.5 text-emerald-400" />
                 <span>8× Pixel Loupe</span>
               </button>
+              <button
+                onClick={() => setVisualTab('wipe')}
+                className={`px-3 py-1.5 rounded-lg font-medium transition flex items-center gap-1.5 ${
+                  visualTab === 'wipe'
+                    ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-sm'
+                    : 'text-gray-400 hover:text-white'
+                }`}
+              >
+                <Split className="w-3.5 h-3.5 text-cyan-400" />
+                <span>Split Curtain Wipe</span>
+              </button>
             </div>
           </div>
 
@@ -913,6 +925,18 @@ export default function Detector({ initialFile = null }) {
               coverSrc="/samples/sample_cover.png"
               stegoSrc={result.diff_map_b64 ? (file?.name?.includes('stego') ? previewUrl : '/samples/sample_stego.png') : (previewUrl || '/samples/sample_stego.png')}
               currentSrc={previewUrl}
+              isPaired={Boolean(result.diff_map_b64 || file?.name?.includes('5001'))}
+            />
+          )}
+
+          {/* Tab 5: Split Curtain Wipe Slider */}
+          {visualTab === 'wipe' && (
+            <ComparisonWipeSlider
+              originalSrc={previewUrl || (file?.name?.includes('cover') ? '/samples/sample_cover.png' : '/samples/sample_stego.png')}
+              heatmapSrc={result.residual_heatmap_b64}
+              diffMapSrc={result.diff_map_b64}
+              coverSrc="/samples/sample_cover.png"
+              stegoSrc={result.diff_map_b64 ? (file?.name?.includes('stego') ? previewUrl : '/samples/sample_stego.png') : (previewUrl || '/samples/sample_stego.png')}
               isPaired={Boolean(result.diff_map_b64 || file?.name?.includes('5001'))}
             />
           )}

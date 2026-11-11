@@ -336,15 +336,83 @@ export default function ForensicReportModal({ isOpen, onClose, reportData, previ
             </div>
           </div>
 
-          {/* Section 4: Examiner Attestation Block */}
+          {/* Section 4: Quantitative Forensic Findings & Algorithmic Attribution */}
+          <div className="space-y-2.5">
+            <h2 className="text-xs font-bold uppercase tracking-wider text-cyan-400 print:text-gray-700 flex items-center gap-1.5 border-b border-[#1B2B48] print:border-gray-300 pb-1 font-mono">
+              <span>4. Quantitative Measurements &amp; Algorithmic Attribution</span>
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs font-mono">
+              {/* Box A: Pixel Alteration Accounting */}
+              <div className="p-3.5 rounded-xl bg-[#050914] print:bg-gray-100 border border-[#1B2B48] print:border-gray-300 space-y-1.5">
+                <span className="text-[10px] uppercase font-bold tracking-wider text-[#64748B] block">
+                  Pixel-Level Modification Accounting
+                </span>
+                {reportData.difference_analysis?.has_paired_reference ? (
+                  <div className="space-y-1 text-white print:text-black text-[11px]">
+                    <div className="flex justify-between">
+                      <span className="text-[#94A3B8] print:text-gray-700">Changed Pixels:</span>
+                      <strong className="text-rose-400 print:text-black">
+                        {reportData.difference_analysis.changed_pixels?.toLocaleString()} px ({reportData.difference_analysis.changed_pixel_percent}%)
+                      </strong>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-[#94A3B8] print:text-gray-700">Ternary Balance (+1 / -1):</span>
+                      <span>
+                        +{reportData.difference_analysis.plus_one_changes?.toLocaleString()} / -{reportData.difference_analysis.minus_one_changes?.toLocaleString()}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-[#94A3B8] print:text-gray-700">Max Delta / PSNR:</span>
+                      <span>
+                        {reportData.difference_analysis.max_abs_diff} / {reportData.difference_analysis.psnr_label}
+                      </span>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-[10px] text-[#94A3B8] print:text-gray-600 font-sans leading-normal">
+                    Single image upload: No paired baseline cover supplied. Exact pixel delta accounting requires a matching reference.
+                  </p>
+                )}
+              </div>
+
+              {/* Box B: Algorithm Attribution & Payload */}
+              <div className="p-3.5 rounded-xl bg-[#050914] print:bg-gray-100 border border-[#1B2B48] print:border-gray-300 space-y-1.5">
+                <span className="text-[10px] uppercase font-bold tracking-wider text-[#64748B] block">
+                  Candidate Stego Technique &amp; Capacity
+                </span>
+                <div className="space-y-1 text-white print:text-black text-[11px]">
+                  <div className="flex justify-between">
+                    <span className="text-[#94A3B8] print:text-gray-700">Attribution:</span>
+                    <strong className="text-cyan-300 print:text-black truncate max-w-[200px]">
+                      {reportData.algorithm_attribution?.candidate_technique || 'Unknown / Unclassified'}
+                    </strong>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-[#94A3B8] print:text-gray-700">Validation Status:</span>
+                    <span className="text-amber-300 print:text-black text-[10px]">
+                      {reportData.algorithm_attribution?.validation_status || 'Unverified'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-[#94A3B8] print:text-gray-700">Benchmark Payload:</span>
+                    <span className="text-white print:text-black">
+                      {reportData.payload_analysis?.known_benchmark_rate || 'Unrecorded'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Section 5: Examiner Attestation Block */}
           <div className="pt-4 border-t-2 border-cyan-500/40 print:border-black grid grid-cols-1 sm:grid-cols-2 gap-6 text-xs font-mono text-[#94A3B8] print:text-gray-700">
             <div>
               <div className="font-bold text-white print:text-black flex items-center gap-1.5">
                 <Lock className="w-3.5 h-3.5 text-cyan-400 print:text-black" />
-                <span>Chain of Custody Attestation:</span>
+                <span>Chain of Custody &amp; Scientific Attestation:</span>
               </div>
               <p className="text-[10px] text-[#64748B] print:text-gray-600 mt-1 leading-relaxed">
-                Evidence acquired and processed under strict ISO/IEC 27037:2012 guidelines. Cryptographic SHA-256 hashes verified with zero bitstream tampering. Residual energy verified against academic baselines.
+                Evidence acquired and processed under strict ISO/IEC 27037:2012 guidelines. Cryptographic SHA-256 hashes verified with zero bitstream tampering. Residual energy and statistical features computed deterministically. Forensic findings represent empirical observations; formal legal admissibility requires accredited independent laboratory verification.
               </p>
             </div>
             <div className="text-left sm:text-right space-y-1">

@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.ml.stegonet_lite import compute_spatial_residual_energy
+from app.ml.forensic_analyzer import ForensicAnalyzer
 from app.schemas.analysis import AnalysisResultResponse, PairComparisonResponse
 from app.services.image_service import ImageService
 from app.services.steganalysis_service import SteganalysisService
@@ -115,6 +116,36 @@ async def compare_pair(
     e_cover = compute_spatial_residual_energy(c_tensor)
     e_stego = compute_spatial_residual_energy(s_tensor)
 
+    # Advanced Forensic Suite for Paired Inputs
+    difference_analysis = ForensicAnalyzer.analyze_image_difference(c_arr, s_arr)
+    spatial_sectors = ForensicAnalyzer.analyze_spatial_sectors_4x4(s_arr, c_arr)
+    texture_analysis = ForensicAnalyzer.analyze_texture_vs_smooth_regions(s_arr, c_arr)
+    advanced_stats = ForensicAnalyzer.compute_advanced_statistical_suite(s_arr)
+    frequency_analysis = ForensicAnalyzer.compute_fft_frequency_analysis(s_arr, c_arr)
+    payload_analysis = ForensicAnalyzer.estimate_payload_rigorous(s_arr, c_arr, s_name)
+    algorithm_attribution = ForensicAnalyzer.fingerprint_steganography_algorithm(
+        s_arr,
+        diff_analysis=difference_analysis,
+        texture_analysis=texture_analysis,
+        statistical_suite=advanced_stats,
+    )
+    mock_prediction = {
+        "verdict": "Stego Indicated" if difference_analysis["changed_pixels"] > 0 else "Cover Indicated",
+        "stego_probability": 0.5,
+        "cover_probability": 0.5,
+        "is_conclusive": True,
+        "model_name": "Paired Differential Reference",
+        "model_status": "Ground Truth Comparison",
+    }
+    evidence_summary = ForensicAnalyzer.fuse_forensic_evidence_summary(
+        model_prediction=mock_prediction,
+        statistical_suite=advanced_stats,
+        difference_analysis=difference_analysis,
+        texture_analysis=texture_analysis,
+        frequency_analysis=frequency_analysis,
+        algorithm_attribution=algorithm_attribution,
+    )
+
     return PairComparisonResponse(
         cover_filename=c_name,
         stego_filename=s_name,
@@ -132,6 +163,14 @@ async def compare_pair(
         changed_bits_hamming=hamming_bits,
         entropy_delta=entropy_delta,
         evidence_status="VERIFIED FORENSIC EVIDENCE (Direct Paired Comparison)",
+        difference_analysis=difference_analysis,
+        spatial_sectors_4x4=spatial_sectors,
+        texture_analysis=texture_analysis,
+        advanced_statistical_suite=advanced_stats,
+        frequency_analysis=frequency_analysis,
+        payload_analysis=payload_analysis,
+        algorithm_attribution=algorithm_attribution,
+        evidence_summary=evidence_summary,
     )
 
 

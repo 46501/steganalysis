@@ -40,6 +40,14 @@ class AnalysisResultResponse(BaseModel):
     statistical_metrics: Optional[dict] = None
     fft_spectrum_b64: Optional[str] = None
     fft_stats: Optional[dict] = None
+    difference_analysis: Optional[dict] = None
+    spatial_sectors_4x4: Optional[List[dict]] = None
+    texture_analysis: Optional[dict] = None
+    advanced_statistical_suite: Optional[dict] = None
+    frequency_analysis: Optional[dict] = None
+    payload_analysis: Optional[dict] = None
+    algorithm_attribution: Optional[dict] = None
+    evidence_summary: Optional[dict] = None
     created_at: Optional[datetime] = None
     metadata: Optional[ImageMetadata] = None
 
@@ -61,6 +69,14 @@ class PairComparisonResponse(BaseModel):
     changed_bits_hamming: Optional[int] = None
     entropy_delta: Optional[float] = None
     evidence_status: Optional[str] = "VERIFIED FORENSIC EVIDENCE (Direct Paired Comparison)"
+    difference_analysis: Optional[dict] = None
+    spatial_sectors_4x4: Optional[List[dict]] = None
+    texture_analysis: Optional[dict] = None
+    advanced_statistical_suite: Optional[dict] = None
+    frequency_analysis: Optional[dict] = None
+    payload_analysis: Optional[dict] = None
+    algorithm_attribution: Optional[dict] = None
+    evidence_summary: Optional[dict] = None
 
 
 class BatchAnalysisResponse(BaseModel):

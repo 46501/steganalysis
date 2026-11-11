@@ -285,3 +285,4 @@ async def test_paired_comparison_evidence_and_dimension_validation():
         )
         assert bad_res.status_code == 400
         assert "mismatch" in bad_res.json()["detail"].lower()
+

@@ -69,7 +69,7 @@ export default function AppLayout({
   }, []);
 
   return (
-    <div className="min-h-screen flex bg-[#000000] text-white overflow-x-hidden">
+    <div className="min-h-screen flex bg-[#000000] text-white">
       {/* Collapsible Left Navigation Sidebar */}
       <Sidebar
         activeTab={activeTab}
@@ -89,7 +89,7 @@ export default function AppLayout({
           collapsed ? 'md:ml-16' : 'md:ml-64'
         }`}
       >
-        {/* Top Context & Action Bar */}
+        {/* Top Context & Action Bar (Fixed & Sticky) */}
         <TopHeader
           activeTab={activeTab}
           setMobileOpen={setMobileOpen}
@@ -100,8 +100,8 @@ export default function AppLayout({
           healthStatus={healthStatus}
         />
 
-        {/* Dynamic Workspace Route View */}
-        <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+        {/* Dynamic Workspace Route View (with top padding to account for fixed 56px navbar) */}
+        <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-18 sm:pt-20 pb-8 sm:pb-12">
           {children}
         </main>
 

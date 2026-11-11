@@ -41,7 +41,11 @@ export default function TopHeader({
     : 'Backend: Offline';
 
   return (
-    <header className="sticky top-0 z-30 h-14 bg-[#090909]/95 backdrop-blur-md border-b border-[#292929] theme-dark-nav flex items-center justify-between px-4 sm:px-6 shrink-0 transition-colors">
+    <header
+      className={`fixed top-0 right-0 z-40 h-14 bg-[#090909]/95 backdrop-blur-md border-b border-[#292929] theme-dark-nav flex items-center justify-between px-4 sm:px-6 shrink-0 transition-all duration-300 ease-in-out ${
+        collapsed ? 'left-0 md:left-16' : 'left-0 md:left-64'
+      }`}
+    >
       {/* Left: Mobile Hamburger / Desktop Expand & Active Breadcrumb */}
       <div className="flex items-center gap-2.5">
         {/* Mobile Hamburger Toggle */}

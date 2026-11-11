@@ -8,7 +8,6 @@ import {
   History,
   GraduationCap,
   Sparkles,
-  Search,
   PanelLeft,
   X,
 } from 'lucide-react';
@@ -64,7 +63,7 @@ export default function Sidebar({
         { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
         { id: 'detector', label: 'Detector', icon: ScanLine },
         { id: 'lab', label: 'Forensics Lab', icon: FlaskConical },
-        { id: 'stego-studio', label: 'Stego Studio', icon: Layers },
+        { id: 'stego-studio', label: 'LSB Concealment', icon: Layers },
       ],
     },
     {
@@ -170,32 +169,8 @@ export default function Sidebar({
           )}
         </div>
 
-        {/* Quick Search Shortcut Trigger */}
-        <div className="p-3 pb-1 shrink-0">
-          <button
-            type="button"
-            onClick={onOpenCommandPalette}
-            className={`w-full flex items-center rounded-lg bg-[#141414] hover:bg-[#1C1C1C] text-[#777777] hover:text-white border border-[#292929] transition-all group ${
-              collapsed
-                ? 'h-9 justify-center p-0'
-                : 'h-9 px-2.5 justify-between text-xs font-mono'
-            }`}
-            title="Open Command Palette (⌘K / Ctrl+K)"
-          >
-            <div className="flex items-center gap-2 truncate">
-              <Search className="w-3.5 h-3.5 text-[#B3B3B3] shrink-0 group-hover:text-white transition" />
-              {!collapsed && <span className="truncate">Quick search...</span>}
-            </div>
-            {!collapsed && (
-              <kbd className="text-[10px] bg-[#1F1F1F] text-[#B3B3B3] px-1.5 py-0.5 rounded border border-[#333333] font-sans">
-                ⌘K
-              </kbd>
-            )}
-          </button>
-        </div>
-
         {/* Scrollable Navigation Items */}
-        <div className="flex-1 overflow-y-auto px-2.5 py-2 space-y-4">
+        <div className="flex-1 overflow-y-auto px-2.5 py-3 space-y-4">
           {navGroups.map((group) => (
             <div key={group.group} className="space-y-1">
               {!collapsed && (

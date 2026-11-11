@@ -31,6 +31,7 @@ import {
 import { steganalysisApi } from '../services/api';
 import { useTheme } from '../context/ThemeContext';
 import PixelLoupeMagnifier from '../components/analysis/PixelLoupeMagnifier';
+import SUniwardStressSimulator from '../components/analysis/SUniwardStressSimulator';
 
 export default function ForensicsLab() {
   const { theme } = useTheme();
@@ -545,8 +546,8 @@ export default function ForensicsLab() {
       {/* ------------------------------------------------------------------ */}
       {/* 2. Scientific Workflow Stepper Indicator */}
       {/* ------------------------------------------------------------------ */}
-      <div className="p-3 rounded-xl bg-[#0A0A0A] border border-[#292929] overflow-x-auto scrollbar-none">
-        <div className="flex items-center min-w-[700px] justify-between text-xs font-mono">
+      <div className="p-3 rounded-2xl bg-[#050914] border border-[#1B2B48] overflow-x-auto scrollbar-none shadow-sm">
+        <div className="flex items-center min-w-[850px] justify-between text-xs font-mono">
           {[
             { id: 'inspector', step: '01', label: 'Upload & Inspect' },
             { id: 'manipulation', step: '02', label: 'Modify Bits' },
@@ -554,22 +555,23 @@ export default function ForensicsLab() {
             { id: 'steganalysis', step: '04', label: 'Run Steganalysis' },
             { id: 'comparison', step: '05', label: 'Compare Forensics' },
             { id: 'history', step: '06', label: 'Audit History' },
+            { id: 'simulator', step: '07', label: 'S-UNIWARD Simulator' },
           ].map((item, idx) => {
             const isActive = activeTab === item.id;
             return (
               <React.Fragment key={item.id}>
                 <button
                   onClick={() => setActiveTab(item.id)}
-                  className={`flex items-center gap-2 px-3 py-1.5 rounded-lg transition-all ${
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-xl transition-all ${
                     isActive
-                      ? 'bg-[#242424] text-white border border-[#383838] font-bold shadow-sm'
-                      : 'text-[#777777] hover:text-white'
+                      ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 font-bold shadow-[0_0_8px_rgba(6,182,212,0.2)]'
+                      : 'text-[#64748B] hover:text-white'
                   }`}
                 >
-                  <span className="text-[10px] opacity-60 font-semibold">{item.step}.</span>
+                  <span className="text-[10px] text-cyan-400 font-semibold">{item.step}.</span>
                   <span>{item.label}</span>
                 </button>
-                {idx < 5 && <ChevronRight className="w-3.5 h-3.5 text-[#383838] shrink-0" />}
+                {idx < 6 && <ChevronRight className="w-3.5 h-3.5 text-cyan-500/30 shrink-0" />}
               </React.Fragment>
             );
           })}
@@ -1459,6 +1461,13 @@ export default function ForensicsLab() {
                   </div>
                 )}
               </div>
+            )}
+
+            {/* -------------------------------------------------------------- */}
+            {/* TAB 7: S-UNIWARD PAYLOAD STRESS-TESTER & DETECTABILITY SIMULATOR */}
+            {/* -------------------------------------------------------------- */}
+            {activeTab === 'simulator' && (
+              <SUniwardStressSimulator originalImageSrc={originalImageB64} />
             )}
           </div>
         </div>

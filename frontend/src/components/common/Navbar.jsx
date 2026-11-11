@@ -58,21 +58,21 @@ export default function Navbar({
   };
 
   return (
-    <header className="sticky top-0 z-50 bg-[#0B0F19]/90 backdrop-blur-md border-b border-gray-800/80">
+    <header className="sticky top-0 z-50 bg-[#090909]/95 backdrop-blur-md border-b border-[#292929]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-14">
         {/* Left Branding */}
         <div
           className="flex items-center space-x-2.5 cursor-pointer group"
           onClick={() => setActiveTab('dashboard')}
         >
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-cyan-600 to-blue-600 flex items-center justify-center text-white shadow-sm shadow-cyan-500/20">
-            <ShieldCheck className="w-4 h-4" />
+          <div className="w-7 h-7 rounded bg-white text-black flex items-center justify-center transition-transform group-hover:scale-105">
+            <ShieldCheck className="w-4 h-4 stroke-[2.5]" />
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-sm font-semibold tracking-tight text-white group-hover:text-cyan-300 transition-colors">
+            <span className="text-sm font-semibold tracking-tight text-white">
               StegoShield AI
             </span>
-            <span className="text-[10px] font-mono text-gray-400 bg-gray-800/80 px-1.5 py-0.5 rounded border border-gray-700/50">
+            <span className="text-[10px] font-mono text-[#777777] bg-[#151515] px-1.5 py-0.5 rounded border border-[#292929]">
               v1.0
             </span>
           </div>
@@ -86,10 +86,10 @@ export default function Navbar({
               <button
                 key={item.id}
                 onClick={() => handleNavClick(item.id)}
-                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
+                className={`px-3 py-1.5 rounded-md text-xs transition-all ${
                   isActive
-                    ? 'bg-gray-800 text-white font-semibold'
-                    : 'text-gray-400 hover:text-gray-200 hover:bg-gray-800/50'
+                    ? 'bg-[#242424] text-white font-semibold border border-[#383838]'
+                    : 'text-[#777777] hover:text-white hover:bg-[#151515]'
                 }`}
               >
                 {item.label}
@@ -104,11 +104,11 @@ export default function Navbar({
           {onOpenCommandPalette && (
             <button
               onClick={onOpenCommandPalette}
-              className="hidden lg:flex items-center space-x-1.5 px-2 py-1 rounded-md text-xs bg-gray-900 hover:bg-gray-800 text-gray-400 hover:text-gray-200 border border-gray-800 transition"
+              className="hidden lg:flex items-center space-x-1.5 px-2 py-1 rounded-md text-xs bg-[#151515] hover:bg-[#242424] text-[#B3B3B3] hover:text-white border border-[#292929] transition"
               title="Quick Command Palette (Ctrl+K)"
             >
-              <Search className="w-3.5 h-3.5 text-gray-400" />
-              <span className="font-mono text-[10px] text-gray-400">⌘K</span>
+              <Search className="w-3.5 h-3.5 text-[#777777]" />
+              <span className="font-mono text-[10px] text-[#777777]">⌘K</span>
             </button>
           )}
 
@@ -116,25 +116,25 @@ export default function Navbar({
           {onOpenVivaTour && (
             <button
               onClick={onOpenVivaTour}
-              className="hidden sm:flex items-center space-x-1 px-2.5 py-1 rounded-md text-xs font-medium bg-gray-900/60 hover:bg-gray-800 text-gray-300 hover:text-white border border-gray-800 transition"
+              className="hidden sm:flex items-center space-x-1 px-2.5 py-1 rounded-md text-xs font-medium bg-[#151515] hover:bg-[#242424] text-[#B3B3B3] hover:text-white border border-[#292929] transition"
               title="Academic Defense Presentation Guide"
             >
-              <GraduationCap className="w-3.5 h-3.5 text-purple-400" />
+              <GraduationCap className="w-3.5 h-3.5 text-[#B3B3B3]" />
               <span>Viva Guide</span>
             </button>
           )}
 
           {/* Compact Backend Status */}
-          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-gray-900/80 border border-gray-800/80 text-[11px] font-mono">
+          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#151515] border border-[#292929] text-[11px] font-mono text-[#B3B3B3]">
             {healthStatus.online ? (
               <>
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400"></span>
-                <span className="text-gray-300 font-medium">PyTorch CPU</span>
+                <span className="h-1.5 w-1.5 rounded-full bg-white"></span>
+                <span>PyTorch CPU</span>
               </>
             ) : (
               <>
-                <span className="h-1.5 w-1.5 rounded-full bg-rose-500"></span>
-                <span className="text-rose-400 font-medium">Connecting</span>
+                <span className="h-1.5 w-1.5 rounded-full bg-[#555555]"></span>
+                <span className="text-[#777777]">Connecting</span>
               </>
             )}
           </div>
@@ -142,7 +142,7 @@ export default function Navbar({
           {/* Mobile Menu Button */}
           <button
             onClick={() => setMobileMenuOpen((prev) => !prev)}
-            className="md:hidden p-1.5 rounded-md text-gray-400 hover:text-white hover:bg-gray-800 transition"
+            className="md:hidden p-1.5 rounded-md text-[#777777] hover:text-white hover:bg-[#151515] transition"
             aria-label="Toggle navigation menu"
           >
             {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -152,7 +152,7 @@ export default function Navbar({
 
       {/* Mobile Navigation Dropdown */}
       {mobileMenuOpen && (
-        <div className="md:hidden border-t border-gray-800 bg-[#0B0F19] px-4 py-3 space-y-1">
+        <div className="md:hidden border-t border-[#292929] bg-[#090909] px-4 py-3 space-y-1">
           {navItems.map((item) => {
             const isActive = activeTab === item.id;
             return (
@@ -161,8 +161,8 @@ export default function Navbar({
                 onClick={() => handleNavClick(item.id)}
                 className={`w-full text-left px-3 py-2 rounded-md text-xs font-medium transition ${
                   isActive
-                    ? 'bg-gray-800 text-white font-semibold'
-                    : 'text-gray-400 hover:text-white hover:bg-gray-800/50'
+                    ? 'bg-[#242424] text-white font-semibold border border-[#383838]'
+                    : 'text-[#777777] hover:text-white hover:bg-[#151515]'
                 }`}
               >
                 {item.label}
@@ -175,9 +175,9 @@ export default function Navbar({
                 onOpenVivaTour();
                 setMobileMenuOpen(false);
               }}
-              className="w-full text-left px-3 py-2 rounded-md text-xs font-medium text-purple-300 hover:bg-gray-800/50 flex items-center gap-1.5 pt-2 border-t border-gray-800/60"
+              className="w-full text-left px-3 py-2 rounded-md text-xs font-medium text-[#B3B3B3] hover:bg-[#151515] flex items-center gap-1.5 pt-2 border-t border-[#292929]"
             >
-              <GraduationCap className="w-3.5 h-3.5 text-purple-400" />
+              <GraduationCap className="w-3.5 h-3.5 text-[#B3B3B3]" />
               <span>Viva Defense Tour</span>
             </button>
           )}

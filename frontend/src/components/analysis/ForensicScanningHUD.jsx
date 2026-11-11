@@ -61,11 +61,11 @@ export default function ForensicScanningHUD({ filename, modelChoice }) {
       <div className="text-center space-y-3">
         <div className="relative w-16 h-16 mx-auto">
           {/* Pulsing ring */}
-          <div className="absolute inset-0 rounded-full border border-cyan-500/20 animate-ping"></div>
+          <div className="absolute inset-0 rounded-full border border-white/20 animate-ping"></div>
           {/* Rotating radar line */}
-          <div className="absolute inset-0 rounded-full border-2 border-cyan-500/30 border-t-cyan-400 animate-spin"></div>
-          <div className="absolute inset-2 rounded-full border border-gray-800 bg-gray-950/80 flex items-center justify-center">
-            <Cpu className="w-5 h-5 text-cyan-400 animate-pulse" />
+          <div className="absolute inset-0 rounded-full border-2 border-[#383838] border-t-white animate-spin"></div>
+          <div className="absolute inset-2 rounded-full border border-[#292929] bg-[#111111] flex items-center justify-center">
+            <Cpu className="w-5 h-5 text-white animate-pulse" />
           </div>
         </div>
 
@@ -73,7 +73,7 @@ export default function ForensicScanningHUD({ filename, modelChoice }) {
           <h4 className="text-sm font-bold text-white tracking-tight">
             Forensic Inspection Sequencer Active
           </h4>
-          <p className="text-[11px] font-mono text-cyan-400 mt-0.5">
+          <p className="text-[11px] font-mono text-[#B3B3B3] mt-0.5">
             PyTorch Execution Timer: {elapsedMs} ms
           </p>
         </div>
@@ -91,19 +91,19 @@ export default function ForensicScanningHUD({ filename, modelChoice }) {
               key={idx}
               className={`p-2.5 rounded-xl border text-xs transition-all duration-300 flex items-center gap-3 ${
                 isDone
-                  ? 'bg-emerald-950/20 border-emerald-500/40 text-emerald-300'
+                  ? 'bg-[#151515] border-[#383838] text-white'
                   : isCurrent
-                  ? 'bg-cyan-950/40 border-cyan-400 text-white shadow-lg shadow-cyan-950/50 scale-[1.01]'
-                  : 'bg-gray-950/40 border-gray-800 text-gray-500 opacity-60'
+                  ? 'bg-[#242424] border-white/80 text-white shadow-md scale-[1.01]'
+                  : 'bg-[#111111] border-[#222222] text-[#777777] opacity-60'
               }`}
             >
               <div className="shrink-0">
                 {isDone ? (
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                  <CheckCircle2 className="w-4 h-4 text-white" />
                 ) : isCurrent ? (
-                  <RefreshCw className="w-4 h-4 text-cyan-400 animate-spin" />
+                  <RefreshCw className="w-4 h-4 text-white animate-spin" />
                 ) : (
-                  <div className="w-4 h-4 rounded-full border border-gray-700 flex items-center justify-center text-[9px] font-mono">
+                  <div className="w-4 h-4 rounded-full border border-[#383838] flex items-center justify-center text-[9px] font-mono text-[#777777]">
                     {idx + 1}
                   </div>
                 )}
@@ -111,7 +111,7 @@ export default function ForensicScanningHUD({ filename, modelChoice }) {
 
               <div className="min-w-0 flex-1">
                 <div className="font-semibold truncate text-[11px]">{st.label}</div>
-                <div className="text-[10px] opacity-75 truncate font-mono">{st.detail}</div>
+                <div className="text-[10px] opacity-75 truncate font-mono text-[#B3B3B3]">{st.detail}</div>
               </div>
             </div>
           );
@@ -120,9 +120,9 @@ export default function ForensicScanningHUD({ filename, modelChoice }) {
 
       {/* Target Carrier Telemetry Pill */}
       {filename && (
-        <div className="p-2.5 rounded-xl bg-gray-950/60 border border-gray-800 text-[10px] font-mono text-gray-400 flex items-center justify-between">
+        <div className="p-2.5 rounded-xl bg-[#111111] border border-[#292929] text-[10px] font-mono text-[#777777] flex items-center justify-between">
           <span className="truncate max-w-[200px]">Carrier: {filename}</span>
-          <span className="text-cyan-400">Target Size: 512×512</span>
+          <span className="text-white">Target Size: 512×512</span>
         </div>
       )}
     </div>

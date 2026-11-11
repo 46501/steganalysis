@@ -166,32 +166,32 @@ export default function CommandPalette({
       className="fixed inset-0 z-50 flex items-start justify-center pt-20 px-4 bg-black/80 backdrop-blur-md animate-fadeIn"
     >
       <div
-        className="w-full max-w-xl bg-gray-900 border border-gray-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col"
+        className="w-full max-w-xl bg-[#111111] border border-[#292929] rounded-2xl shadow-2xl overflow-hidden flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Search Input Bar */}
-        <div className="flex items-center px-4 py-3.5 border-b border-gray-800 bg-gray-950/90 gap-3">
-          <Search className="w-5 h-5 text-cyan-400 shrink-0" />
+        <div className="flex items-center px-4 py-3.5 border-b border-[#292929] bg-[#0A0A0A] gap-3">
+          <Search className="w-5 h-5 text-white shrink-0" />
           <input
             ref={inputRef}
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Type a command or jump to workspace... (e.g. 'viva', '5001', 'batch')"
-            className="w-full bg-transparent text-sm text-white placeholder-gray-500 focus:outline-none"
+            className="w-full bg-transparent text-sm text-white placeholder-[#777777] focus:outline-none"
           />
           <button
             onClick={onClose}
-            className="p-1 rounded-md text-gray-500 hover:text-white hover:bg-gray-800 transition"
+            className="p-1 rounded-md text-[#777777] hover:text-white hover:bg-[#242424] transition"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Results List */}
-        <div className="max-h-80 overflow-y-auto p-2 divide-y divide-gray-800/40">
+        <div className="max-h-80 overflow-y-auto p-2 divide-y divide-[#222222]">
           {filtered.length === 0 ? (
-            <div className="py-12 text-center text-gray-500 text-xs">
+            <div className="py-12 text-center text-[#777777] text-xs">
               No matching commands or actions found for "{query}".
             </div>
           ) : (
@@ -206,34 +206,34 @@ export default function CommandPalette({
                   onMouseEnter={() => setSelectedIndex(idx)}
                   className={`flex items-center justify-between p-3 rounded-xl cursor-pointer transition text-xs ${
                     isSelected
-                      ? 'bg-cyan-500/15 border border-cyan-500/30 text-white'
-                      : 'text-gray-300 hover:bg-gray-800/50'
+                      ? 'bg-[#242424] border border-[#383838] text-white'
+                      : 'text-[#B3B3B3] hover:bg-[#1A1A1A]'
                   }`}
                 >
                   <div className="flex items-center gap-3 min-w-0">
                     <div
                       className={`p-2 rounded-lg ${
                         isSelected
-                          ? 'bg-cyan-500/20 text-cyan-300'
-                          : 'bg-gray-800 text-gray-400'
+                          ? 'bg-[#151515] text-white border border-[#383838]'
+                          : 'bg-[#151515] text-[#777777] border border-[#222222]'
                       }`}
                     >
                       <Icon className="w-4 h-4" />
                     </div>
                     <div className="min-w-0">
-                      <div className="font-semibold truncate">{item.title}</div>
-                      <div className="text-[11px] text-gray-400 truncate">
+                      <div className="font-semibold text-white truncate">{item.title}</div>
+                      <div className="text-[11px] text-[#777777] truncate">
                         {item.subtitle}
                       </div>
                     </div>
                   </div>
 
                   <div className="flex items-center gap-2 shrink-0 ml-3">
-                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-gray-950 text-gray-400 border border-gray-800">
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#151515] text-[#B3B3B3] border border-[#292929]">
                       {item.badge}
                     </span>
                     {isSelected && (
-                      <ArrowRight className="w-3.5 h-3.5 text-cyan-400" />
+                      <ArrowRight className="w-3.5 h-3.5 text-white" />
                     )}
                   </div>
                 </div>
@@ -243,13 +243,13 @@ export default function CommandPalette({
         </div>
 
         {/* Footer Shortcut Bar */}
-        <div className="px-4 py-2.5 bg-gray-950 border-t border-gray-800 flex items-center justify-between text-[11px] font-mono text-gray-500">
+        <div className="px-4 py-2.5 bg-[#0A0A0A] border-t border-[#292929] flex items-center justify-between text-[11px] font-mono text-[#777777]">
           <div className="flex items-center gap-3">
             <span>[↑↓] Navigate</span>
             <span>[Enter] Select</span>
             <span>[Esc] Close</span>
           </div>
-          <div className="text-cyan-400 font-bold">
+          <div className="text-white font-medium">
             StegoShield Command Center
           </div>
         </div>

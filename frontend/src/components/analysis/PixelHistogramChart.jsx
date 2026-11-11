@@ -129,8 +129,8 @@ export default function PixelHistogramChart({
 
   if (!histData || !stats) {
     return (
-      <div className="py-12 text-center text-gray-500 font-mono text-xs">
-        <Activity className="w-5 h-5 mx-auto mb-2 animate-spin text-cyan-400" />
+      <div className="py-12 text-center text-[#777777] font-mono text-xs">
+        <Activity className="w-5 h-5 mx-auto mb-2 animate-spin text-white" />
         Calculating 256-Bin Pixel Distribution Spectrum...
       </div>
     );
@@ -155,32 +155,32 @@ export default function PixelHistogramChart({
   const diffAreaPath = `M 0,${svgHeight} L ${diffPoints.join(' L ')} L ${svgWidth},${svgHeight} Z`;
 
   return (
-    <div className="p-6 rounded-2xl bg-gray-900/90 border border-gray-800 shadow-xl space-y-6 animate-fadeIn">
+    <div className="p-6 rounded-2xl bg-[#111111] border border-[#292929] shadow-xl space-y-6 animate-fadeIn">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-gray-800 pb-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-[#292929] pb-4">
         <div>
           <div className="flex items-center gap-2">
-            <BarChart2 className="w-5 h-5 text-cyan-400" />
+            <BarChart2 className="w-5 h-5 text-white" />
             <h3 className="text-base font-bold text-white">
               256-Bin Pixel Histogram & Difference Spectrum
             </h3>
-            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-950 text-cyan-400 border border-cyan-800">
+            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#151515] text-[#B3B3B3] border border-[#292929]">
               First-Order Invariance Analysis
             </span>
           </div>
-          <p className="text-xs text-gray-400 mt-1">
+          <p className="text-xs text-[#777777] mt-1">
             Empirical analysis of pixel intensity frequencies and adjacent horizontal gradient differentials.
           </p>
         </div>
 
         {/* Chart View Switcher */}
-        <div className="flex items-center gap-1.5 p-1 rounded-xl bg-gray-950 border border-gray-800 text-xs font-mono">
+        <div className="flex items-center gap-1.5 p-1 rounded-xl bg-[#0A0A0A] border border-[#292929] text-xs font-mono">
           <button
             onClick={() => setChartMode('intensity')}
             className={`px-3 py-1.5 rounded-lg transition ${
               chartMode === 'intensity'
-                ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-sm'
-                : 'text-gray-400 hover:text-white'
+                ? 'bg-[#242424] text-white border border-[#383838] shadow-sm'
+                : 'text-[#777777] hover:text-white'
             }`}
           >
             Grayscale Frequencies (0–255)
@@ -189,8 +189,8 @@ export default function PixelHistogramChart({
             onClick={() => setChartMode('diff')}
             className={`px-3 py-1.5 rounded-lg transition ${
               chartMode === 'diff'
-                ? 'bg-purple-500/20 text-purple-300 border border-purple-500/40 shadow-sm'
-                : 'text-gray-400 hover:text-white'
+                ? 'bg-[#242424] text-white border border-[#383838] shadow-sm'
+                : 'text-[#777777] hover:text-white'
             }`}
           >
             1st-Order Gradients ΔP
@@ -200,14 +200,14 @@ export default function PixelHistogramChart({
 
       {/* SVG Chart Display */}
       <div className="space-y-4">
-        <div className="relative p-4 rounded-xl bg-gray-950 border border-gray-800 select-none">
+        <div className="relative p-4 rounded-xl bg-[#0A0A0A] border border-[#292929] select-none">
           {/* Top Axis / Hover Legend */}
           <div className="flex justify-between items-center mb-2 text-xs font-mono">
-            <span className="text-gray-400">
+            <span className="text-[#777777]">
               {chartMode === 'intensity' ? (
                 hoveredBin !== null ? (
                   <>
-                    Grayscale Value: <span className="text-cyan-400 font-bold">{hoveredBin}</span> •
+                    Grayscale Value: <span className="text-white font-bold">{hoveredBin}</span> •
                     Count: <span className="text-white font-bold">{histData.intensityBins[hoveredBin].toLocaleString()} px</span> (
                     {((histData.intensityBins[hoveredBin] / stats.totalPixels) * 100).toFixed(2)}%)
                   </>
@@ -217,7 +217,7 @@ export default function PixelHistogramChart({
               ) : (
                 hoveredBin !== null ? (
                   <>
-                    Pixel Difference Δ: <span className="text-purple-400 font-bold">{hoveredBin - 30}</span> •
+                    Pixel Difference Δ: <span className="text-white font-bold">{hoveredBin - 30}</span> •
                     Occurrences: <span className="text-white font-bold">{histData.diffBins[hoveredBin].toLocaleString()}</span>
                   </>
                 ) : (
@@ -225,7 +225,7 @@ export default function PixelHistogramChart({
                 )
               )}
             </span>
-            <span className="text-[11px] text-gray-500">
+            <span className="text-[11px] text-[#777777]">
               {chartMode === 'intensity' ? 'Total: 262,144 px' : 'Gradient Span: [-30..+30]'}
             </span>
           </div>
@@ -239,19 +239,19 @@ export default function PixelHistogramChart({
             >
               <defs>
                 <linearGradient id="intensityGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#22D3EE" stopOpacity="0.6" />
-                  <stop offset="100%" stopColor="#0891B2" stopOpacity="0.05" />
+                  <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.35" />
+                  <stop offset="100%" stopColor="#FFFFFF" stopOpacity="0.02" />
                 </linearGradient>
                 <linearGradient id="diffGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#C084FC" stopOpacity="0.6" />
-                  <stop offset="100%" stopColor="#7E22CE" stopOpacity="0.05" />
+                  <stop offset="0%" stopColor="#B3B3B3" stopOpacity="0.35" />
+                  <stop offset="100%" stopColor="#777777" stopOpacity="0.02" />
                 </linearGradient>
               </defs>
 
               {/* Horizontal grid lines */}
-              <line x1="0" y1={svgHeight * 0.25} x2={svgWidth} y2={svgHeight * 0.25} stroke="#1F2937" strokeDasharray="3 3" />
-              <line x1="0" y1={svgHeight * 0.5} x2={svgWidth} y2={svgHeight * 0.5} stroke="#1F2937" strokeDasharray="3 3" />
-              <line x1="0" y1={svgHeight * 0.75} x2={svgWidth} y2={svgHeight * 0.75} stroke="#1F2937" strokeDasharray="3 3" />
+              <line x1="0" y1={svgHeight * 0.25} x2={svgWidth} y2={svgHeight * 0.25} stroke="#222222" strokeDasharray="3 3" />
+              <line x1="0" y1={svgHeight * 0.5} x2={svgWidth} y2={svgHeight * 0.5} stroke="#222222" strokeDasharray="3 3" />
+              <line x1="0" y1={svgHeight * 0.75} x2={svgWidth} y2={svgHeight * 0.75} stroke="#222222" strokeDasharray="3 3" />
 
               {/* Intensity Path */}
               {chartMode === 'intensity' && (
@@ -260,7 +260,7 @@ export default function PixelHistogramChart({
                   <path
                     d={`M ${intensityPoints.join(' L ')}`}
                     fill="none"
-                    stroke="#22D3EE"
+                    stroke="#FFFFFF"
                     strokeWidth="1.5"
                   />
                   {/* Invisible hitboxes for hovering */}
@@ -285,7 +285,7 @@ export default function PixelHistogramChart({
                   <path
                     d={`M ${diffPoints.join(' L ')}`}
                     fill="none"
-                    stroke="#C084FC"
+                    stroke="#B3B3B3"
                     strokeWidth="1.5"
                   />
                   {/* Center Delta = 0 vertical line */}
@@ -294,7 +294,7 @@ export default function PixelHistogramChart({
                     y1={0}
                     x2={svgWidth / 2}
                     y2={svgHeight}
-                    stroke="#38BDF8"
+                    stroke="#555555"
                     strokeWidth="1.5"
                     strokeDasharray="2 2"
                   />
@@ -315,7 +315,7 @@ export default function PixelHistogramChart({
           </div>
 
           {/* Bottom X-Axis Scale */}
-          <div className="flex justify-between items-center text-[10px] font-mono text-gray-500 pt-1 border-t border-gray-800">
+          <div className="flex justify-between items-center text-[10px] font-mono text-[#777777] pt-1 border-t border-[#292929]">
             {chartMode === 'intensity' ? (
               <>
                 <span>0 (Pure Black)</span>
@@ -328,7 +328,7 @@ export default function PixelHistogramChart({
               <>
                 <span>Δ -30</span>
                 <span>Δ -15</span>
-                <span className="text-cyan-400 font-bold">Δ 0 (Equal)</span>
+                <span className="text-white font-bold">Δ 0 (Equal)</span>
                 <span>Δ +15</span>
                 <span>Δ +30</span>
               </>
@@ -338,34 +338,34 @@ export default function PixelHistogramChart({
 
         {/* Statistical Summary Grid */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs font-mono">
-          <div className="p-3 rounded-xl bg-gray-950/70 border border-gray-800">
-            <span className="text-gray-500 block text-[10px] uppercase">Mean Pixel Value (μ)</span>
+          <div className="p-3 rounded-xl bg-[#151515] border border-[#292929]">
+            <span className="text-[#777777] block text-[10px] uppercase">Mean Pixel Value (μ)</span>
             <span className="text-white font-bold block text-sm mt-0.5">{stats.mean}</span>
           </div>
 
-          <div className="p-3 rounded-xl bg-gray-950/70 border border-gray-800">
-            <span className="text-gray-500 block text-[10px] uppercase">Standard Deviation (σ)</span>
-            <span className="text-cyan-400 font-bold block text-sm mt-0.5">{stats.stdDev}</span>
+          <div className="p-3 rounded-xl bg-[#151515] border border-[#292929]">
+            <span className="text-[#777777] block text-[10px] uppercase">Standard Deviation (σ)</span>
+            <span className="text-white font-bold block text-sm mt-0.5">{stats.stdDev}</span>
           </div>
 
-          <div className="p-3 rounded-xl bg-gray-950/70 border border-gray-800">
-            <span className="text-gray-500 block text-[10px] uppercase">Gradient Variance (σΔ²)</span>
-            <span className="text-purple-400 font-bold block text-sm mt-0.5">{stats.diffVariance}</span>
+          <div className="p-3 rounded-xl bg-[#151515] border border-[#292929]">
+            <span className="text-[#777777] block text-[10px] uppercase">Gradient Variance (σΔ²)</span>
+            <span className="text-white font-bold block text-sm mt-0.5">{stats.diffVariance}</span>
           </div>
 
-          <div className="p-3 rounded-xl bg-gray-950/70 border border-gray-800">
-            <span className="text-gray-500 block text-[10px] uppercase">Dynamic Range</span>
-            <span className="text-amber-400 font-bold block text-sm mt-0.5">[{stats.minVal}..{stats.maxVal}]</span>
+          <div className="p-3 rounded-xl bg-[#151515] border border-[#292929]">
+            <span className="text-[#777777] block text-[10px] uppercase">Dynamic Range</span>
+            <span className="text-white font-bold block text-sm mt-0.5">[{stats.minVal}..{stats.maxVal}]</span>
           </div>
         </div>
 
         {/* Theoretical Scientific Callout (Crucial for Viva) */}
-        <div className="p-4 rounded-xl bg-indigo-950/20 border border-indigo-900/40 text-xs text-gray-300 space-y-1.5">
-          <div className="flex items-center gap-1.5 font-bold text-indigo-300">
-            <Info className="w-4 h-4 text-indigo-400" />
+        <div className="p-4 rounded-xl bg-[#151515] border border-[#292929] text-xs space-y-1.5">
+          <div className="flex items-center gap-1.5 font-bold text-white">
+            <Info className="w-4 h-4 text-white" />
             <span>Theoretical Steganalysis Principle: Why Global Histograms Fail</span>
           </div>
-          <p className="text-[11px] text-gray-400 leading-relaxed">
+          <p className="text-[11px] text-[#777777] leading-relaxed">
             Content-adaptive algorithms like S-UNIWARD spread discrete ±1 modifications across high-frequency texture regions, keeping the global 256-bin histogram virtually invariant ($&lt;0.01\%$ drift). Classical first-order Chi-square or histogram attacks are completely blind to this embedding. This mathematically substantiates why high-pass residual filtering and deep convolutional feature extractors (SRNet) are required to reveal spatial correlation anomalies.
           </p>
         </div>

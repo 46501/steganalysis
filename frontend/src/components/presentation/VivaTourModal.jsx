@@ -25,7 +25,7 @@ export default function VivaTourModal({ isOpen, onClose, onNavigateTab }) {
       stage: 'Stage 1 of 5',
       title: 'The Steganographic Challenge: S-UNIWARD 0.4 bpp',
       icon: ShieldAlert,
-      badgeColor: 'bg-rose-950 text-rose-300 border-rose-800',
+      badgeColor: 'bg-[#151515] text-[#B3B3B3] border-[#292929]',
       summary:
         'Understanding why modern content-adaptive steganography evades classical computer vision and standard CNNs.',
       keyPoints: [
@@ -42,7 +42,7 @@ export default function VivaTourModal({ isOpen, onClose, onNavigateTab }) {
       stage: 'Stage 2 of 5',
       title: 'BOSSbase 1.01 Dataset Engineering & Zero-Leakage Protocol',
       icon: Database,
-      badgeColor: 'bg-cyan-950 text-cyan-300 border-cyan-800',
+      badgeColor: 'bg-[#151515] text-[#B3B3B3] border-[#292929]',
       summary:
         'Scientific rigor in dataset generation: 20,000 512×512 images with complete mathematical integrity verification.',
       keyPoints: [
@@ -59,7 +59,7 @@ export default function VivaTourModal({ isOpen, onClose, onNavigateTab }) {
       stage: 'Stage 3 of 5',
       title: 'The SRNet Deep Residual Neural Architecture',
       icon: Cpu,
-      badgeColor: 'bg-indigo-950 text-indigo-300 border-indigo-800',
+      badgeColor: 'bg-[#151515] text-[#B3B3B3] border-[#292929]',
       summary:
         'Architectural breakdown of Boroumand et al. (IEEE TIFS 2019) 39-layer deep residual network for digital steganalysis.',
       keyPoints: [
@@ -77,7 +77,7 @@ export default function VivaTourModal({ isOpen, onClose, onNavigateTab }) {
       stage: 'Stage 4 of 5',
       title: 'Multi-Faceted Forensic Fusion: Neural + Statistical + Spectral',
       icon: Eye,
-      badgeColor: 'bg-emerald-950 text-emerald-300 border-emerald-800',
+      badgeColor: 'bg-[#151515] text-[#B3B3B3] border-[#292929]',
       summary:
         'Combining deep residual neural detection with deterministic statistical tests and 2D frequency transforms.',
       keyPoints: [
@@ -95,7 +95,7 @@ export default function VivaTourModal({ isOpen, onClose, onNavigateTab }) {
       stage: 'Stage 5 of 5',
       title: 'Interactive Counter-Steganography: Stego Studio',
       icon: Lock,
-      badgeColor: 'bg-amber-950 text-amber-300 border-amber-800',
+      badgeColor: 'bg-[#151515] text-[#B3B3B3] border-[#292929]',
       summary:
         'End-to-end message concealment, bitstream extraction, and immediate pipe-to-detector verification.',
       keyPoints: [
@@ -123,11 +123,11 @@ export default function VivaTourModal({ isOpen, onClose, onNavigateTab }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fadeIn">
-      <div className="bg-[#0B0F19] border border-cyan-500/40 w-full max-w-3xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
+      <div className="bg-[#111111] border border-[#292929] w-full max-w-3xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
         {/* Modal Header */}
-        <div className="p-5 border-b border-gray-800 flex items-center justify-between bg-gray-950/80">
+        <div className="p-5 border-b border-[#292929] flex items-center justify-between bg-[#0A0A0A]">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400 shadow-sm">
+            <div className="w-10 h-10 rounded-xl bg-[#151515] border border-[#292929] flex items-center justify-center text-white shadow-sm">
               <GraduationCap className="w-5 h-5" />
             </div>
             <div>
@@ -135,23 +135,23 @@ export default function VivaTourModal({ isOpen, onClose, onNavigateTab }) {
                 <span className="text-base font-bold text-white tracking-tight">
                   StegoShield AI — Examiner Presentation & Viva Guide
                 </span>
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-cyan-950 text-cyan-400 border border-cyan-800 font-mono">
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#151515] text-[#B3B3B3] border border-[#292929] font-mono">
                   Interactive Defense Mode
                 </span>
               </div>
-              <p className="text-xs text-gray-400">Step-by-step academic presentation and demonstration script</p>
+              <p className="text-xs text-[#777777]">Step-by-step academic presentation and demonstration script</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-gray-800 transition"
+            className="p-1.5 rounded-lg text-[#777777] hover:text-white hover:bg-[#242424] transition"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Step Progression Indicator */}
-        <div className="px-6 pt-4 pb-2 border-b border-gray-900 bg-gray-950/40">
+        <div className="px-6 pt-4 pb-2 border-b border-[#292929] bg-[#0A0A0A]">
           <div className="flex items-center justify-between gap-2">
             {steps.map((s, idx) => (
               <button
@@ -159,10 +159,10 @@ export default function VivaTourModal({ isOpen, onClose, onNavigateTab }) {
                 onClick={() => setCurrentStep(idx)}
                 className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
                   idx === currentStep
-                    ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-sm'
+                    ? 'bg-[#242424] text-white border border-[#383838]'
                     : idx < currentStep
-                    ? 'bg-emerald-950/40 text-emerald-400 border border-emerald-900/60'
-                    : 'bg-gray-900/40 text-gray-500 border border-gray-800 hover:text-gray-300'
+                    ? 'bg-[#151515] text-[#B3B3B3] border border-[#292929]'
+                    : 'bg-[#111111] text-[#777777] border border-[#222222] hover:text-[#B3B3B3]'
                 }`}
               >
                 <span>{idx + 1}.</span>
@@ -173,10 +173,10 @@ export default function VivaTourModal({ isOpen, onClose, onNavigateTab }) {
         </div>
 
         {/* Step Body Content */}
-        <div className="p-6 overflow-y-auto space-y-5 text-gray-300 text-xs">
+        <div className="p-6 overflow-y-auto space-y-5 text-[#B3B3B3] text-xs">
           {/* Stage Header */}
           <div className="flex items-start gap-4">
-            <div className="w-12 h-12 rounded-xl bg-gray-900 border border-gray-800 flex items-center justify-center text-cyan-400 shrink-0">
+            <div className="w-12 h-12 rounded-xl bg-[#151515] border border-[#292929] flex items-center justify-center text-white shrink-0">
               <Icon className="w-6 h-6" />
             </div>
             <div>
@@ -184,20 +184,20 @@ export default function VivaTourModal({ isOpen, onClose, onNavigateTab }) {
                 {current.stage}
               </span>
               <h2 className="text-lg font-bold text-white mt-1">{current.title}</h2>
-              <p className="text-gray-400 mt-1 text-xs leading-relaxed">{current.summary}</p>
+              <p className="text-[#B3B3B3] mt-1 text-xs leading-relaxed">{current.summary}</p>
             </div>
           </div>
 
           {/* Key Architectural & Scientific Highlights */}
-          <div className="p-4 rounded-xl bg-gray-900/70 border border-gray-800 space-y-2.5">
+          <div className="p-4 rounded-xl bg-[#151515] border border-[#292929] space-y-2.5">
             <h4 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
-              <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
+              <Sparkles className="w-3.5 h-3.5 text-white" />
               Core Scientific Takeaways
             </h4>
-            <ul className="space-y-2 text-gray-300">
+            <ul className="space-y-2 text-[#B3B3B3]">
               {current.keyPoints.map((point, i) => (
                 <li key={i} className="flex items-start gap-2">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-cyan-400 shrink-0 mt-0.5" />
+                  <CheckCircle2 className="w-3.5 h-3.5 text-white shrink-0 mt-0.5" />
                   <span className="leading-relaxed">{point}</span>
                 </li>
               ))}
@@ -205,27 +205,27 @@ export default function VivaTourModal({ isOpen, onClose, onNavigateTab }) {
           </div>
 
           {/* Examiner Viva Defense Q&A Box */}
-          <div className="p-4 rounded-xl bg-amber-950/20 border border-amber-800/60 space-y-1.5">
-            <div className="flex items-center gap-2 text-amber-300 font-semibold text-xs">
-              <HelpCircle className="w-4 h-4 text-amber-400" />
+          <div className="p-4 rounded-xl bg-[#181818] border border-[#292929] space-y-1.5">
+            <div className="flex items-center gap-2 text-white font-semibold text-xs">
+              <HelpCircle className="w-4 h-4 text-white" />
               <span>Viva Defense Strategy & FAQ</span>
             </div>
-            <p className="text-amber-200/90 leading-relaxed text-[11px] font-sans">
+            <p className="text-[#B3B3B3] leading-relaxed text-[11px] font-sans">
               {current.vivaTip}
             </p>
           </div>
         </div>
 
         {/* Modal Footer Controls */}
-        <div className="p-5 border-t border-gray-800 bg-gray-950/90 flex flex-wrap items-center justify-between gap-3">
+        <div className="p-5 border-t border-[#292929] bg-[#0A0A0A] flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             <button
               onClick={() => setCurrentStep((prev) => Math.max(0, prev - 1))}
               disabled={currentStep === 0}
               className={`px-3 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition ${
                 currentStep === 0
-                  ? 'text-gray-600 bg-gray-900 border border-gray-800 cursor-not-allowed'
-                  : 'text-gray-300 hover:text-white bg-gray-800 hover:bg-gray-700 border border-gray-700'
+                  ? 'text-[#555555] bg-[#111111] border border-[#222222] cursor-not-allowed'
+                  : 'text-[#B3B3B3] hover:text-white bg-[#181818] hover:bg-[#242424] border border-[#292929]'
               }`}
             >
               <ChevronLeft className="w-4 h-4" />
@@ -236,8 +236,8 @@ export default function VivaTourModal({ isOpen, onClose, onNavigateTab }) {
               disabled={currentStep === steps.length - 1}
               className={`px-3 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition ${
                 currentStep === steps.length - 1
-                  ? 'text-gray-600 bg-gray-900 border border-gray-800 cursor-not-allowed'
-                  : 'text-cyan-300 hover:text-white bg-cyan-950/60 hover:bg-cyan-900 border border-cyan-800'
+                  ? 'text-[#555555] bg-[#111111] border border-[#222222] cursor-not-allowed'
+                  : 'text-white hover:text-white bg-[#242424] hover:bg-[#2E2E2E] border border-[#383838]'
               }`}
             >
               Next Stage
@@ -248,7 +248,7 @@ export default function VivaTourModal({ isOpen, onClose, onNavigateTab }) {
           {/* Jump directly to live workspace */}
           <button
             onClick={handleAction}
-            className="py-2.5 px-4 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-black font-bold text-xs flex items-center gap-2 shadow-lg shadow-cyan-500/20 transition-all"
+            className="py-2.5 px-4 rounded-xl bg-white hover:bg-[#E5E5E5] text-black font-semibold text-xs flex items-center gap-2 transition-all"
           >
             <span>{current.actionLabel}</span>
             <ArrowRight className="w-3.5 h-3.5" />

@@ -385,7 +385,7 @@ export default function ThreatRadarHUD({ stats = {}, recentScans = [], onNavigat
               </button>
 
               <button
-                onClick={() => onNavigate && onNavigate('forensics-lab')}
+                onClick={() => onNavigate && onNavigate('lab')}
                 className="p-2 rounded-lg bg-[#070D1A] hover:bg-[#0A1224] border border-[#1B2B48] hover:border-cyan-500/40 text-[#94A3B8] hover:text-white text-xs font-semibold transition flex items-center justify-center gap-1.5"
               >
                 <span>Forensics Lab</span>

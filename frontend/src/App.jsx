@@ -46,7 +46,7 @@ export default function App() {
         />
       )}
       {activeTab === 'detector' && <Detector initialFile={injectedDetectorFile} />}
-      {activeTab === 'lab' && <ForensicsLab />}
+      {(activeTab === 'lab' || activeTab === 'forensics-lab') && <ForensicsLab />}
       {activeTab === 'stego-studio' && <StegoStudio onSendToDetector={handleSendToDetector} />}
       {activeTab === 'history' && <History />}
       {activeTab === 'model-info' && <ModelInfo />}
@@ -55,7 +55,8 @@ export default function App() {
         isOpen={isVivaTourOpen}
         onClose={() => setIsVivaTourOpen(false)}
         onNavigateTab={(tab) => {
-          setActiveTab(tab);
+          const target = tab === 'forensics-lab' ? 'lab' : tab;
+          setActiveTab(target);
           setIsVivaTourOpen(false);
         }}
       />

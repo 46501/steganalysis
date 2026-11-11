@@ -122,7 +122,7 @@ export default function VivaTourModal({ isOpen, onClose, onNavigateTab }) {
       vivaTip:
         'Examiner FAQ: "How is chain-of-custody guaranteed?" Answer: All raw byte uploads, intermediate high-pass residuals, and classification outputs are tagged with cryptographic SHA-256 hashes stored in SQLite with atomic transactions.',
       actionLabel: 'Launch Forensics Laboratory',
-      actionTab: 'forensics-lab',
+      actionTab: 'lab',
     },
   ];
 

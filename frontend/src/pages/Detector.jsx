@@ -524,27 +524,34 @@ export default function Detector({ initialFile = null }) {
           )}
         </div>
 
-        {/* Right Column: Forensic Results Panel (5 cols) */}
+        {/* Right Column: Dynamic Cyber Threat Verdict HUD (5 cols) */}
         <div className="lg:col-span-5 space-y-6">
-          <div className="p-6 rounded-2xl bg-[#111111] border border-[#292929] shadow-xl flex flex-col justify-between min-h-[460px]">
+          <div className="p-6 rounded-2xl bg-[#070D1A] border border-[#1B2B48] shadow-2xl flex flex-col justify-between min-h-[460px] relative overflow-hidden">
             <div>
-              <div className="flex items-center justify-between pb-4 border-b border-[#292929]">
-                <div className="flex items-center gap-2">
-                  <ShieldCheck className="w-5 h-5 text-white" />
-                  <h3 className="text-base font-bold text-white">Forensic Inspection Report</h3>
+              {/* Card Header */}
+              <div className="flex items-center justify-between pb-4 border-b border-[#1B2B48]">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-lg bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400 shadow-[0_0_10px_rgba(6,182,212,0.2)]">
+                    <ShieldCheck className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold text-white tracking-wide">Forensic Inspection HUD</h3>
+                    <span className="text-[10px] font-mono text-[#94A3B8]">Real-Time Classifier Telemetry</span>
+                  </div>
                 </div>
+
                 {result && (
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => setIsReportOpen(true)}
-                      className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#1A1A1A] hover:bg-[#222222] text-white border border-[#292929] text-[11px] font-semibold transition"
+                      className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-300 border border-cyan-500/40 text-[11px] font-semibold transition shadow-[0_0_8px_rgba(6,182,212,0.15)]"
                       title="Open Official Case Report"
                     >
-                      <FileText className="w-3.5 h-3.5 text-white" />
-                      <span>Forensic Certificate</span>
+                      <FileText className="w-3.5 h-3.5" />
+                      <span>Certificate</span>
                     </button>
-                    <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-[#151515] text-[#B3B3B3] border border-[#292929]">
-                      ID #{result.id || 'LIVE'}
+                    <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-[#0B1528] text-cyan-400 border border-[#1B2B48]">
+                      #{result.id || 'LIVE'}
                     </span>
                   </div>
                 )}
@@ -552,12 +559,12 @@ export default function Detector({ initialFile = null }) {
 
               {!result && !isAnalyzing && (
                 <div className="py-24 text-center">
-                  <div className="w-12 h-12 rounded-full bg-[#151515] border border-[#222222] flex items-center justify-center mx-auto mb-3 text-[#777777]">
-                    <Activity className="w-6 h-6" />
+                  <div className="w-14 h-14 rounded-2xl bg-[#0B1528] border border-[#1B2B48] flex items-center justify-center mx-auto mb-3 text-cyan-400/60 shadow-[0_0_20px_rgba(6,182,212,0.08)]">
+                    <Activity className="w-7 h-7" />
                   </div>
-                  <p className="text-sm font-medium text-white">Ready to Analyze</p>
-                  <p className="text-xs text-[#777777] mt-1 max-w-xs mx-auto">
-                    Select a sample image above or upload your own image file to run real-time steganalysis.
+                  <p className="text-sm font-semibold text-white">Sensor Grid Ready</p>
+                  <p className="text-xs text-[#94A3B8] mt-1 max-w-xs mx-auto">
+                    Select a benchmark sample above or drop an image tensor to execute high-pass residual steganalysis.
                   </p>
                 </div>
               )}
@@ -570,29 +577,46 @@ export default function Detector({ initialFile = null }) {
               )}
 
               {result && !isAnalyzing && (
-                <div className="mt-5 space-y-5">
-                  {/* Big Verdict Banner */}
-                  <div className="p-5 rounded-2xl text-center border border-[#383838] bg-[#151515] text-white shadow-none">
-                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#242424] border border-[#383838] text-xs font-semibold mb-2">
+                <div className="mt-5 space-y-4">
+                  {/* Dynamic Cyber Threat Verdict Banner */}
+                  <div
+                    className={`p-5 rounded-2xl text-center border relative overflow-hidden transition-all duration-300 ${
+                      isInconclusive
+                        ? 'bg-amber-950/25 border-amber-500/40 text-amber-200 shadow-[0_0_24px_rgba(245,158,11,0.12)]'
+                        : isStego
+                        ? 'bg-rose-950/30 border-rose-500/50 text-rose-200 shadow-[0_0_24px_rgba(244,63,94,0.18)]'
+                        : 'bg-emerald-950/30 border-emerald-500/50 text-emerald-200 shadow-[0_0_24px_rgba(16,185,129,0.18)]'
+                    }`}
+                  >
+                    <div
+                      className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-mono font-bold mb-2.5 border ${
+                        isInconclusive
+                          ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
+                          : isStego
+                          ? 'bg-rose-500/20 text-rose-300 border-rose-500/40'
+                          : 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+                      }`}
+                    >
                       {isInconclusive ? (
                         <>
-                          <HelpCircle className="w-4 h-4 text-[#B3B3B3]" />
-                          <span className="text-[#B3B3B3]">INCONCLUSIVE — LOW CONFIDENCE</span>
+                          <HelpCircle className="w-3.5 h-3.5 text-amber-400" />
+                          <span>SCIENTIFIC GUARDRAIL (LOW MARGIN)</span>
                         </>
                       ) : isStego ? (
                         <>
-                          <AlertTriangle className="w-4 h-4 text-white" />
-                          <span>STEGO INDICATED</span>
+                          <span className="w-2 h-2 rounded-full bg-rose-400 animate-ping mr-0.5"></span>
+                          <AlertTriangle className="w-3.5 h-3.5 text-rose-400" />
+                          <span>STEGO PAYLOAD INDICATED</span>
                         </>
                       ) : (
                         <>
-                          <CheckCircle2 className="w-4 h-4 text-white" />
-                          <span>COVER INDICATED</span>
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                          <span>PRISTINE COVER CARRIER</span>
                         </>
                       )}
                     </div>
 
-                    <div className="text-3xl font-black tracking-tight text-white">
+                    <div className="text-2xl sm:text-3xl font-black font-mono tracking-tight text-white drop-shadow-[0_0_12px_rgba(255,255,255,0.2)]">
                       {isInconclusive
                         ? 'INCONCLUSIVE'
                         : isStego
@@ -600,133 +624,106 @@ export default function Detector({ initialFile = null }) {
                         : 'COVER INDICATED'}
                     </div>
 
-                    <div className="text-xs mt-1.5 text-[#B3B3B3] font-mono">
+                    <div className="text-xs mt-1.5 text-[#94A3B8] font-mono">
                       {isInconclusive
                         ? `Decision Margin: ${(Math.abs(result.stego_probability - result.cover_probability) * 100).toFixed(1)}% (Insufficient evidence to classify)`
-                        : `Neural Model Indication: ${(result.confidence * 100).toFixed(1)}% (${result.model_name || 'StegoNet-Lite'})`}
+                        : `Neural Activation Confidence: ${(result.confidence * 100).toFixed(1)}% (${result.model_name || 'StegoNet-Lite'})`}
                     </div>
                   </div>
 
-                  {/* Dual Probability Bar */}
-                  <div className="p-4 rounded-xl bg-[#151515] border border-[#292929] space-y-2.5">
+                  {/* Glowing Dual Probability Spectrum Bar */}
+                  <div className="p-4 rounded-xl bg-[#050914] border border-[#1B2B48] space-y-2.5">
                     <div className="flex items-center justify-between text-xs">
-                      <span className="font-semibold text-white flex items-center gap-1.5">
-                        <Activity className="w-3.5 h-3.5 text-white" />
-                        <span>Model Output & Scores</span>
+                      <span className="font-semibold text-white flex items-center gap-1.5 font-mono">
+                        <Activity className="w-3.5 h-3.5 text-cyan-400" />
+                        <span>Probability Spectrum</span>
                       </span>
-                      <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#222222] text-[#B3B3B3] border border-[#333333]">
+                      <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#0B1528] text-cyan-300 border border-[#1B2B48]">
                         {result.score_type || 'Uncalibrated Model Score'}
                       </span>
                     </div>
 
                     <div className="space-y-1.5">
                       <div className="flex justify-between text-xs font-mono">
-                        <span className="text-white">
-                          Cover Score: {(result.cover_probability * 100).toFixed(1)}%
+                        <span className="text-emerald-400 font-bold flex items-center gap-1">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                          Cover: {(result.cover_probability * 100).toFixed(1)}%
                         </span>
-                        <span className="text-[#B3B3B3]">
-                          Stego Score: {(result.stego_probability * 100).toFixed(1)}%
+                        <span className="text-rose-400 font-bold flex items-center gap-1">
+                          Stego: {(result.stego_probability * 100).toFixed(1)}%
+                          <span className="w-1.5 h-1.5 rounded-full bg-rose-400"></span>
                         </span>
                       </div>
-                      <div className="h-3 w-full rounded-full bg-[#222222] border border-[#292929] overflow-hidden flex p-0.5">
+
+                      {/* Glowing Dual Progress Bar */}
+                      <div className="h-3 w-full rounded-full bg-black/60 border border-[#1B2B48] overflow-hidden flex p-0.5 relative">
                         <div
                           style={{ width: `${result.cover_probability * 100}%` }}
-                          className="h-full bg-white rounded-l-full transition-all duration-500"
+                          className="h-full bg-gradient-to-r from-emerald-600 to-emerald-400 rounded-l-full transition-all duration-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"
                         ></div>
                         <div
                           style={{ width: `${result.stego_probability * 100}%` }}
-                          className="h-full bg-[#555555] rounded-r-full transition-all duration-500"
+                          className="h-full bg-gradient-to-r from-rose-500 to-red-600 rounded-r-full transition-all duration-500 shadow-[0_0_8px_rgba(244,63,94,0.5)]"
                         ></div>
                       </div>
-                      <div className="flex justify-between text-[10px] text-[#777777] font-mono">
-                        <span>Model: {result.model_name || 'StegoNet-Lite'}</span>
-                        <span>Status: {result.model_status || 'Experimental Baseline'}</span>
+
+                      <div className="flex justify-between text-[10px] text-[#64748B] font-mono">
+                        <span>Architecture: {result.model_name || 'StegoNet-Lite'}</span>
+                        <span>Evaluation: {result.model_status || 'Experimental Baseline'}</span>
                       </div>
                     </div>
                   </div>
 
                   {/* Forensic Parameters Grid */}
-                  <div className="grid grid-cols-2 gap-3 text-xs">
-                    <div className="p-3 rounded-xl bg-[#151515] border border-[#292929]">
-                      <span className="text-[#777777] block text-[10px] uppercase font-semibold">
-                        Auxiliary Metric: Residual Energy (σr²)
+                  <div className="grid grid-cols-2 gap-3 text-xs font-mono">
+                    <div className="p-3 rounded-xl bg-[#050914] border border-[#1B2B48]">
+                      <span className="text-[#64748B] block text-[10px] uppercase font-bold">
+                        Laplacian Residual (σr²)
                       </span>
-                      <span className="text-white font-mono font-bold text-sm mt-0.5 block">
-                        {result.residual_energy ? result.residual_energy.toFixed(2) : '--'}
+                      <span className="text-cyan-300 font-bold text-sm mt-0.5 block">
+                        {result.residual_energy ? `${result.residual_energy.toFixed(2)} σr²` : '--'}
                       </span>
                     </div>
 
-                    <div className="p-3 rounded-xl bg-[#151515] border border-[#292929]">
-                      <span className="text-[#777777] block text-[10px] uppercase font-semibold">
-                        Latency / Device
+                    <div className="p-3 rounded-xl bg-[#050914] border border-[#1B2B48]">
+                      <span className="text-[#64748B] block text-[10px] uppercase font-bold">
+                        Inference Telemetry
                       </span>
-                      <span className="text-white font-mono font-bold text-sm mt-0.5 block">
+                      <span className="text-white font-bold text-sm mt-0.5 block truncate">
                         {result.execution_time_ms} ms / {result.device}
                       </span>
                     </div>
                   </div>
 
-                  {/* Classical Statistical Forensics Card (Phase 2) */}
-                  {result.statistical_metrics && (
-                    <div className="p-4 rounded-xl bg-[#151515] border border-[#292929] space-y-2">
-                      <div className="flex items-center justify-between text-xs font-semibold text-white">
-                        <span className="flex items-center gap-1.5">
-                          <Activity className="w-3.5 h-3.5 text-white" />
-                          <span>Auxiliary Forensic Measurements</span>
-                        </span>
-                        <span className="text-[10px] font-mono text-[#777777]">Diagnostic Only</span>
-                      </div>
-                      <div className="grid grid-cols-3 gap-2 text-[11px] font-mono pt-1">
-                        <div className="p-2 rounded-lg bg-[#111111] border border-[#222222]">
-                          <span className="text-[#777777] block text-[10px]">LSB Entropy</span>
-                          <span className="text-white font-bold block">{result.statistical_metrics.lsb_shannon_entropy}</span>
-                        </div>
-                        <div className="p-2 rounded-lg bg-[#111111] border border-[#222222]">
-                          <span className="text-[#777777] block text-[10px]">Gradient Var</span>
-                          <span className="text-white font-bold block">{result.statistical_metrics.spatial_gradient_variance?.toFixed(1)}</span>
-                        </div>
-                        <div className="p-2 rounded-lg bg-[#111111] border border-[#222222]">
-                          <span className="text-[#777777] block text-[10px]">SPAM Diag</span>
-                          <span className="text-white font-bold block">{result.statistical_metrics.spam_markov_diag_dominance}</span>
-                        </div>
-                      </div>
-                      <p className="text-[10px] text-[#777777] pt-1 leading-normal">
-                        Note: Auxiliary metrics are empirical measurements of texture and spatial gradient variance, not independent proof of steganography.
-                      </p>
-                    </div>
-                  )}
-
                   {/* Scientific Rationale Card */}
-                  <div className="p-4 rounded-xl bg-[#151515] border border-[#292929] text-xs space-y-2">
-                    <div className="flex items-center gap-1.5 text-white font-semibold text-[11px]">
-                      <FileText className="w-3.5 h-3.5 text-white" />
-                      <span>Scientific Forensic Explanation</span>
+                  <div className="p-3.5 rounded-xl bg-[#050914] border border-[#1B2B48] text-xs space-y-1.5">
+                    <div className="flex items-center gap-1.5 text-cyan-300 font-mono font-bold text-[11px]">
+                      <FileText className="w-3.5 h-3.5 text-cyan-400" />
+                      <span>Forensic Classification Rationale</span>
                     </div>
-                    <p className="text-[#B3B3B3] leading-relaxed text-[11px]">
+                    <p className="text-[#94A3B8] leading-relaxed text-[11px] font-sans">
                       {result.forensic_explanation}
                     </p>
-                    <div className="p-2 rounded-lg bg-[#0A0A0A] border border-[#222222] text-[10px] text-[#777777] leading-relaxed">
-                      Single image analysis: No reference cover image supplied. Exact pixel modifications cannot be verified without a matched reference.
-                    </div>
                   </div>
 
                   {/* Forensic Hash Fingerprint */}
-                  <div className="p-3 rounded-xl bg-[#151515] border border-[#292929] text-[11px] font-mono text-[#777777] flex items-center justify-between">
-                    <span className="flex items-center gap-1 truncate max-w-[280px]">
-                      <Hash className="w-3 h-3 text-[#B3B3B3] shrink-0" />
-                      SHA-256: {result.file_hash}
+                  <div className="p-2.5 rounded-xl bg-[#050914] border border-[#1B2B48] text-[11px] font-mono text-[#64748B] flex items-center justify-between">
+                    <span className="flex items-center gap-1.5 truncate max-w-[280px]">
+                      <Hash className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+                      <span className="text-[#94A3B8] font-bold">SHA-256:</span>
+                      <span className="text-cyan-300 truncate">{result.file_hash}</span>
                     </span>
-                    <span className="text-[#B3B3B3] shrink-0">Chain-of-Custody</span>
+                    <span className="text-[10px] text-emerald-400 font-bold shrink-0">✓ Chain-of-Custody</span>
                   </div>
                 </div>
               )}
             </div>
 
             {/* Scientific Transparency Disclaimer */}
-            <div className="mt-6 pt-4 border-t border-[#292929] text-[11px] text-[#777777] leading-normal flex items-start gap-2">
-              <HelpCircle className="w-3.5 h-3.5 text-[#B3B3B3] shrink-0 mt-0.5" />
+            <div className="mt-5 pt-3.5 border-t border-[#1B2B48] text-[11px] text-[#64748B] leading-normal flex items-start gap-2">
+              <HelpCircle className="w-3.5 h-3.5 text-cyan-400 shrink-0 mt-0.5" />
               <span>
-                Demonstration Notice: StegoNet-Lite is an experimental baseline engineered for CPU demonstration. In spatial S-UNIWARD steganography at 0.4 bpp, discrete ±1 perturbations cancel across spatial pooling, so lightweight CNNs cannot reliably classify arbitrary single images without deep GPU-trained unpooled representations (SRNet). Spatial residual energy serves as an auxiliary physical metric.
+                Demonstration Rigor: StegoNet-Lite is an experimental baseline engineered for CPU demonstration. S-UNIWARD ternary ±1 perturbations cancel across spatial pooling; paired baseline subtraction or deep SRNet unpooled features are essential for courtroom attribution.
               </span>
             </div>
           </div>

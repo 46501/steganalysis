@@ -219,28 +219,34 @@ export default function Detector({ initialFile = null }) {
       </div>
 
       {/* Workspace Mode Switcher */}
-      <div className="flex items-center gap-2 p-1.5 rounded-xl bg-[#111111] border border-[#292929] w-fit">
+      <div className="flex items-center gap-2 p-1.5 rounded-2xl bg-[#070D1A] border border-[#1B2B48] w-fit shadow-md">
         <button
-          onClick={() => setDetectionMode('single')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition ${
+          onClick={() => {
+            playCyberClick();
+            setDetectionMode('single');
+          }}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold font-mono transition ${
             detectionMode === 'single'
-              ? 'bg-[#242424] text-white border border-[#383838] shadow-sm'
-              : 'text-[#777777] hover:text-white'
+              ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-[0_0_10px_rgba(6,182,212,0.2)]'
+              : 'text-[#64748B] hover:text-white'
           }`}
         >
-          <FileImage className="w-4 h-4 text-white" />
-          <span>Single Image Inspection</span>
+          <FileImage className="w-4 h-4 text-cyan-400" />
+          <span>Single Carrier Inspection</span>
         </button>
         <button
-          onClick={() => setDetectionMode('batch')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition ${
+          onClick={() => {
+            playCyberClick();
+            setDetectionMode('batch');
+          }}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold font-mono transition ${
             detectionMode === 'batch'
-              ? 'bg-[#242424] text-white border border-[#383838] shadow-sm'
-              : 'text-[#777777] hover:text-white'
+              ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-[0_0_10px_rgba(6,182,212,0.2)]'
+              : 'text-[#64748B] hover:text-white'
           }`}
         >
-          <FolderArchive className="w-4 h-4 text-[#B3B3B3]" />
-          <span>Batch Evidence Triage (10–50 Images)</span>
+          <FolderArchive className="w-4 h-4 text-cyan-400" />
+          <span>Batch Evidence Triage (10–50 Carriers)</span>
         </button>
       </div>
 

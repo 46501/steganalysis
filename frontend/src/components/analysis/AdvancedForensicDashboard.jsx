@@ -32,6 +32,50 @@ import ComparisonWipeSlider from './ComparisonWipeSlider';
 import PixelHistogramChart from './PixelHistogramChart';
 import FileStructureCarver from './FileStructureCarver';
 
+function SectorOverlayGrid({ sectors, selectedSector, onSelectSector, isVisible }) {
+  if (!isVisible || !sectors || sectors.length !== 16) return null;
+  return (
+    <div className="absolute inset-0 grid grid-cols-4 grid-rows-4 z-20 pointer-events-auto">
+      {sectors.map((sec) => {
+        const isSelected = selectedSector === sec.sector_index;
+        return (
+          <div
+            key={sec.sector_index}
+            onClick={(e) => {
+              e.stopPropagation();
+              onSelectSector(isSelected ? null : sec.sector_index);
+            }}
+            className={`relative border border-cyan-500/25 cursor-pointer transition-all flex flex-col justify-between p-1 group/sec ${
+              isSelected
+                ? 'border-2 border-cyan-400 bg-cyan-500/30 shadow-[inset_0_0_14px_rgba(6,182,212,0.5)] z-20'
+                : 'hover:bg-cyan-500/15 hover:border-cyan-400/60'
+            }`}
+            title={`Sector #${sec.sector_index} (${sec.row},${sec.col}) - Entropy: ${sec.local_entropy}, Residual: ${sec.residual_energy}${sec.changed_pixels !== null ? `, Altered: ${sec.changed_pixels} px (${sec.changed_pixel_percent}%)` : ''}`}
+          >
+            <div className="flex items-center justify-between pointer-events-none">
+              <span
+                className={`text-[9px] font-mono font-bold px-1 rounded ${
+                  isSelected ? 'bg-cyan-400 text-black shadow-sm' : 'bg-black/75 text-cyan-300'
+                }`}
+              >
+                #{sec.sector_index}
+              </span>
+              {sec.changed_pixel_percent !== null && sec.changed_pixel_percent > 0 && (
+                <span className="text-[8px] font-mono font-bold text-rose-300 bg-black/80 px-1 rounded">
+                  {sec.changed_pixel_percent}%
+                </span>
+              )}
+            </div>
+            <div className="text-[8px] font-mono text-[#94A3B8] opacity-0 group-hover/sec:opacity-100 transition-opacity bg-black/80 px-1 rounded pointer-events-none truncate">
+              {sec.texture_complexity}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 /**
  * AdvancedForensicDashboard
  *
@@ -51,6 +95,7 @@ export default function AdvancedForensicDashboard({
   const [activeTab, setActiveTab] = useState('overview');
   const [isAdvancedView, setIsAdvancedView] = useState(true);
   const [selectedSector, setSelectedSector] = useState(null);
+  const [showSectorGridOverlay, setShowSectorGridOverlay] = useState(true);
   const [diffViewMode, setDiffViewMode] = useState('ternary'); // 'ternary' | 'heatmap' | 'wipe' | 'loupe'
   const [amplificationFactor, setAmplificationFactor] = useState(50);
   const [expandedMetric, setExpandedMetric] = useState(null);
@@ -370,39 +415,56 @@ export default function AdvancedForensicDashboard({
                 </p>
               </div>
 
-              <div className="flex items-center gap-1.5 p-1 rounded-xl bg-[#050914] border border-[#1B2B48] font-mono text-xs">
-                <button
-                  onClick={() => setDiffViewMode('ternary')}
-                  className={`px-3 py-1.5 rounded-lg transition ${
-                    diffViewMode === 'ternary' ? 'bg-cyan-500/20 text-cyan-300 font-bold' : 'text-[#64748B] hover:text-white'
-                  }`}
-                >
-                  Ternary Map
-                </button>
-                <button
-                  onClick={() => setDiffViewMode('heatmap')}
-                  className={`px-3 py-1.5 rounded-lg transition ${
-                    diffViewMode === 'heatmap' ? 'bg-cyan-500/20 text-cyan-300 font-bold' : 'text-[#64748B] hover:text-white'
-                  }`}
-                >
-                  Residual Heatmap
-                </button>
-                <button
-                  onClick={() => setDiffViewMode('loupe')}
-                  className={`px-3 py-1.5 rounded-lg transition ${
-                    diffViewMode === 'loupe' ? 'bg-cyan-500/20 text-cyan-300 font-bold' : 'text-[#64748B] hover:text-white'
-                  }`}
-                >
-                  8× Pixel Loupe
-                </button>
-                <button
-                  onClick={() => setDiffViewMode('wipe')}
-                  className={`px-3 py-1.5 rounded-lg transition ${
-                    diffViewMode === 'wipe' ? 'bg-cyan-500/20 text-cyan-300 font-bold' : 'text-[#64748B] hover:text-white'
-                  }`}
-                >
-                  Split Wipe
-                </button>
+              <div className="flex flex-wrap items-center gap-2">
+                {(diffViewMode === 'ternary' || diffViewMode === 'heatmap') && (
+                  <button
+                    type="button"
+                    onClick={() => setShowSectorGridOverlay(!showSectorGridOverlay)}
+                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono transition border ${
+                      showSectorGridOverlay
+                        ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/50 shadow-[0_0_10px_rgba(6,182,212,0.25)] font-bold'
+                        : 'bg-[#050914] text-[#64748B] border-[#1B2B48] hover:text-white'
+                    }`}
+                  >
+                    <Grid className="w-3.5 h-3.5" />
+                    <span>4×4 Sector Overlay: {showSectorGridOverlay ? 'ON' : 'OFF'}</span>
+                  </button>
+                )}
+
+                <div className="flex items-center gap-1.5 p-1 rounded-xl bg-[#050914] border border-[#1B2B48] font-mono text-xs">
+                  <button
+                    onClick={() => setDiffViewMode('ternary')}
+                    className={`px-3 py-1.5 rounded-lg transition ${
+                      diffViewMode === 'ternary' ? 'bg-cyan-500/20 text-cyan-300 font-bold' : 'text-[#64748B] hover:text-white'
+                    }`}
+                  >
+                    Ternary Map
+                  </button>
+                  <button
+                    onClick={() => setDiffViewMode('heatmap')}
+                    className={`px-3 py-1.5 rounded-lg transition ${
+                      diffViewMode === 'heatmap' ? 'bg-cyan-500/20 text-cyan-300 font-bold' : 'text-[#64748B] hover:text-white'
+                    }`}
+                  >
+                    Residual Heatmap
+                  </button>
+                  <button
+                    onClick={() => setDiffViewMode('loupe')}
+                    className={`px-3 py-1.5 rounded-lg transition ${
+                      diffViewMode === 'loupe' ? 'bg-cyan-500/20 text-cyan-300 font-bold' : 'text-[#64748B] hover:text-white'
+                    }`}
+                  >
+                    8× Pixel Loupe
+                  </button>
+                  <button
+                    onClick={() => setDiffViewMode('wipe')}
+                    className={`px-3 py-1.5 rounded-lg transition ${
+                      diffViewMode === 'wipe' ? 'bg-cyan-500/20 text-cyan-300 font-bold' : 'text-[#64748B] hover:text-white'
+                    }`}
+                  >
+                    Split Wipe
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -448,17 +510,63 @@ export default function AdvancedForensicDashboard({
             {/* Display active visual exhibit */}
             {diffViewMode === 'ternary' && (
               <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
-                <div className="md:col-span-5 flex justify-center">
-                  <div className="w-72 h-72 rounded-2xl overflow-hidden border border-[#1B2B48] bg-black shadow-xl relative group">
+                <div className="md:col-span-5 flex flex-col items-center">
+                  <div className="w-72 h-72 sm:w-80 sm:h-80 rounded-2xl overflow-hidden border border-[#1B2B48] bg-black shadow-xl relative group select-none">
                     <img
                       src={result.diff_map_b64 || previewUrl}
                       alt="Ternary Difference Map"
                       className="w-full h-full object-cover"
                     />
-                    <div className="absolute top-2 left-2 px-2 py-0.5 rounded bg-black/80 text-[10px] font-mono text-white border border-[#334155]">
+                    <div className="absolute top-2 left-2 px-2 py-0.5 rounded bg-black/80 text-[10px] font-mono text-white border border-[#334155] z-10 pointer-events-none">
                       Ternary Perturbation Map
                     </div>
+                    <SectorOverlayGrid
+                      sectors={sectors}
+                      selectedSector={selectedSector}
+                      onSelectSector={setSelectedSector}
+                      isVisible={showSectorGridOverlay}
+                    />
                   </div>
+
+                  {/* Active Sector Quick HUD */}
+                  {selectedSector !== null && sectors[selectedSector] && (
+                    <div className="w-72 sm:w-80 mt-2 p-2.5 rounded-xl bg-cyan-950/40 border border-cyan-500/40 font-mono text-[11px] text-cyan-200 shadow-lg">
+                      <div className="flex items-center justify-between">
+                        <span className="font-bold text-white">
+                          Sector #{selectedSector} ({sectors[selectedSector].row},{sectors[selectedSector].col})
+                        </span>
+                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-black/60 text-cyan-300 border border-cyan-500/30">
+                          {sectors[selectedSector].texture_complexity}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center text-[10px] text-[#94A3B8] mt-1">
+                        <span>Entropy: <strong className="text-white">{sectors[selectedSector].local_entropy}</strong></span>
+                        <span>Residual: <strong className="text-white">{sectors[selectedSector].residual_energy}</strong></span>
+                      </div>
+                      {sectors[selectedSector].changed_pixels !== null && (
+                        <div className="mt-1 text-rose-300 font-bold text-[10px] flex justify-between border-t border-cyan-500/20 pt-1">
+                          <span>Altered:</span>
+                          <span>{sectors[selectedSector].changed_pixels.toLocaleString()} px ({sectors[selectedSector].changed_pixel_percent}%)</span>
+                        </div>
+                      )}
+                      <div className="flex justify-between items-center mt-1.5 pt-1.5 border-t border-[#1B2B48]">
+                        <button
+                          type="button"
+                          onClick={() => setDiffViewMode('loupe')}
+                          className="text-[10px] text-cyan-400 hover:text-cyan-200 font-bold flex items-center gap-1"
+                        >
+                          <ZoomIn className="w-3 h-3" /> Inspect in 8× Loupe
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setSelectedSector(null)}
+                          className="text-[10px] text-[#64748B] hover:text-white"
+                        >
+                          Clear
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
                 <div className="md:col-span-7 space-y-4 text-xs font-mono">
                   <div>
@@ -508,14 +616,57 @@ export default function AdvancedForensicDashboard({
 
             {diffViewMode === 'heatmap' && (
               <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
-                <div className="md:col-span-5 flex justify-center">
-                  <div className="w-72 h-72 rounded-2xl overflow-hidden border border-[#1B2B48] bg-black shadow-xl">
+                <div className="md:col-span-5 flex flex-col items-center">
+                  <div className="w-72 h-72 sm:w-80 sm:h-80 rounded-2xl overflow-hidden border border-[#1B2B48] bg-black shadow-xl relative group select-none">
                     <img
                       src={result.residual_heatmap_b64 || previewUrl}
                       alt="Residual Heatmap"
                       className="w-full h-full object-cover"
                     />
+                    <div className="absolute top-2 left-2 px-2 py-0.5 rounded bg-black/80 text-[10px] font-mono text-white border border-[#334155] z-10 pointer-events-none">
+                      Laplacian Residual Heatmap
+                    </div>
+                    <SectorOverlayGrid
+                      sectors={sectors}
+                      selectedSector={selectedSector}
+                      onSelectSector={setSelectedSector}
+                      isVisible={showSectorGridOverlay}
+                    />
                   </div>
+
+                  {/* Active Sector Quick HUD */}
+                  {selectedSector !== null && sectors[selectedSector] && (
+                    <div className="w-72 sm:w-80 mt-2 p-2.5 rounded-xl bg-cyan-950/40 border border-cyan-500/40 font-mono text-[11px] text-cyan-200 shadow-lg">
+                      <div className="flex items-center justify-between">
+                        <span className="font-bold text-white">
+                          Sector #{selectedSector} ({sectors[selectedSector].row},{sectors[selectedSector].col})
+                        </span>
+                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-black/60 text-cyan-300 border border-cyan-500/30">
+                          {sectors[selectedSector].texture_complexity}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center text-[10px] text-[#94A3B8] mt-1">
+                        <span>Entropy: <strong className="text-white">{sectors[selectedSector].local_entropy}</strong></span>
+                        <span>Residual: <strong className="text-white">{sectors[selectedSector].residual_energy}</strong></span>
+                      </div>
+                      <div className="flex justify-between items-center mt-1.5 pt-1.5 border-t border-[#1B2B48]">
+                        <button
+                          type="button"
+                          onClick={() => setDiffViewMode('loupe')}
+                          className="text-[10px] text-cyan-400 hover:text-cyan-200 font-bold flex items-center gap-1"
+                        >
+                          <ZoomIn className="w-3 h-3" /> Inspect in 8× Loupe
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setSelectedSector(null)}
+                          className="text-[10px] text-[#64748B] hover:text-white"
+                        >
+                          Clear
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
                 <div className="md:col-span-7 space-y-3 text-xs">
                   <h4 className="text-sm font-bold text-white">Spatial Laplacian Residual Heatmap</h4>
@@ -607,6 +758,21 @@ export default function AdvancedForensicDashboard({
                           {sec.changed_pixels !== null && (
                             <div className="text-rose-400 font-bold">
                               Altered: {sec.changed_pixels.toLocaleString()} px ({sec.changed_pixel_percent}%)
+                            </div>
+                          )}
+                          {isSelected && (
+                            <div className="mt-2 pt-1.5 border-t border-cyan-400/30 flex justify-between items-center text-[10px]">
+                              <span className="text-cyan-300 font-bold">Active Region</span>
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setDiffViewMode('loupe');
+                                }}
+                                className="text-cyan-400 hover:text-cyan-200 underline flex items-center gap-1"
+                              >
+                                <ZoomIn className="w-2.5 h-2.5" /> Loupe
+                              </button>
                             </div>
                           )}
                         </div>
@@ -1000,3 +1166,4 @@ export default function AdvancedForensicDashboard({
     </div>
   );
 }
+

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import AppLayout from './components/layout/AppLayout';
 import Dashboard from './pages/Dashboard';
 import Detector from './pages/Detector';
+import ForensicsLab from './pages/ForensicsLab';
 import StegoStudio from './pages/StegoStudio';
 import History from './pages/History';
 import ModelInfo from './pages/ModelInfo';
@@ -45,6 +46,7 @@ export default function App() {
         />
       )}
       {activeTab === 'detector' && <Detector initialFile={injectedDetectorFile} />}
+      {activeTab === 'lab' && <ForensicsLab />}
       {activeTab === 'stego-studio' && <StegoStudio onSendToDetector={handleSendToDetector} />}
       {activeTab === 'history' && <History />}
       {activeTab === 'model-info' && <ModelInfo />}

@@ -14,6 +14,7 @@ import {
   ArrowRight,
   X,
   Activity,
+  FlaskConical,
 } from 'lucide-react';
 
 export default function CommandPalette({
@@ -68,6 +69,17 @@ export default function CommandPalette({
       badge: 'Workstation',
       action: () => {
         onNavigate('detector');
+        onClose();
+      },
+    },
+    {
+      category: 'Workstation Tools',
+      title: 'Interactive Forensics Laboratory',
+      subtitle: 'Lossless bit manipulation, pixel inspector, LSB studio & comparison',
+      icon: FlaskConical,
+      badge: 'Lab',
+      action: () => {
+        onNavigate('lab');
         onClose();
       },
     },

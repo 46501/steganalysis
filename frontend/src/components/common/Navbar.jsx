@@ -48,6 +48,7 @@ export default function Navbar({
   const navItems = [
     { id: 'dashboard', label: 'Dashboard' },
     { id: 'detector', label: 'Detector' },
+    { id: 'lab', label: 'Forensics Lab' },
     { id: 'stego-studio', label: 'Stego Studio' },
     { id: 'history', label: 'Scan History' },
     { id: 'model-info', label: 'Research' },

@@ -99,6 +99,113 @@ export const steganalysisApi = {
     const response = await apiClient.post('/stego/extract', formData);
     return response.data;
   },
+
+  // --------------------------------------------------------------------------
+  // Interactive Steganography & Forensics Laboratory Endpoints
+  // --------------------------------------------------------------------------
+  inspectLabImage: async (file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await apiClient.post('/lab/inspect', formData);
+    return response.data;
+  },
+
+  inspectLabPixel: async (imageB64, x, y) => {
+    const response = await apiClient.post('/lab/pixel-inspect', {
+      image_b64: imageB64,
+      x,
+      y,
+    });
+    return response.data;
+  },
+
+  toggleLabBit: async (pixelValue, bitPosition) => {
+    const response = await apiClient.post('/lab/toggle-bit', {
+      pixel_value: pixelValue,
+      bit_position: bitPosition,
+    });
+    return response.data;
+  },
+
+  applyLabPixel: async (imageB64, x, y, channelIndex, newValue) => {
+    const response = await apiClient.post('/lab/apply-pixel', {
+      image_b64: imageB64,
+      x,
+      y,
+      channel_index: channelIndex,
+      new_value: newValue,
+    });
+    return response.data;
+  },
+
+  manipulateLabBulk: async (params) => {
+    const response = await apiClient.post('/lab/manipulate-bulk', params);
+    return response.data;
+  },
+
+  getLabBitplane: async (imageB64, plane = 0, channel = 'gray') => {
+    const response = await apiClient.post('/lab/bitplane', {
+      image_b64: imageB64,
+      plane,
+      channel,
+    });
+    return response.data;
+  },
+
+  embedLabSecret: async (imageB64, secretText, password = null) => {
+    const response = await apiClient.post('/lab/embed', {
+      image_b64: imageB64,
+      secret_text: secretText,
+      password: password || null,
+    });
+    return response.data;
+  },
+
+  extractLabSecret: async (imageB64, password = null) => {
+    const response = await apiClient.post('/lab/extract', {
+      image_b64: imageB64,
+      password: password || null,
+    });
+    return response.data;
+  },
+
+  compareLabPair: async (originalB64, modifiedB64) => {
+    const response = await apiClient.post('/lab/compare', {
+      original_image_b64: originalB64,
+      modified_image_b64: modifiedB64,
+    });
+    return response.data;
+  },
+
+  analyzeLabImage: async (imageB64, modelName = 'StegoNet-Lite') => {
+    const formData = new FormData();
+    formData.append('image_b64', imageB64);
+    formData.append('model_name', modelName);
+    const response = await apiClient.post('/lab/analyze', formData);
+    return response.data;
+  },
+
+  saveLabExperiment: async (data) => {
+    const response = await apiClient.post('/lab/experiments', data);
+    return response.data;
+  },
+
+  listLabExperiments: async (limit = 50) => {
+    const response = await apiClient.get(`/lab/experiments?limit=${limit}`);
+    return response.data;
+  },
+
+  getLabExperiment: async (id) => {
+    const response = await apiClient.get(`/lab/experiments/${id}`);
+    return response.data;
+  },
+
+  deleteLabExperiment: async (id) => {
+    const response = await apiClient.delete(`/lab/experiments/${id}`);
+    return response.data;
+  },
+
+  getLabDownloadUrl: (id) => `${API_BASE_URL}/lab/experiments/${id}/download`,
 };
 
 export default apiClient;

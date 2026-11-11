@@ -99,18 +99,53 @@ export default function Detector({ initialFile = null }) {
   };
 
   const loadSample = async (sampleType) => {
+    loadAndRunSample(sampleType);
+  };
+
+  const loadAndRunSample = async (sampleType) => {
     setError(null);
     setResult(null);
-    const samplePath = sampleType === 'cover' ? '/samples/sample_cover.png' : '/samples/sample_stego.png';
-    const sampleName = sampleType === 'cover' ? 'sample_5001_cover.png' : 'sample_5001_stego_0.4bpp.png';
+    setBitplaneCache({});
+    setSelectedBitplane(0);
+    setVisualTab('heatmap');
+
+    let samplePath, sampleName;
+    if (sampleType === 'cover') {
+      samplePath = '/samples/sample_cover.png';
+      sampleName = 'sample_5001_cover.png';
+    } else if (sampleType === 'stego') {
+      samplePath = '/samples/sample_stego.png';
+      sampleName = 'sample_5001_stego_0.4bpp.png';
+    } else {
+      samplePath = '/samples/sample_inconclusive.png';
+      sampleName = 'sample_uniform_gray.png';
+    }
 
     try {
       const response = await fetch(samplePath);
       const blob = await response.blob();
       const sampleFile = new File([blob], sampleName, { type: 'image/png' });
-      handleFileSelect(sampleFile);
+      setFile(sampleFile);
+      const url = URL.createObjectURL(sampleFile);
+      setPreviewUrl(url);
+
+      // Instantly run analysis for live demonstration
+      setIsAnalyzing(true);
+      const res = await steganalysisApi.analyzeImage(sampleFile, modelChoice);
+      setResult(res);
+      if (res.bitplane_0_b64) {
+        setBitplaneCache({ 0: res.bitplane_0_b64 });
+      }
+      if (res.diff_map_b64) {
+        setVisualTab('diff');
+      } else {
+        setVisualTab('heatmap');
+      }
     } catch (err) {
-      setError('Could not load sample file. Please upload an image directly.');
+      console.error('Failed to load & analyze sample:', err);
+      setError('Could not run benchmark sample analysis.');
+    } finally {
+      setIsAnalyzing(false);
     }
   };
 
@@ -208,32 +243,45 @@ export default function Detector({ initialFile = null }) {
         <BatchTriageWorkstation />
       ) : (
         <>
-          {/* Preset Sample Quick-Pick Bar (College Demo Accelerator) */}
+          {/* Evaluator Benchmark Triage Bar (Live Demo Mode) */}
       <div className="space-y-3">
-        <div className="flex flex-wrap items-center justify-between gap-4 p-4 rounded-xl bg-[#111111] border border-[#292929]">
+        <div className="flex flex-wrap items-center justify-between gap-4 p-4 rounded-xl bg-[#0B1120] border border-[#1B2B48] shadow-sm">
           <div className="flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-white" />
-            <span className="text-xs font-semibold text-[#B3B3B3]">
-              Instant Evaluator Samples:
+            <Sparkles className="w-4 h-4 text-cyan-400 drop-shadow-[0_0_6px_rgba(6,182,212,0.6)]" />
+            <span className="text-xs font-semibold text-white">
+              One-Click Evaluator Benchmark Triage:
             </span>
-            <span className="text-xs text-[#777777]">
-              (From validated BOSSbase 1.01 test partition)
+            <span className="text-xs text-cyan-400/80 font-mono hidden sm:inline">
+              (Live Demo Mode)
             </span>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2.5">
             <button
-              onClick={() => loadSample('cover')}
-              className="px-3 py-1.5 rounded-lg bg-[#151515] hover:bg-[#1E1E1E] border border-[#292929] text-white text-xs font-medium transition flex items-center gap-1.5"
+              onClick={() => loadAndRunSample('cover')}
+              disabled={isAnalyzing}
+              className="px-3 py-1.5 rounded-lg bg-[#0F1A30] hover:bg-emerald-950/40 border border-emerald-500/40 hover:border-emerald-400 text-emerald-300 hover:text-white text-xs font-medium transition flex items-center gap-1.5 shadow-[0_0_10px_rgba(16,185,129,0.15)] disabled:opacity-50"
+              title="Loads clean reference image and immediately verifies Cover Indicated verdict"
             >
-              <ShieldCheck className="w-3.5 h-3.5 text-white" />
-              <span>Load Sample Cover (#5001)</span>
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+              <span>Clean Cover (#5001)</span>
             </button>
             <button
-              onClick={() => loadSample('stego')}
-              className="px-3 py-1.5 rounded-lg bg-[#151515] hover:bg-[#1E1E1E] border border-[#292929] text-[#B3B3B3] hover:text-white text-xs font-medium transition flex items-center gap-1.5"
+              onClick={() => loadAndRunSample('stego')}
+              disabled={isAnalyzing}
+              className="px-3 py-1.5 rounded-lg bg-[#0F1A30] hover:bg-rose-950/40 border border-rose-500/40 hover:border-rose-400 text-rose-300 hover:text-white text-xs font-medium transition flex items-center gap-1.5 shadow-[0_0_10px_rgba(244,63,94,0.15)] disabled:opacity-50"
+              title="Loads stego carrier and immediately verifies Stego Indicated verdict with S-UNIWARD perturbations"
             >
-              <AlertTriangle className="w-3.5 h-3.5 text-[#B3B3B3]" />
-              <span>Load Sample Stego (#5001 S-UNIWARD)</span>
+              <AlertTriangle className="w-3.5 h-3.5 text-rose-400" />
+              <span>Stego S-UNIWARD (#5001)</span>
+            </button>
+            <button
+              onClick={() => loadAndRunSample('inconclusive')}
+              disabled={isAnalyzing}
+              className="px-3 py-1.5 rounded-lg bg-[#0F1A30] hover:bg-amber-950/40 border border-amber-500/40 hover:border-amber-400 text-amber-300 hover:text-white text-xs font-medium transition flex items-center gap-1.5 shadow-[0_0_10px_rgba(245,158,11,0.15)] disabled:opacity-50"
+              title="Loads zero-residual gray carrier and immediately demonstrates Inconclusive scientific state"
+            >
+              <HelpCircle className="w-3.5 h-3.5 text-amber-400" />
+              <span>Inconclusive Sample</span>
             </button>
           </div>
         </div>
@@ -314,14 +362,15 @@ export default function Detector({ initialFile = null }) {
                     alt="Preview"
                     className="w-full h-full object-cover"
                   />
-                  {/* Laser Scanline HUD Overlay when analyzing */}
+                  {/* Electric-Cyan Laser Scanline HUD Overlay when analyzing */}
                   {isAnalyzing && (
                     <>
-                      <div className="absolute inset-0 bg-white/5 z-10 pointer-events-none"></div>
-                      <div className="absolute inset-0 bg-[radial-gradient(#ffffff_1px,transparent_1px)] [background-size:12px_12px] opacity-20 z-10 pointer-events-none"></div>
-                      <div className="absolute left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-white to-transparent shadow-[0_0_12px_#ffffff] animate-laser-scan pointer-events-none z-20"></div>
-                      <div className="absolute top-2 left-2 px-1.5 py-0.5 rounded bg-black/90 text-[8px] font-mono text-white border border-[#383838] z-20 animate-pulse">
-                        SCANNING TENSOR
+                      <div className="absolute inset-0 bg-cyan-500/10 z-10 pointer-events-none"></div>
+                      <div className="absolute inset-0 bg-[radial-gradient(#00f0ff_1px,transparent_1px)] [background-size:16px_16px] opacity-30 z-10 pointer-events-none"></div>
+                      <div className="absolute left-0 right-0 h-1 bg-gradient-to-r from-transparent via-cyan-400 to-transparent shadow-[0_0_16px_#00f0ff,0_0_32px_#00f0ff] animate-laser-scan pointer-events-none z-20"></div>
+                      <div className="absolute top-2 left-2 px-2 py-0.5 rounded bg-black/90 text-[9px] font-mono text-cyan-300 border border-cyan-500/40 z-20 animate-pulse flex items-center gap-1.5 shadow-[0_0_8px_rgba(6,182,212,0.4)]">
+                        <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping"></span>
+                        <span>SCANNING SPATIAL TENSOR</span>
                       </div>
                     </>
                   )}

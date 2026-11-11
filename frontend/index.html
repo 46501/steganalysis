@@ -10,17 +10,10 @@
     <script>
       (function() {
         try {
-          var saved = localStorage.getItem('stegoshield-theme');
-          var isDark = saved ? saved === 'dark' : true; // Default to dark cyber mode for StegoShield AI
-          if (isDark) {
-            document.documentElement.classList.add('dark');
-            document.documentElement.classList.remove('light');
-            document.documentElement.style.colorScheme = 'dark';
-          } else {
-            document.documentElement.classList.remove('dark');
-            document.documentElement.classList.add('light');
-            document.documentElement.style.colorScheme = 'light';
-          }
+          localStorage.setItem('stegoshield-theme', 'dark');
+          document.documentElement.classList.add('dark');
+          document.documentElement.classList.remove('light');
+          document.documentElement.style.colorScheme = 'dark';
         } catch (e) {}
       })();
     </script>

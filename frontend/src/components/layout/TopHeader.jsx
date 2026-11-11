@@ -1,6 +1,5 @@
 import React from 'react';
 import { Menu, Search, Sparkles, PanelLeft, Activity } from 'lucide-react';
-import ThemeSwitcher from '../common/ThemeSwitcher';
 
 export default function TopHeader({
   setMobileOpen,
@@ -65,8 +64,8 @@ export default function TopHeader({
               Uncover the Invisible.
             </span>
             <span
-              className="text-xs sm:text-[13px] lg:text-[14px] leading-tight font-normal truncate hidden sm:block"
-              style={{ color: 'rgba(165, 243, 252, 0.8)' }}
+              className="text-xs sm:text-[13px] lg:text-[14px] leading-tight font-normal truncate hidden sm:block text-cyan-300"
+              style={{ color: 'rgba(165, 243, 252, 0.85)' }}
             >
               Advanced Image Steganalysis & Digital Forensics
             </span>
@@ -74,7 +73,7 @@ export default function TopHeader({
         </div>
       </div>
 
-      {/* Right Actions: Command Panel -> Theme Switcher -> View Guide */}
+      {/* Right Actions: Command Panel -> View Guide */}
       <div className="flex items-center gap-2 sm:gap-3 shrink-0 ml-4">
         {/* Quick Search Shortcut Pill (Command Panel) */}
         <button
@@ -89,9 +88,6 @@ export default function TopHeader({
             ⌘K
           </kbd>
         </button>
-
-        {/* Theme Switcher placed directly in between Command Panel and Viva Guide */}
-        <ThemeSwitcher />
 
         {/* Viva Guide Shortcut (View Guide) */}
         <button

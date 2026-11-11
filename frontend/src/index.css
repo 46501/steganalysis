@@ -3,21 +3,30 @@
 @tailwind utilities;
 
 :root {
-  color-scheme: light;
-}
-
-html.dark {
   color-scheme: dark;
 }
 
-body {
+html, body {
   margin: 0;
+  background-color: #050811;
+  color: #F8FAFC;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Smooth transitions for theme switching */
+/* Cyber Atmospheric Background with Subtle Tactical Grid */
+body {
+  background-color: #050811;
+  background-image: 
+    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(6, 182, 212, 0.08), transparent),
+    linear-gradient(to right, rgba(6, 182, 212, 0.025) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(6, 182, 212, 0.025) 1px, transparent 1px);
+  background-size: 100% 100%, 36px 36px, 36px 36px;
+  min-height: 100vh;
+}
+
+/* Smooth transitions */
 html, body, div, section, main, header, footer, aside, nav, article,
 button, input, textarea, select, table, th, td, p, h1, h2, h3, h4, h5, h6, span {
   transition-property: background-color, border-color, color, box-shadow;
@@ -25,118 +34,105 @@ button, input, textarea, select, table, th, td, p, h1, h2, h3, h4, h5, h6, span 
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Custom scrollbars */
-html.dark ::-webkit-scrollbar-track {
+/* Custom Cyber Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
   background: #050811;
 }
-html.dark ::-webkit-scrollbar-thumb {
-  background: #1A2844;
-  border-radius: 2px;
+::-webkit-scrollbar-thumb {
+  background: #1B2B48;
+  border-radius: 3px;
 }
-html.dark ::-webkit-scrollbar-thumb:hover {
+::-webkit-scrollbar-thumb:hover {
   background: #06B6D4;
 }
 
-html.light ::-webkit-scrollbar-track {
-  background: #F4F4F6;
-}
-html.light ::-webkit-scrollbar-thumb {
-  background: #D1D5DB;
-  border-radius: 2px;
-}
-html.light ::-webkit-scrollbar-thumb:hover {
-  background: #9CA3AF;
-}
-
 /* ========================================================
-   1. CYBER DARK THEME (Advanced Cybersecurity Operations)
+   UNIFIED CYBER DARK THEME PALETTE (Full Platform Alignment)
    ======================================================== */
-html.dark body {
-  background-color: #050811;
-  color: #F8FAFC;
-  background-image: 
-    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(6, 182, 212, 0.08), transparent),
-    linear-gradient(to right, rgba(6, 182, 212, 0.025) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(6, 182, 212, 0.025) 1px, transparent 1px);
-  background-size: 100% 100%, 36px 36px, 36px 36px;
-}
-
-html.dark .bg-\[\#000000\] {
+.bg-\[\#000000\] {
   background-color: #050811 !important;
 }
 
 /* Cyber Surface Panels & Cards */
-html.dark .bg-\[\#090909\] {
+.bg-\[\#090909\] {
   background-color: #0B1120 !important;
 }
 
-html.dark .bg-\[\#0A0A0A\] {
+.bg-\[\#0A0A0A\] {
   background-color: #080D1A !important;
 }
 
-html.dark .bg-\[\#111111\] {
+.bg-\[\#111111\] {
   background-color: #0D1527 !important;
 }
 
-html.dark .bg-\[\#141414\] {
+.bg-\[\#141414\] {
   background-color: #0F1A30 !important;
 }
 
-html.dark .bg-\[\#151515\] {
+.bg-\[\#151515\] {
   background-color: #111D36 !important;
 }
 
-html.dark .bg-\[\#181818\],
-html.dark .bg-\[\#1A1A1A\],
-html.dark .bg-\[\#1C1C1C\],
-html.dark .bg-\[\#222222\],
-html.dark .bg-\[\#242424\],
-html.dark .bg-\[\#2E2E2E\] {
+.bg-\[\#181818\],
+.bg-\[\#1A1A1A\],
+.bg-\[\#1C1C1C\],
+.bg-\[\#222222\],
+.bg-\[\#242424\],
+.bg-\[\#2E2E2E\] {
   background-color: #15223D !important;
 }
 
 /* Cyber Borders */
-html.dark .border-\[\#292929\],
-html.dark .border-\[\#242424\],
-html.dark .border-\[\#222222\] {
+.border-\[\#292929\],
+.border-\[\#242424\],
+.border-\[\#222222\] {
   border-color: #1B2B48 !important;
 }
 
-html.dark .border-\[\#383838\],
-html.dark .border-\[\#333333\] {
+.border-\[\#383838\],
+.border-\[\#333333\] {
   border-color: #24385C !important;
 }
 
 /* Cyber Hover States */
-html.dark .hover\:bg-\[\#141414\]:hover,
-html.dark .hover\:bg-\[\#151515\]:hover,
-html.dark .hover\:bg-\[\#1A1A1A\]:hover {
+.hover\:bg-\[\#141414\]:hover,
+.hover\:bg-\[\#151515\]:hover,
+.hover\:bg-\[\#1A1A1A\]:hover {
   background-color: #14223E !important;
 }
 
-html.dark .hover\:bg-\[\#1C1C1C\]:hover,
-html.dark .hover\:bg-\[\#1F1F1F\]:hover,
-html.dark .hover\:bg-\[\#202020\]:hover,
-html.dark .hover\:bg-\[\#242424\]:hover {
+.hover\:bg-\[\#1C1C1C\]:hover,
+.hover\:bg-\[\#1F1F1F\]:hover,
+.hover\:bg-\[\#202020\]:hover,
+.hover\:bg-\[\#242424\]:hover {
   background-color: #1A2B4D !important;
 }
 
 /* Cyber Typography Hierarchy */
-html.dark .text-\[\#B3B3B3\] {
+.text-white {
+  color: #F8FAFC !important;
+}
+
+.text-\[\#B3B3B3\] {
   color: #94A3B8 !important;
 }
 
-html.dark .text-\[\#777777\] {
+.text-\[\#777777\] {
   color: #64748B !important;
 }
 
-html.dark .text-\[\#555555\],
-html.dark .text-\[\#444444\] {
+.text-\[\#555555\],
+.text-\[\#444444\] {
   color: #475569 !important;
 }
 
 /* Primary Action Buttons in Dark Cyber Mode */
-html.dark .theme-btn-primary {
+.theme-btn-primary {
   background: linear-gradient(135deg, #06B6D4 0%, #0284C7 100%) !important;
   color: #030712 !important;
   font-weight: 600 !important;
@@ -144,176 +140,33 @@ html.dark .theme-btn-primary {
   box-shadow: 0 0 16px rgba(6, 182, 212, 0.3) !important;
 }
 
-html.dark .theme-btn-primary:hover {
+.theme-btn-primary:hover {
   background: linear-gradient(135deg, #22D3EE 0%, #0EA5E9 100%) !important;
   box-shadow: 0 0 24px rgba(6, 182, 212, 0.5) !important;
 }
 
-html.dark .theme-btn-primary * {
+.theme-btn-primary * {
   color: #030712 !important;
 }
 
-/* ========================================================
-   2. LIGHT THEME RULES (Explicit class 'light' or not .dark)
-   ======================================================== */
-html.light body,
-html:not(.dark) body {
-  background-color: #FAFAFA !important;
-  color: #0A0A0A !important;
+/* Inputs, Textareas, Selects */
+input, textarea, select {
+  background-color: #0F1A30 !important;
+  color: #F8FAFC !important;
+  border-color: #1B2B48 !important;
 }
 
-/* Light Mode Page Background */
-html.light :not(.theme-dark-nav):not(.theme-dark-nav *) .bg-\[\#000000\],
-html:not(.dark) :not(.theme-dark-nav):not(.theme-dark-nav *) .bg-\[\#000000\] {
-  background-color: #FAFAFA !important;
-}
-
-/* Light Mode Surfaces / Cards */
-html.light :not(.theme-dark-nav):not(.theme-dark-nav *) .bg-\[\#090909\],
-html:not(.dark) :not(.theme-dark-nav):not(.theme-dark-nav *) .bg-\[\#090909\] {
-  background-color: #FFFFFF !important;
-}
-
-html.light :not(.theme-dark-nav):not(.theme-dark-nav *) .bg-\[\#0A0A0A\],
-html:not(.dark) :not(.theme-dark-nav):not(.theme-dark-nav *) .bg-\[\#0A0A0A\] {
-  background-color: #F4F4F6 !important;
-}
-
-html.light :not(.theme-dark-nav):not(.theme-dark-nav *) .bg-\[\#111111\],
-html:not(.dark) :not(.theme-dark-nav):not(.theme-dark-nav *) .bg-\[\#111111\] {
-  background-color: #FFFFFF !important;
-}
-
-html.light :not(.theme-dark-nav):not(.theme-dark-nav *) .bg-\[\#151515\],
-html:not(.dark) :not(.theme-dark-nav):not(.theme-dark-nav *) .bg-\[\#151515\] {
-  background-color: #F4F4F6 !important;
-}
-
-html.light :not(.theme-dark-nav):not(.theme-dark-nav *) .bg-\[\#181818\],
-html.light :not(.theme-dark-nav):not(.theme-dark-nav *) .bg-\[\#1A1A1A\],
-html.light :not(.theme-dark-nav):not(.theme-dark-nav *) .bg-\[\#1C1C1C\],
-html.light :not(.theme-dark-nav):not(.theme-dark-nav *) .bg-\[\#222222\],
-html.light :not(.theme-dark-nav):not(.theme-dark-nav *) .bg-\[\#242424\],
-html.light :not(.theme-dark-nav):not(.theme-dark-nav *) .bg-\[\#2E2E2E\],
-html:not(.dark) :not(.theme-dark-nav):not(.theme-dark-nav *) .bg-\[\#181818\],
-html:not(.dark) :not(.theme-dark-nav):not(.theme-dark-nav *) .bg-\[\#1A1A1A\],
-html:not(.dark) :not(.theme-dark-nav):not(.theme-dark-nav *) .bg-\[\#1C1C1C\],
-html:not(.dark) :not(.theme-dark-nav):not(.theme-dark-nav *) .bg-\[\#222222\],
-html:not(.dark) :not(.theme-dark-nav):not(.theme-dark-nav *) .bg-\[\#242424\],
-html:not(.dark) :not(.theme-dark-nav):not(.theme-dark-nav *) .bg-\[\#2E2E2E\] {
-  background-color: #E9ECEF !important;
-}
-
-/* Light Mode Hover States */
-html.light :not(.theme-dark-nav):not(.theme-dark-nav *) .hover\:bg-\[\#151515\]:hover,
-html:not(.dark) :not(.theme-dark-nav):not(.theme-dark-nav *) .hover\:bg-\[\#151515\]:hover {
-  background-color: #E9ECEF !important;
-}
-
-html.light :not(.theme-dark-nav):not(.theme-dark-nav *) .hover\:bg-\[\#242424\]:hover,
-html.light :not(.theme-dark-nav):not(.theme-dark-nav *) .hover\:bg-\[\#222222\]:hover,
-html.light :not(.theme-dark-nav):not(.theme-dark-nav *) .hover\:bg-\[\#1C1C1C\]:hover,
-html.light :not(.theme-dark-nav):not(.theme-dark-nav *) .hover\:bg-\[\#181818\]:hover,
-html:not(.dark) :not(.theme-dark-nav):not(.theme-dark-nav *) .hover\:bg-\[\#242424\]:hover,
-html:not(.dark) :not(.theme-dark-nav):not(.theme-dark-nav *) .hover\:bg-\[\#222222\]:hover,
-html:not(.dark) :not(.theme-dark-nav):not(.theme-dark-nav *) .hover\:bg-\[\#1C1C1C\]:hover,
-html:not(.dark) :not(.theme-dark-nav):not(.theme-dark-nav *) .hover\:bg-\[\#181818\]:hover {
-  background-color: #DEE2E6 !important;
-}
-
-/* Light Mode Borders */
-html.light :not(.theme-dark-nav):not(.theme-dark-nav *) .border-\[\#292929\],
-html:not(.dark) :not(.theme-dark-nav):not(.theme-dark-nav *) .border-\[\#292929\] {
-  border-color: #E5E7EB !important;
-}
-
-html.light :not(.theme-dark-nav):not(.theme-dark-nav *) .border-\[\#383838\],
-html:not(.dark) :not(.theme-dark-nav):not(.theme-dark-nav *) .border-\[\#383838\] {
-  border-color: #D1D5DB !important;
-}
-
-html.light :not(.theme-dark-nav):not(.theme-dark-nav *) .border-\[\#222222\],
-html:not(.dark) :not(.theme-dark-nav):not(.theme-dark-nav *) .border-\[\#222222\] {
-  border-color: #E5E7EB !important;
-}
-
-/* Light Mode Typography */
-html.light :not(.theme-dark-nav):not(.theme-dark-nav *):not(.theme-btn-primary):not(.theme-btn-primary *) .text-white,
-html:not(.dark) :not(.theme-dark-nav):not(.theme-dark-nav *):not(.theme-btn-primary):not(.theme-btn-primary *) .text-white {
-  color: #0A0A0A !important;
-}
-
-/* Explicit Dark Nav text protections so navigation never inverts to black */
-.theme-dark-nav .text-white,
-.theme-dark-nav *.text-white {
-  color: #FFFFFF !important;
-}
-.theme-dark-nav .text-cyan-400,
-.theme-dark-nav *.text-cyan-400 {
-  color: #22D3EE !important;
-}
-
-html.light :not(.theme-dark-nav):not(.theme-dark-nav *) .text-\[\#B3B3B3\],
-html:not(.dark) :not(.theme-dark-nav):not(.theme-dark-nav *) .text-\[\#B3B3B3\] {
-  color: #4B5563 !important;
-}
-
-html.light :not(.theme-dark-nav):not(.theme-dark-nav *) .text-\[\#777777\],
-html:not(.dark) :not(.theme-dark-nav):not(.theme-dark-nav *) .text-\[\#777777\] {
-  color: #6B7280 !important;
-}
-
-html.light :not(.theme-dark-nav):not(.theme-dark-nav *) .text-\[\#555555\],
-html.light :not(.theme-dark-nav):not(.theme-dark-nav *) .text-\[\#444444\],
-html:not(.dark) :not(.theme-dark-nav):not(.theme-dark-nav *) .text-\[\#555555\],
-html:not(.dark) :not(.theme-dark-nav):not(.theme-dark-nav *) .text-\[\#444444\] {
-  color: #9CA3AF !important;
-}
-
-/* Light Mode Inputs, Textareas, Selects */
-html.light input,
-html.light textarea,
-html.light select,
-html:not(.dark) input,
-html:not(.dark) textarea,
-html:not(.dark) select {
-  background-color: #FFFFFF !important;
-  color: #0A0A0A !important;
-  border-color: #D1D5DB !important;
-}
-
-html.light input::placeholder,
-html.light textarea::placeholder,
-html:not(.dark) input::placeholder,
-html:not(.dark) textarea::placeholder {
-  color: #9CA3AF !important;
-}
-
-/* Primary Action Buttons in Light Mode */
-html.light .theme-btn-primary,
-html:not(.dark) .theme-btn-primary {
-  background-color: #0A0A0A !important;
-  color: #FFFFFF !important;
-  border-color: transparent !important;
-}
-
-html.light .theme-btn-primary:hover,
-html:not(.dark) .theme-btn-primary:hover {
-  background-color: #262626 !important;
-}
-
-html.light .theme-btn-primary *,
-html:not(.dark) .theme-btn-primary * {
-  color: #FFFFFF !important;
+input:focus, textarea:focus, select:focus {
+  border-color: #06B6D4 !important;
+  box-shadow: 0 0 10px rgba(6, 182, 212, 0.3) !important;
+  outline: none;
 }
 
 /* Modals & Backdrop */
-html.light .bg-black\/80,
-html.light .bg-black\/75,
-html:not(.dark) .bg-black\/80,
-html:not(.dark) .bg-black\/75 {
-  background-color: rgba(0, 0, 0, 0.45) !important;
-  backdrop-filter: blur(6px);
+.bg-black\/80,
+.bg-black\/75 {
+  background-color: rgba(5, 8, 17, 0.85) !important;
+  backdrop-filter: blur(8px);
 }
 
 /* Keyframe animations */

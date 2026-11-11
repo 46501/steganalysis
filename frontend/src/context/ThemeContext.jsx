@@ -1,90 +1,46 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 
 const ThemeContext = createContext({
-  theme: 'light',
+  theme: 'dark',
   setTheme: () => {},
   toggleTheme: () => {},
-  isDark: false,
+  isDark: true,
 });
 
 const THEME_STORAGE_KEY = 'stegoshield-theme';
 
 export function ThemeProvider({ children }) {
-  const [theme, setThemeState] = useState(() => {
-    // 1. Check saved preference in localStorage
-    if (typeof window !== 'undefined') {
-      const savedTheme = localStorage.getItem(THEME_STORAGE_KEY);
-      if (savedTheme === 'light' || savedTheme === 'dark') {
-        return savedTheme;
-      }
-      // 2. Check system OS preference
-      if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
-        return 'light';
-      }
-    }
-    // 3. Default to dark cyber mode for StegoShield AI
-    return 'dark';
-  });
+  const [theme, setThemeState] = useState('dark');
 
-  const applyThemeToDOM = (activeTheme) => {
+  const applyThemeToDOM = () => {
     const root = document.documentElement;
-    if (activeTheme === 'dark') {
-      root.classList.add('dark');
-      root.classList.remove('light');
-      root.style.colorScheme = 'dark';
-      root.setAttribute('data-theme', 'dark');
-    } else {
-      root.classList.remove('dark');
-      root.classList.add('light');
-      root.style.colorScheme = 'light';
-      root.setAttribute('data-theme', 'light');
-    }
+    root.classList.add('dark');
+    root.classList.remove('light');
+    root.style.colorScheme = 'dark';
+    root.setAttribute('data-theme', 'dark');
   };
 
   useEffect(() => {
-    applyThemeToDOM(theme);
+    applyThemeToDOM();
     try {
-      localStorage.setItem(THEME_STORAGE_KEY, theme);
+      localStorage.setItem(THEME_STORAGE_KEY, 'dark');
     } catch (e) {
-      console.warn('Unable to persist theme to localStorage:', e);
+      // ignore
     }
-  }, [theme]);
-
-  // Listen to system OS theme changes if user has not explicitly stored preference
-  useEffect(() => {
-    if (typeof window === 'undefined' || !window.matchMedia) return;
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    
-    const handleOSChange = (e) => {
-      const hasExplicitChoice = localStorage.getItem(THEME_STORAGE_KEY);
-      if (!hasExplicitChoice) {
-        setThemeState(e.matches ? 'dark' : 'light');
-      }
-    };
-
-    mediaQuery.addEventListener('change', handleOSChange);
-    return () => mediaQuery.removeEventListener('change', handleOSChange);
   }, []);
 
   const setTheme = (newTheme) => {
-    if (newTheme === 'dark' || newTheme === 'light') {
-      setThemeState(newTheme);
-    }
+    setThemeState('dark');
+    applyThemeToDOM();
   };
 
   const toggleTheme = () => {
-    setThemeState((prev) => (prev === 'dark' ? 'light' : 'dark'));
+    setThemeState('dark');
+    applyThemeToDOM();
   };
 
   return (
-    <ThemeContext.Provider
-      value={{
-        theme,
-        setTheme,
-        toggleTheme,
-        isDark: theme === 'dark',
-      }}
-    >
+    <ThemeContext.Provider value={{ theme: 'dark', setTheme, toggleTheme, isDark: true }}>
       {children}
     </ThemeContext.Provider>
   );
@@ -97,4 +53,3 @@ export function useTheme() {
   }
   return context;
 }
-

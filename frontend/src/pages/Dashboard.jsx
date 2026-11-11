@@ -9,8 +9,8 @@ import {
   ArrowRight,
   Clock,
   Sparkles,
-  CheckCircle,
-  GraduationCap,
+  FileImage,
+  BookOpen,
 } from 'lucide-react';
 import { steganalysisApi } from '../services/api';
 
@@ -31,7 +31,7 @@ export default function Dashboard({ setActiveTab, onOpenVivaTour }) {
       try {
         const [healthRes, historyRes] = await Promise.allSettled([
           steganalysisApi.checkHealth(),
-          steganalysisApi.getHistory({ limit: 5, offset: 0 }),
+          steganalysisApi.getHistory({ limit: 6, offset: 0 }),
         ]);
 
         if (!isMounted) return;
@@ -74,287 +74,273 @@ export default function Dashboard({ setActiveTab, onOpenVivaTour }) {
   }, []);
 
   return (
-    <div className="space-y-8 animate-fadeIn">
-      {/* Header Banner */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-gradient-to-r from-gray-900 via-gray-900 to-cyan-950/40 p-6 rounded-2xl border border-gray-800 shadow-xl">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
-              Steganalysis Research & Evaluation Center
-            </span>
-            <span className="text-xs text-gray-400">• BOSSbase 1.01 S-UNIWARD 0.4 bpp</span>
+    <div className="space-y-6 max-w-7xl mx-auto">
+      {/* 1. Compact Hero Section */}
+      <div className="p-6 sm:p-7 rounded-xl bg-gray-900/40 border border-gray-800 flex flex-col md:flex-row justify-between items-start md:items-center gap-5">
+        <div className="space-y-1.5">
+          <div className="text-[11px] font-semibold uppercase tracking-wider text-cyan-400 font-mono">
+            Image Forensics Platform
           </div>
-          <h1 className="text-2xl lg:text-3xl font-extrabold text-white tracking-tight">
-            Digital Image Steganalysis Research Platform
+          <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
+            Digital Image Steganalysis
           </h1>
-          <p className="text-sm text-gray-400 mt-1 max-w-2xl">
-            Academic demonstration platform for digital image steganography (S-UNIWARD @ 0.4 bpp). Features an experimental StegoNet-Lite CPU baseline and full PyTorch SRNet research architecture.
+          <p className="text-xs sm:text-sm text-gray-400 max-w-xl leading-relaxed">
+            Analyze digital images for hidden steganographic content using experimental deep learning and forensic analysis tools.
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3">
-          {onOpenVivaTour && (
-            <button
-              onClick={onOpenVivaTour}
-              className="flex items-center gap-2 px-4 py-3 bg-purple-950/60 hover:bg-purple-900/70 text-purple-200 border border-purple-500/40 hover:border-purple-300 rounded-xl text-sm font-semibold transition-all shadow-lg shadow-purple-950/30 hover:scale-[1.02]"
-              title="Interactive Examiner Viva Presentation & Defense Guide"
-            >
-              <GraduationCap className="w-4 h-4 text-purple-300" />
-              <span>Viva Defense Tour</span>
-            </button>
-          )}
-
+        <div className="flex items-center gap-2.5 shrink-0">
           <button
             onClick={() => setActiveTab('detector')}
-            className="flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white rounded-xl text-sm font-semibold transition-all shadow-lg shadow-cyan-600/25 hover:shadow-cyan-500/35 hover:scale-[1.02]"
+            className="flex items-center gap-2 px-4 py-2.5 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg text-xs font-semibold transition shadow-sm"
           >
-            <Sparkles className="w-4 h-4" />
-            <span>Launch Stego Detector</span>
-            <ArrowRight className="w-4 h-4 ml-1" />
+            <span>Launch Detector</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </button>
+
+          <button
+            onClick={() => setActiveTab('model-info')}
+            className="px-3.5 py-2.5 bg-gray-900 hover:bg-gray-800 text-gray-300 hover:text-white border border-gray-800 rounded-lg text-xs font-medium transition"
+          >
+            Research Overview
           </button>
         </div>
       </div>
 
-      {/* Metrics Cards Grid */}
+      {/* 2. Four Statistics Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Total Scans */}
-        <div className="p-5 rounded-xl bg-gray-900/80 border border-gray-800 hover:border-gray-700 transition">
+        <div className="p-4 rounded-xl bg-gray-900/40 border border-gray-800/80 flex flex-col justify-between h-28">
           <div className="flex items-center justify-between text-gray-400">
-            <span className="text-xs font-semibold uppercase tracking-wider">Total Scans</span>
-            <div className="p-2 rounded-lg bg-cyan-500/10 text-cyan-400">
-              <Activity className="w-5 h-5" />
-            </div>
+            <span className="text-xs font-medium uppercase tracking-wide">Total Scans</span>
+            <Activity className="w-4 h-4 text-gray-400" />
           </div>
-          <div className="text-3xl font-bold text-white mt-3">{stats.totalScans}</div>
-          <div className="flex items-center gap-1.5 text-xs text-gray-500 mt-2 font-mono">
-            <Database className="w-3.5 h-3.5 text-cyan-400" />
-            <span>{systemHealth?.database?.type || 'Persistent Storage'}</span>
-          </div>
+          <div className="text-2xl font-bold text-white tracking-tight">{stats.totalScans}</div>
+          <span className="text-[11px] text-gray-400">All-time analyzed carriers</span>
         </div>
 
-        {/* Stego Detections */}
-        <div className="p-5 rounded-xl bg-gray-900/80 border border-gray-800 hover:border-rose-900/40 transition">
+        {/* Flagged as Stego */}
+        <div className="p-4 rounded-xl bg-gray-900/40 border border-gray-800/80 flex flex-col justify-between h-28">
           <div className="flex items-center justify-between text-gray-400">
-            <span className="text-xs font-semibold uppercase tracking-wider">Model Flagged (Stego)</span>
-            <div className="p-2 rounded-lg bg-rose-500/10 text-rose-400">
-              <AlertTriangle className="w-5 h-5" />
-            </div>
+            <span className="text-xs font-medium uppercase tracking-wide">Flagged as Stego</span>
+            <AlertTriangle className="w-4 h-4 text-rose-400" />
           </div>
-          <div className="text-3xl font-bold text-rose-400 mt-3">{stats.stegoDetections}</div>
-          <span className="text-xs text-gray-500 mt-2 block">
-            Baseline detections (experimental)
-          </span>
+          <div className="text-2xl font-bold text-rose-400 tracking-tight">{stats.stegoDetections}</div>
+          <span className="text-[11px] text-gray-400">Experimental model classification</span>
         </div>
 
-        {/* Cover Verified */}
-        <div className="p-5 rounded-xl bg-gray-900/80 border border-gray-800 hover:border-emerald-900/40 transition">
+        {/* Classified as Cover */}
+        <div className="p-4 rounded-xl bg-gray-900/40 border border-gray-800/80 flex flex-col justify-between h-28">
           <div className="flex items-center justify-between text-gray-400">
-            <span className="text-xs font-semibold uppercase tracking-wider">Model Verified (Cover)</span>
-            <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-400">
-              <ShieldCheck className="w-5 h-5" />
-            </div>
+            <span className="text-xs font-medium uppercase tracking-wide">Classified as Cover</span>
+            <ShieldCheck className="w-4 h-4 text-emerald-400" />
           </div>
-          <div className="text-3xl font-bold text-emerald-400 mt-3">{stats.coverVerified}</div>
-          <span className="text-xs text-gray-500 mt-2 block">
-            Baseline classifications (experimental)
-          </span>
+          <div className="text-2xl font-bold text-emerald-400 tracking-tight">{stats.coverVerified}</div>
+          <span className="text-[11px] text-gray-400">Experimental model classification</span>
         </div>
 
-        {/* Average Latency */}
-        <div className="p-5 rounded-xl bg-gray-900/80 border border-gray-800 hover:border-purple-900/40 transition">
+        {/* Average Inference Time */}
+        <div className="p-4 rounded-xl bg-gray-900/40 border border-gray-800/80 flex flex-col justify-between h-28">
           <div className="flex items-center justify-between text-gray-400">
-            <span className="text-xs font-semibold uppercase tracking-wider">Inference Speed</span>
-            <div className="p-2 rounded-lg bg-purple-500/10 text-purple-400">
-              <Clock className="w-5 h-5" />
-            </div>
+            <span className="text-xs font-medium uppercase tracking-wide">Average Inference Time</span>
+            <Clock className="w-4 h-4 text-cyan-400" />
           </div>
-          <div className="text-3xl font-bold text-purple-300 mt-3">
+          <div className="text-2xl font-bold text-white tracking-tight">
             {stats.avgLatency ? `${stats.avgLatency} ms` : '< 25 ms'}
           </div>
-          <span className="text-xs text-gray-500 mt-2 block">
-            Real-time CPU execution
-          </span>
+          <span className="text-[11px] text-gray-400">PyTorch CPU execution</span>
         </div>
       </div>
 
-      {/* System Infrastructure Cards */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* ML Engine Card */}
-        <div className="p-6 rounded-2xl bg-gray-900/60 border border-gray-800 flex flex-col justify-between">
+      {/* 3. Three Compact Overview Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* Card 1: Active Model */}
+        <div className="p-5 rounded-xl bg-gray-900/40 border border-gray-800/80 flex flex-col justify-between space-y-4">
           <div>
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold uppercase tracking-wider text-cyan-400">
-                Active Inference Engine
+            <div className="flex items-center justify-between text-gray-400 mb-1">
+              <span className="text-[11px] font-semibold uppercase tracking-wider text-cyan-400 font-mono">
+                Active Model
               </span>
-              <Cpu className="w-5 h-5 text-cyan-400" />
+              <Cpu className="w-4 h-4 text-cyan-400" />
             </div>
-            <h3 className="text-lg font-bold text-white mt-2">
-              {systemHealth?.model?.active_model || 'StegoNet-Lite (Experimental Baseline)'}
-            </h3>
-            <p className="text-xs text-gray-400 mt-2 leading-relaxed">
-              Compact 4-stage residual network engineered for CPU execution and pipeline demonstration. Note: Content-adaptive S-UNIWARD steganography requires deep unpooled architectures (SRNet) for reliable classification.
+            <h2 className="text-base font-bold text-white">StegoNet-Lite</h2>
+            <p className="text-xs text-gray-400 mt-1">
+              Lightweight residual baseline for CPU pipeline demonstration.
             </p>
           </div>
 
-          <div className="mt-5 pt-4 border-t border-gray-800 space-y-2 text-xs">
+          <div className="space-y-1.5 pt-3 border-t border-gray-800/60 text-xs font-mono">
             <div className="flex justify-between text-gray-400">
-              <span>Model Classification:</span>
+              <span>Status:</span>
               <span className="text-amber-400 font-medium">Experimental Baseline</span>
             </div>
             <div className="flex justify-between text-gray-400">
-              <span>Execution Device:</span>
-              <span className="text-gray-200 font-mono">PyTorch CPU</span>
+              <span>Engine:</span>
+              <span className="text-gray-300">PyTorch CPU</span>
             </div>
             <div className="flex justify-between text-gray-400">
               <span>Parameters:</span>
-              <span className="text-gray-200 font-mono">~304,220 params</span>
+              <span className="text-gray-300">304K Parameters</span>
             </div>
           </div>
+
+          <button
+            onClick={() => setActiveTab('model-info')}
+            className="w-full py-1.5 px-3 rounded-lg bg-gray-900 hover:bg-gray-800 text-gray-300 hover:text-white border border-gray-800 text-xs font-medium transition text-center"
+          >
+            View Details
+          </button>
         </div>
 
-        {/* Dataset Verification Card */}
-        <div className="p-6 rounded-2xl bg-gray-900/60 border border-gray-800 flex flex-col justify-between">
+        {/* Card 2: Dataset */}
+        <div className="p-5 rounded-xl bg-gray-900/40 border border-gray-800/80 flex flex-col justify-between space-y-4">
           <div>
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold uppercase tracking-wider text-blue-400">
-                Validated Dataset
+            <div className="flex items-center justify-between text-gray-400 mb-1">
+              <span className="text-[11px] font-semibold uppercase tracking-wider text-blue-400 font-mono">
+                Benchmark Dataset
               </span>
-              <Database className="w-5 h-5 text-blue-400" />
+              <Database className="w-4 h-4 text-blue-400" />
             </div>
-            <h3 className="text-lg font-bold text-white mt-2">
-              BOSSbase 1.01 S-UNIWARD
-            </h3>
-            <p className="text-xs text-gray-400 mt-2 leading-relaxed">
-              10,000 matched cover-stego pairs (20,000 images) fully certified with zero partition leakage and exact ±1 pixel constraints.
+            <h2 className="text-base font-bold text-white">BOSSbase 1.01</h2>
+            <p className="text-xs text-gray-400 mt-1">
+              Standard academic benchmark with certified zero-leakage partitions.
             </p>
           </div>
 
-          <div className="mt-5 pt-4 border-t border-gray-800 space-y-2 text-xs">
+          <div className="space-y-1.5 pt-3 border-t border-gray-800/60 text-xs font-mono">
             <div className="flex justify-between text-gray-400">
-              <span>Train Partition:</span>
-              <span className="text-gray-200 font-mono">4,000 pairs (8,000 imgs)</span>
+              <span>Algorithm:</span>
+              <span className="text-cyan-400 font-medium">S-UNIWARD (0.4 bpp)</span>
             </div>
             <div className="flex justify-between text-gray-400">
-              <span>Validation Partition:</span>
-              <span className="text-gray-200 font-mono">1,000 pairs (2,000 imgs)</span>
+              <span>Volume:</span>
+              <span className="text-gray-300">20,000 Images (10k Pairs)</span>
             </div>
             <div className="flex justify-between text-gray-400">
-              <span>Test Partition:</span>
-              <span className="text-gray-200 font-mono">5,000 pairs (10,000 imgs)</span>
+              <span>Partitions:</span>
+              <span className="text-gray-300">4k / 1k / 5k (Train/Val/Test)</span>
             </div>
+          </div>
+
+          <div className="py-1.5 text-center text-[11px] font-mono text-gray-400">
+            Certified Partition Separation
           </div>
         </div>
 
-        {/* Research Architecture Card */}
-        <div className="p-6 rounded-2xl bg-gray-900/60 border border-gray-800 flex flex-col justify-between">
+        {/* Card 3: Research Architecture */}
+        <div className="p-5 rounded-xl bg-gray-900/40 border border-gray-800/80 flex flex-col justify-between space-y-4">
           <div>
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold uppercase tracking-wider text-purple-400">
-                Research Architecture
+            <div className="flex items-center justify-between text-gray-400 mb-1">
+              <span className="text-[11px] font-semibold uppercase tracking-wider text-purple-400 font-mono">
+                Research Model
               </span>
-              <Layers className="w-5 h-5 text-purple-400" />
+              <Layers className="w-4 h-4 text-purple-400" />
             </div>
-            <h3 className="text-lg font-bold text-white mt-2">
-              SRNet (Boroumand et al. 2018)
-            </h3>
-            <p className="text-xs text-gray-400 mt-2 leading-relaxed">
-              Deep 12-layer residual network (39 layers total) published in IEEE TIFS. Features unpooled residual layers (Type 1-2) to preserve subtle ±1 embedding noise. Fully implemented in PyTorch; full GPU cluster training (500k steps, ~360 GPU hrs) is pending.
+            <h2 className="text-base font-bold text-white">SRNet Architecture</h2>
+            <p className="text-xs text-gray-400 mt-1">
+              Boroumand et al. (IEEE TIFS 2019) deep residual steganalysis model.
             </p>
           </div>
 
-          <div className="mt-5 pt-4 border-t border-gray-800 space-y-2 text-xs">
+          <div className="space-y-1.5 pt-3 border-t border-gray-800/60 text-xs font-mono">
             <div className="flex justify-between text-gray-400">
-              <span>Architecture Depth:</span>
-              <span className="text-purple-300 font-mono">39 Layers (12 Blocks)</span>
+              <span>Depth:</span>
+              <span className="text-purple-300 font-medium">39 Layers (12 Blocks)</span>
             </div>
             <div className="flex justify-between text-gray-400">
-              <span>Full GPU Training:</span>
-              <span className="text-amber-400 font-mono">500,000 Steps (~360 GPU hrs)</span>
+              <span>Implementation:</span>
+              <span className="text-emerald-400 font-medium">Fully Implemented</span>
             </div>
             <div className="flex justify-between text-gray-400">
-              <span>Implementation Status:</span>
-              <span className="text-emerald-400 font-medium">Fully Implemented & Unit-Tested</span>
+              <span>Training:</span>
+              <span className="text-amber-400 font-medium">Full GPU Training Pending</span>
             </div>
           </div>
+
+          <button
+            onClick={() => setActiveTab('model-info')}
+            className="w-full py-1.5 px-3 rounded-lg bg-gray-900 hover:bg-gray-800 text-gray-300 hover:text-white border border-gray-800 text-xs font-medium transition text-center"
+          >
+            Explore Research
+          </button>
         </div>
       </div>
 
-      {/* Recent Scans Table */}
-      <div className="bg-gray-900/60 border border-gray-800 rounded-2xl overflow-hidden shadow-lg">
-        <div className="p-5 border-b border-gray-800 flex items-center justify-between">
+      {/* 4. Recent Scans Table */}
+      <div className="rounded-xl bg-gray-900/40 border border-gray-800 overflow-hidden">
+        <div className="p-4 sm:p-5 border-b border-gray-800 flex items-center justify-between">
           <div>
-            <h2 className="text-base font-bold text-white">Recent Steganalysis Scans</h2>
-            <p className="text-xs text-gray-400">Audit trail of recently analyzed images</p>
+            <h2 className="text-sm sm:text-base font-bold text-white">Recent Scans</h2>
+            <p className="text-xs text-gray-400">Your latest image analysis activity</p>
           </div>
           <button
             onClick={() => setActiveTab('history')}
             className="text-xs text-cyan-400 hover:text-cyan-300 flex items-center gap-1 font-medium transition"
           >
-            <span>View All Records</span>
+            <span>View All</span>
             <ArrowRight className="w-3.5 h-3.5" />
           </button>
         </div>
 
         {recentScans.length === 0 ? (
-          <div className="p-10 text-center text-sm text-gray-500">
-            No scans recorded yet. Upload an image in the Steganalysis Detector to generate live results.
+          <div className="py-12 text-center text-xs text-gray-400 font-mono">
+            No scans recorded yet. Upload an image in the Detector to begin.
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
-              <thead className="bg-gray-950/60 text-gray-400 uppercase tracking-wider font-semibold border-b border-gray-800">
+            <table className="w-full text-left text-xs font-mono">
+              <thead className="bg-gray-950/60 text-gray-400 uppercase text-[10px] tracking-wider border-b border-gray-800">
                 <tr>
-                  <th className="py-3 px-4">Timestamp</th>
-                  <th className="py-3 px-4">Filename</th>
-                  <th className="py-3 px-4">Verdict</th>
-                  <th className="py-3 px-4">Confidence</th>
-                  <th className="py-3 px-4">Residual Energy</th>
-                  <th className="py-3 px-4">Model Used</th>
-                  <th className="py-3 px-4 text-right">Latency</th>
+                  <th className="py-2.5 px-4">Image</th>
+                  <th className="py-2.5 px-4">Filename</th>
+                  <th className="py-2.5 px-4">Verdict</th>
+                  <th className="py-2.5 px-4">Confidence</th>
+                  <th className="py-2.5 px-4">Residual Energy</th>
+                  <th className="py-2.5 px-4">Model</th>
+                  <th className="py-2.5 px-4 text-right">Time</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-800/60 text-gray-300">
+              <tbody className="divide-y divide-gray-800/50 text-gray-300">
                 {recentScans.map((scan) => {
                   const isStego = scan.verdict === 'Stego';
-                  const dateStr = new Date(scan.created_at).toLocaleTimeString();
+                  const dateStr = new Date(scan.created_at).toLocaleTimeString([], {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit',
+                  });
+
                   return (
-                    <tr key={scan.id} className="hover:bg-gray-800/40 transition">
-                      <td className="py-3 px-4 font-mono text-gray-500">{dateStr}</td>
-                      <td className="py-3 px-4 font-medium text-white max-w-[200px] truncate">
+                    <tr key={scan.id} className="hover:bg-gray-800/30 transition">
+                      <td className="py-2.5 px-4">
+                        <div className="w-7 h-7 rounded bg-gray-800 border border-gray-700/60 flex items-center justify-center text-gray-400">
+                          <FileImage className="w-3.5 h-3.5" />
+                        </div>
+                      </td>
+                      <td className="py-2.5 px-4 font-sans font-medium text-white max-w-[180px] truncate" title={scan.filename}>
                         {scan.filename}
                       </td>
-                      <td className="py-3 px-4">
+                      <td className="py-2.5 px-4">
                         <span
-                          className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full font-semibold text-[11px] ${
+                          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold ${
                             isStego
-                              ? 'bg-rose-500/15 text-rose-400 border border-rose-500/30'
-                              : 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
+                              ? 'bg-rose-950/70 text-rose-300 border border-rose-800/80'
+                              : 'bg-emerald-950/70 text-emerald-300 border border-emerald-800/80'
                           }`}
                         >
-                          {isStego ? (
-                            <>
-                              <AlertTriangle className="w-3 h-3" />
-                              <span>STEGO</span>
-                            </>
-                          ) : (
-                            <>
-                              <ShieldCheck className="w-3 h-3" />
-                              <span>COVER</span>
-                            </>
-                          )}
+                          {scan.verdict}
                         </span>
                       </td>
-                      <td className="py-3 px-4 font-mono font-semibold">
+                      <td className="py-2.5 px-4">
                         {(scan.confidence * 100).toFixed(1)}%
                       </td>
-                      <td className="py-3 px-4 font-mono text-cyan-400">
-                        {scan.residual_energy ? scan.residual_energy.toFixed(2) : '--'}
+                      <td className="py-2.5 px-4 text-cyan-400">
+                        {scan.residual_energy ? `${scan.residual_energy.toFixed(2)} σr²` : '--'}
                       </td>
-                      <td className="py-3 px-4 text-gray-400">
+                      <td className="py-2.5 px-4 text-gray-400">
                         {scan.model_name || 'StegoNet-Lite'}
                       </td>
-                      <td className="py-3 px-4 text-right font-mono text-gray-400">
-                        {scan.execution_time_ms ? `${scan.execution_time_ms.toFixed(1)} ms` : '--'}
+                      <td className="py-2.5 px-4 text-right text-gray-400">
+                        {dateStr}
                       </td>
                     </tr>
                   );

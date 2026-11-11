@@ -45,7 +45,12 @@ export default function App() {
           onOpenVivaTour={() => setIsVivaTourOpen(true)}
         />
       )}
-      {activeTab === 'detector' && <Detector initialFile={injectedDetectorFile} />}
+      {activeTab === 'detector' && (
+        <Detector
+          initialFile={injectedDetectorFile}
+          onNavigateTab={setActiveTab}
+        />
+      )}
       {(activeTab === 'lab' || activeTab === 'forensics-lab') && <ForensicsLab />}
       {activeTab === 'stego-studio' && <StegoStudio onSendToDetector={handleSendToDetector} />}
       {activeTab === 'history' && <History />}

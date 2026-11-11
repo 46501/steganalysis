@@ -22,6 +22,11 @@ import {
   FolderArchive,
   BarChart2,
   FileCode,
+  Download,
+  Terminal,
+  ExternalLink,
+  Target,
+  Grid,
 } from 'lucide-react';
 import { steganalysisApi } from '../services/api';
 import ForensicReportModal from '../components/analysis/ForensicReportModal';
@@ -34,7 +39,7 @@ import FileStructureCarver from '../components/analysis/FileStructureCarver';
 import AdvancedForensicDashboard from '../components/analysis/AdvancedForensicDashboard';
 import { playLaserScan, playTargetLock, playCyberClick } from '../utils/cyberSoundEffects';
 
-export default function Detector({ initialFile = null }) {
+export default function Detector({ initialFile = null, onNavigateTab = null }) {
   const [detectionMode, setDetectionMode] = useState('single'); // 'single' | 'batch'
   const [file, setFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
@@ -43,6 +48,8 @@ export default function Detector({ initialFile = null }) {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
+  const [dashboardTab, setDashboardTab] = useState('overview');
+  const [dashboardDiffMode, setDashboardDiffMode] = useState('ternary');
 
   // Visual Forensics State
   const [visualTab, setVisualTab] = useState('heatmap'); // 'heatmap' | 'bitplane' | 'diff'
@@ -52,6 +59,49 @@ export default function Detector({ initialFile = null }) {
   const [isReportOpen, setIsReportOpen] = useState(false);
 
   const fileInputRef = useRef(null);
+
+  const handleQuickTriage = (tab, diffMode = null) => {
+    playCyberClick();
+    setDashboardTab(tab);
+    if (diffMode) setDashboardDiffMode(diffMode);
+    const el = document.getElementById('forensic-dashboard');
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
+  const handleDownloadEvidencePackage = () => {
+    if (!result) return;
+    playCyberClick();
+    const evidenceData = {
+      case_id: result.id || `LIVE-${Date.now()}`,
+      timestamp: new Date().toISOString(),
+      standard: 'NIST SP 800-86 / ISO/IEC 27037',
+      file_hash_sha256: result.file_hash,
+      classification: {
+        verdict: result.verdict_category || result.verdict,
+        confidence: result.confidence,
+        p_cover: result.cover_probability,
+        p_stego: result.stego_probability,
+        model_name: result.model_name || 'StegoNet-Lite',
+        model_status: result.model_status || 'Experimental Baseline',
+      },
+      pixel_accounting: result.pixel_diff || result.difference_analysis || null,
+      spatial_sectors: result.spatial_sectors_4x4 || null,
+      statistical_forensics: result.advanced_statistical_suite || null,
+      frequency_fft: result.frequency_analysis || null,
+      payload_accounting: result.payload_analysis || null,
+      algorithm_attribution: result.algorithm_attribution || null,
+      evidence_summary: result.evidence_summary || null,
+    };
+    const blob = new Blob([JSON.stringify(evidenceData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `stegoshield-evidence-${(result.file_hash || 'package').slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
 
   useEffect(() => {
     if (initialFile) {
@@ -730,6 +780,117 @@ export default function Detector({ initialFile = null }) {
         </div>
       </div>
 
+      {/* Quick-Action Floating Triage Command Bar */}
+      {result && (
+        <div className="p-3.5 sm:p-4 rounded-2xl bg-gradient-to-r from-[#070D1A] via-[#0A1224] to-[#070D1A] border border-cyan-500/30 shadow-[0_0_24px_rgba(6,182,212,0.15)] space-y-2.5 animate-fadeIn">
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#1B2B48] pb-2">
+            <div className="flex items-center gap-2">
+              <span className="flex h-2 w-2 relative">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-cyan-500"></span>
+              </span>
+              <span className="text-xs font-mono font-bold text-white tracking-wider uppercase">
+                Examiner Quick Triage Command Bar
+              </span>
+              <span className="text-[10px] font-mono text-cyan-300 bg-cyan-500/10 border border-cyan-500/30 px-2 py-0.5 rounded-full">
+                1-Click Inspection Shortcuts
+              </span>
+            </div>
+            <div className="text-[10px] font-mono text-[#64748B]">
+              Standard: NIST SP 800-86
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={() => handleQuickTriage('pixels', 'loupe')}
+              className="px-3 py-1.5 rounded-xl bg-[#0B1528] hover:bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 text-xs font-mono font-semibold transition flex items-center gap-1.5 shadow-[0_0_8px_rgba(6,182,212,0.15)]"
+              title="Inspect focal pixels with 8x magnification and 8-bit binary matrix"
+            >
+              <ZoomIn className="w-3.5 h-3.5 text-cyan-400" />
+              <span>8× Pixel Loupe</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleQuickTriage('pixels', 'ternary')}
+              className="px-3 py-1.5 rounded-xl bg-[#0B1528] hover:bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 text-xs font-mono font-semibold transition flex items-center gap-1.5 shadow-[0_0_8px_rgba(6,182,212,0.15)]"
+              title="Inspect ternary +/-1 S-UNIWARD perturbations and 4x4 spatial sectors"
+            >
+              <Grid className="w-3.5 h-3.5 text-cyan-400" />
+              <span>Ternary Map &amp; 4×4 Sectors</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleQuickTriage('statistical')}
+              className="px-3 py-1.5 rounded-xl bg-[#0B1528] hover:bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 text-xs font-mono font-semibold transition flex items-center gap-1.5 shadow-[0_0_8px_rgba(6,182,212,0.15)]"
+              title="Inspect 10 classical statistical steganalysis metrics and SPAM residuals"
+            >
+              <BarChart2 className="w-3.5 h-3.5 text-cyan-400" />
+              <span>Statistical Suite (10 Metrics)</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleQuickTriage('frequency')}
+              className="px-3 py-1.5 rounded-xl bg-[#0B1528] hover:bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 text-xs font-mono font-semibold transition flex items-center gap-1.5 shadow-[0_0_8px_rgba(6,182,212,0.15)]"
+              title="Inspect 2D FFT logarithmic frequency spectra and energy bands"
+            >
+              <Zap className="w-3.5 h-3.5 text-cyan-400" />
+              <span>2D FFT Frequency</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleQuickTriage('attribution')}
+              className="px-3 py-1.5 rounded-xl bg-[#0B1528] hover:bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 text-xs font-mono font-semibold transition flex items-center gap-1.5 shadow-[0_0_8px_rgba(6,182,212,0.15)]"
+              title="Inspect payload accounting and heuristic algorithm fingerprinting"
+            >
+              <Target className="w-3.5 h-3.5 text-cyan-400" />
+              <span>Payload &amp; Attribution</span>
+            </button>
+
+            <div className="h-5 w-[1px] bg-[#1B2B48] hidden sm:block mx-0.5"></div>
+
+            <button
+              type="button"
+              onClick={() => setIsReportOpen(true)}
+              className="px-3 py-1.5 rounded-xl bg-cyan-950/40 hover:bg-cyan-900/60 text-cyan-200 border border-cyan-500/50 text-xs font-mono font-bold transition flex items-center gap-1.5 shadow-[0_0_12px_rgba(6,182,212,0.25)]"
+              title="Open Official Forensic Certificate Modal"
+            >
+              <FileText className="w-3.5 h-3.5 text-cyan-300" />
+              <span>Forensic Certificate</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={handleDownloadEvidencePackage}
+              className="px-3 py-1.5 rounded-xl bg-emerald-950/40 hover:bg-emerald-900/60 text-emerald-200 border border-emerald-500/40 text-xs font-mono font-bold transition flex items-center gap-1.5 shadow-[0_0_12px_rgba(16,185,129,0.2)]"
+              title="Download signed NIST JSON evidence package with SHA-256 chain of custody"
+            >
+              <Download className="w-3.5 h-3.5 text-emerald-400" />
+              <span>Download Evidence JSON</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                playCyberClick();
+                if (onNavigateTab) onNavigateTab('lab');
+              }}
+              className="px-3 py-1.5 rounded-xl bg-[#120B28] hover:bg-[#201348] text-purple-200 border border-purple-500/40 text-xs font-mono font-bold transition flex items-center gap-1.5 shadow-[0_0_12px_rgba(168,85,247,0.2)] ml-auto"
+              title="Launch Forensics Laboratory"
+            >
+              <Terminal className="w-3.5 h-3.5 text-purple-400" />
+              <span>Forensics Lab</span>
+              <ExternalLink className="w-3 h-3 text-purple-300" />
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Advanced Forensic Intelligence & Precision Analysis Studio */}
       {result && (
         <AdvancedForensicDashboard
@@ -741,6 +902,10 @@ export default function Detector({ initialFile = null }) {
           selectedBitplane={selectedBitplane}
           bitplaneCache={bitplaneCache}
           isLoadingBitplane={isLoadingBitplane}
+          externalTab={dashboardTab}
+          onTabChange={setDashboardTab}
+          externalDiffMode={dashboardDiffMode}
+          onDiffModeChange={setDashboardDiffMode}
         />
       )}
 

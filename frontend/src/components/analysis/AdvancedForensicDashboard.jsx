@@ -91,14 +91,31 @@ export default function AdvancedForensicDashboard({
   selectedBitplane,
   bitplaneCache,
   isLoadingBitplane,
+  externalTab = null,
+  onTabChange = null,
+  externalDiffMode = null,
+  onDiffModeChange = null,
 }) {
-  const [activeTab, setActiveTab] = useState('overview');
+  const [internalTab, setInternalTab] = useState('overview');
   const [isAdvancedView, setIsAdvancedView] = useState(true);
   const [selectedSector, setSelectedSector] = useState(null);
   const [showSectorGridOverlay, setShowSectorGridOverlay] = useState(true);
-  const [diffViewMode, setDiffViewMode] = useState('ternary'); // 'ternary' | 'heatmap' | 'wipe' | 'loupe'
+  const [internalDiffMode, setInternalDiffMode] = useState('ternary'); // 'ternary' | 'heatmap' | 'wipe' | 'loupe'
   const [amplificationFactor, setAmplificationFactor] = useState(50);
   const [expandedMetric, setExpandedMetric] = useState(null);
+
+  // Sync external controls
+  const activeTab = externalTab || internalTab;
+  const setActiveTab = (tab) => {
+    setInternalTab(tab);
+    if (onTabChange) onTabChange(tab);
+  };
+
+  const diffViewMode = externalDiffMode || internalDiffMode;
+  const setDiffViewMode = (mode) => {
+    setInternalDiffMode(mode);
+    if (onDiffModeChange) onDiffModeChange(mode);
+  };
 
   if (!result) return null;
 
@@ -128,7 +145,7 @@ export default function AdvancedForensicDashboard({
   ];
 
   return (
-    <div className="rounded-2xl bg-[#090D16] border border-[#1B2B48] shadow-2xl overflow-hidden animate-fadeIn text-slate-100 font-sans">
+    <div id="forensic-dashboard" className="rounded-2xl bg-[#090D16] border border-[#1B2B48] shadow-2xl overflow-hidden animate-fadeIn text-slate-100 font-sans">
       {/* Top Header Bar */}
       <div className="p-4 sm:p-5 border-b border-[#1B2B48] bg-[#050914] flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-3">

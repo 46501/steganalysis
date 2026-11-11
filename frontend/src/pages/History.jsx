@@ -18,6 +18,7 @@ import {
   Archive,
 } from 'lucide-react';
 import { steganalysisApi } from '../services/api';
+import ForensicReportModal from '../components/analysis/ForensicReportModal';
 
 export default function History() {
   const [records, setRecords] = useState([]);
@@ -143,51 +144,51 @@ export default function History() {
   return (
     <div className="space-y-6 animate-fadeIn">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-[#292929] pb-5">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-[#1B2B48] pb-5">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-xs font-semibold px-2 py-0.5 rounded bg-[#151515] text-[#B3B3B3] border border-[#292929]">
-              Audit Logs
+            <span className="text-xs font-mono font-bold px-2 py-0.5 rounded bg-[#0A1224] text-cyan-300 border border-cyan-500/30">
+              AUDIT TRAIL
             </span>
-            <span className="text-xs text-[#777777]">• Forensic Persistence</span>
+            <span className="text-xs text-cyan-400 font-mono">• ISO/IEC 27037 Forensic Evidence Persistence</span>
           </div>
-          <h1 className="text-2xl lg:text-3xl font-bold text-white tracking-tight">
-            Scan Archive & Reports
+          <h1 className="text-2xl lg:text-3xl font-extrabold text-white tracking-tight">
+            Scan Archive &amp; Forensic Reports
           </h1>
-          <p className="text-sm text-[#777777] mt-1">
-            Historical audit log of processed digital images with forensic hash verification.
+          <p className="text-sm text-[#94A3B8] mt-1 font-sans">
+            Historical audit log of examined digital carriers with cryptographic SHA-256 integrity verification.
           </p>
         </div>
 
         <div className="flex items-center gap-2.5">
           <button
             onClick={fetchHistory}
-            className="p-2 rounded-xl bg-[#151515] hover:bg-[#222222] text-[#B3B3B3] hover:text-white border border-[#292929] transition"
+            className="p-2.5 rounded-xl bg-[#0A1224] hover:bg-[#0F1C36] text-[#94A3B8] hover:text-white border border-[#1B2B48] transition"
             title="Refresh Scan List"
           >
-            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin text-white' : ''}`} />
+            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin text-cyan-400' : ''}`} />
           </button>
 
           <button
             onClick={handleExportCSV}
             disabled={records.length === 0}
-            className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold border transition ${
+            className={`flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-xs font-bold border transition ${
               records.length === 0
-                ? 'bg-[#111111] text-[#555555] border-[#222222] cursor-not-allowed'
-                : 'bg-[#1C1C1C] hover:bg-[#242424] text-white border border-[#292929]'
+                ? 'bg-[#050914] text-[#64748B] border-[#1B2B48] cursor-not-allowed'
+                : 'bg-[#0A1224] hover:bg-[#0F1C36] text-cyan-300 border border-cyan-500/30'
             }`}
           >
-            <Download className="w-3.5 h-3.5 text-white" />
+            <Download className="w-3.5 h-3.5 text-cyan-400" />
             <span>Export CSV</span>
           </button>
 
           <button
             onClick={handleClearAll}
             disabled={records.length === 0}
-            className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold border transition ${
+            className={`flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl text-xs font-semibold border transition ${
               records.length === 0
-                ? 'bg-[#111111] text-[#555555] border-[#222222] cursor-not-allowed'
-                : 'bg-transparent hover:bg-[#1A1A1A] text-[#777777] hover:text-white border border-[#292929]'
+                ? 'bg-[#050914] text-[#64748B] border-[#1B2B48] cursor-not-allowed'
+                : 'bg-transparent hover:bg-rose-950/30 text-[#64748B] hover:text-rose-300 border border-[#1B2B48] hover:border-rose-500/40'
             }`}
           >
             <Trash2 className="w-3.5 h-3.5" />
@@ -197,21 +198,21 @@ export default function History() {
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 rounded-xl bg-[#111111] border border-[#292929]">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 rounded-2xl bg-[#070D1A]/95 border border-[#1B2B48] shadow-sm">
         <div className="relative w-full sm:w-80">
-          <Search className="w-4 h-4 text-[#777777] absolute left-3.5 top-1/2 -translate-y-1/2" />
+          <Search className="w-4 h-4 text-cyan-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
           <input
             type="text"
             placeholder="Search by filename or SHA-256..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-[#0A0A0A] border border-[#292929] rounded-lg pl-9 pr-3.5 py-2 text-xs text-white placeholder-[#777777] focus:outline-none focus:border-[#555555]"
+            className="w-full bg-[#050914] border border-[#1B2B48] rounded-xl pl-9 pr-3.5 py-2 text-xs font-mono text-white placeholder-[#64748B] focus:outline-none focus:border-cyan-400"
           />
         </div>
 
         <div className="flex items-center gap-2 w-full sm:w-auto">
-          <span className="text-xs text-[#777777] flex items-center gap-1">
-            <Filter className="w-3 h-3" />
+          <span className="text-xs font-mono text-[#64748B] flex items-center gap-1">
+            <Filter className="w-3 h-3 text-cyan-400" />
             Filter:
           </span>
           {[
@@ -223,10 +224,10 @@ export default function History() {
             <button
               key={key}
               onClick={() => setVerdictFilter(key)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition ${
+              className={`px-3 py-1.5 rounded-xl text-xs font-mono transition ${
                 verdictFilter === key
-                  ? 'bg-[#242424] text-white border border-[#383838]'
-                  : 'bg-[#151515] text-[#777777] hover:text-white border border-[#292929]'
+                  ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 font-bold shadow-[0_0_8px_rgba(6,182,212,0.2)]'
+                  : 'bg-[#0A1224] text-[#94A3B8] hover:text-white border border-[#1B2B48]'
               }`}
             >
               {label}
@@ -236,21 +237,21 @@ export default function History() {
       </div>
 
       {/* Main Records Table */}
-      <div className="border border-[#292929] rounded-2xl overflow-hidden bg-[#111111] shadow-xl">
+      <div className="border border-[#1B2B48] rounded-2xl overflow-hidden bg-[#070D1A]/95 shadow-[0_4px_30px_rgba(0,0,0,0.5)]">
         {filteredRecords.length === 0 ? (
-          <div className="p-16 text-center text-sm text-[#777777]">
-            <HistoryIcon className="w-12 h-12 text-[#555555] mx-auto mb-3 opacity-60" />
-            <p className="font-medium text-white">No scan records found</p>
-            <p className="text-xs text-[#777777] mt-1">
+          <div className="p-16 text-center text-sm text-[#64748B]">
+            <HistoryIcon className="w-12 h-12 text-[#1B2B48] mx-auto mb-3" />
+            <p className="font-bold text-white text-base">No scan records found</p>
+            <p className="text-xs text-[#94A3B8] mt-1 font-mono">
               Upload images in the Steganalysis Detector to generate persistent audit trails.
             </p>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs font-mono">
-              <thead className="bg-[#0A0A0A] text-[#777777] uppercase tracking-wider font-semibold border-b border-[#292929]">
+              <thead className="bg-[#050914] text-[#64748B] uppercase tracking-wider font-semibold border-b border-[#1B2B48]">
                 <tr>
-                  <th className="py-3.5 px-4">Date & Time</th>
+                  <th className="py-3.5 px-4">Date &amp; Time</th>
                   <th className="py-3.5 px-4">Image Filename</th>
                   <th className="py-3.5 px-4">Verdict</th>
                   <th className="py-3.5 px-4">Stego Prob</th>
@@ -261,7 +262,7 @@ export default function History() {
                   <th className="py-3.5 px-4 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#222222] text-[#B3B3B3]">
+              <tbody className="divide-y divide-[#1B2B48] text-[#94A3B8]">
                 {filteredRecords.map((r) => {
                   const v = r.verdict || '';
                   const isInconclusive = v.toLowerCase().includes('inconclusive');
@@ -269,75 +270,75 @@ export default function History() {
                   const isCover = !isInconclusive && (v === 'Cover' || v === 'Cover Indicated');
                   const dateStr = new Date(r.created_at).toLocaleString();
                   return (
-                    <tr key={r.id} className="hover:bg-[#1A1A1A] transition">
-                      <td className="py-3 px-4 font-mono text-[#777777] whitespace-nowrap">
+                    <tr key={r.id} className="hover:bg-cyan-500/5 transition">
+                      <td className="py-3 px-4 font-mono text-[#64748B] whitespace-nowrap">
                         {dateStr}
                       </td>
-                      <td className="py-3 px-4 font-medium text-white max-w-[220px] truncate" title={r.filename}>
+                      <td className="py-3 px-4 font-sans font-medium text-white max-w-[220px] truncate" title={r.filename}>
                         {r.filename}
                       </td>
                       <td className="py-3 px-4 whitespace-nowrap">
                         <span
-                          className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full font-semibold text-[11px] ${
+                          className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full font-bold text-[10px] ${
                             isInconclusive
-                              ? 'bg-[#1C1C1C] text-[#B3B3B3] border border-[#333333]'
+                              ? 'bg-amber-950/40 text-amber-300 border border-amber-500/40'
                               : isStego
-                              ? 'bg-[#242424] text-white border border-[#383838]'
-                              : 'bg-[#151515] text-[#B3B3B3] border border-[#292929]'
+                              ? 'bg-rose-950/40 text-rose-300 border border-rose-500/40 shadow-[0_0_8px_rgba(244,63,94,0.2)]'
+                              : 'bg-cyan-950/40 text-cyan-300 border border-cyan-500/40 shadow-[0_0_8px_rgba(6,182,212,0.2)]'
                           }`}
                         >
                           {isInconclusive ? (
                             <>
-                              <HelpCircle className="w-3 h-3 text-[#777777]" />
+                              <HelpCircle className="w-3 h-3 text-amber-400" />
                               <span>INCONCLUSIVE</span>
                             </>
                           ) : isStego ? (
                             <>
-                              <AlertTriangle className="w-3 h-3 text-white" />
+                              <AlertTriangle className="w-3 h-3 text-rose-400" />
                               <span>STEGO</span>
                             </>
                           ) : (
                             <>
-                              <ShieldCheck className="w-3 h-3 text-[#B3B3B3]" />
+                              <ShieldCheck className="w-3 h-3 text-cyan-400" />
                               <span>COVER</span>
                             </>
                           )}
                         </span>
                       </td>
-                      <td className="py-3 px-4 font-mono text-[#B3B3B3]">
+                      <td className="py-3 px-4 font-mono text-[#94A3B8]">
                         {(r.stego_probability * 100).toFixed(1)}%
                       </td>
-                      <td className="py-3 px-4 font-mono font-bold text-white">
+                      <td className="py-3 px-4 font-mono font-bold text-cyan-300">
                         {(r.confidence * 100).toFixed(1)}%
                       </td>
                       <td className="py-3 px-4 font-mono text-white font-bold">
-                        {r.residual_energy ? r.residual_energy.toFixed(2) : '--'}
+                        {r.residual_energy ? `${r.residual_energy.toFixed(2)} σr²` : '--'}
                       </td>
-                      <td className="py-3 px-4 text-[#777777] whitespace-nowrap">
+                      <td className="py-3 px-4 text-[#64748B] whitespace-nowrap">
                         {r.model_name || 'StegoNet-Lite'}
                       </td>
-                      <td className="py-3 px-4 font-mono text-[#777777] whitespace-nowrap">
+                      <td className="py-3 px-4 font-mono text-[#64748B] whitespace-nowrap">
                         {r.execution_time_ms ? `${r.execution_time_ms.toFixed(1)} ms` : '--'}
                       </td>
                       <td className="py-3 px-4 text-right whitespace-nowrap">
                         <div className="flex items-center justify-end gap-1.5">
                           <button
                             onClick={() => handleDownloadArchive(r.id)}
-                            className="p-1.5 rounded-lg bg-[#151515] hover:bg-[#222222] text-[#B3B3B3] hover:text-white border border-[#292929] transition"
+                            className="p-1.5 rounded-lg bg-[#0A1224] hover:bg-[#0F1C36] text-cyan-300 hover:text-white border border-[#1B2B48] hover:border-cyan-500/40 transition"
                             title="Download NIST/ISO-27037 Evidence Package (.zip)"
                           >
-                            <Archive className="w-3.5 h-3.5" />
+                            <Archive className="w-3.5 h-3.5 text-cyan-400" />
                           </button>
                           <button
                             onClick={() => setSelectedRecord(r)}
-                            className="p-1.5 rounded-lg bg-[#151515] hover:bg-[#222222] text-[#B3B3B3] hover:text-white border border-[#292929] transition"
-                            title="Inspect Details"
+                            className="p-1.5 rounded-lg bg-[#0A1224] hover:bg-[#0F1C36] text-[#94A3B8] hover:text-white border border-[#1B2B48] hover:border-cyan-500/40 transition"
+                            title="Inspect ISO/IEC 27037 Certificate"
                           >
-                            <Eye className="w-3.5 h-3.5" />
+                            <Eye className="w-3.5 h-3.5 text-cyan-400" />
                           </button>
                           <button
                             onClick={() => handleDelete(r.id)}
-                            className="p-1.5 rounded-lg bg-[#151515] hover:bg-[#222222] text-[#777777] hover:text-white border border-[#292929] transition"
+                            className="p-1.5 rounded-lg bg-[#0A1224] hover:bg-rose-950/40 text-[#64748B] hover:text-rose-400 border border-[#1B2B48] hover:border-rose-500/40 transition"
                             title="Delete Record"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
@@ -353,100 +354,14 @@ export default function History() {
         )}
       </div>
 
-      {/* Detail Inspection Modal */}
+      {/* Official ISO/IEC 27037 & NIST SP 800-86 Forensic Certificate Modal */}
       {selectedRecord && (
-        <div className="fixed inset-0 bg-black/85 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-[#111111] border border-[#292929] rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-5 animate-scaleUp">
-            <div className="flex items-center justify-between pb-3 border-b border-[#292929]">
-              <div className="flex items-center gap-2">
-                <FileText className="w-5 h-5 text-white" />
-                <h3 className="text-base font-bold text-white">Scan Forensic Report</h3>
-              </div>
-              <button
-                onClick={() => setSelectedRecord(null)}
-                className="p-1 rounded-lg hover:bg-[#242424] text-[#777777] hover:text-white transition"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            <div className="space-y-4 text-xs">
-              {/* Verdict Banner */}
-              <div className="p-4 rounded-xl text-center border border-[#383838] bg-[#151515] text-white">
-                <div className="text-xl font-bold">
-                  {selectedRecord.verdict.toLowerCase().includes('inconclusive')
-                    ? 'INCONCLUSIVE — LOW CONFIDENCE'
-                    : selectedRecord.verdict.includes('Stego')
-                    ? 'STEGO INDICATED (POSSIBLE PAYLOAD)'
-                    : 'COVER INDICATED (POSSIBLE COVER)'}
-                </div>
-                <div className="text-xs mt-1 font-mono text-[#B3B3B3]">
-                  Score: {(selectedRecord.confidence * 100).toFixed(1)}% ({selectedRecord.model_name || 'StegoNet-Lite'})
-                </div>
-              </div>
-
-              {/* Data Table */}
-              <div className="grid grid-cols-2 gap-2 font-mono">
-                <div className="p-2.5 rounded-lg bg-[#151515] border border-[#292929]">
-                  <span className="text-[#777777] block text-[10px] uppercase">Filename</span>
-                  <span className="text-white truncate block">{selectedRecord.filename}</span>
-                </div>
-                <div className="p-2.5 rounded-lg bg-[#151515] border border-[#292929]">
-                  <span className="text-[#777777] block text-[10px] uppercase">Residual Energy (σr²)</span>
-                  <span className="text-white block font-bold">
-                    {selectedRecord.residual_energy ? selectedRecord.residual_energy.toFixed(2) : '--'}
-                  </span>
-                </div>
-                <div className="p-2.5 rounded-lg bg-[#151515] border border-[#292929]">
-                  <span className="text-[#777777] block text-[10px] uppercase">Cover Probability</span>
-                  <span className="text-white block">
-                    {(selectedRecord.cover_probability * 100).toFixed(1)}%
-                  </span>
-                </div>
-                <div className="p-2.5 rounded-lg bg-[#151515] border border-[#292929]">
-                  <span className="text-[#777777] block text-[10px] uppercase">Stego Probability</span>
-                  <span className="text-[#B3B3B3] block">
-                    {(selectedRecord.stego_probability * 100).toFixed(1)}%
-                  </span>
-                </div>
-              </div>
-
-              {/* Forensic Rationale */}
-              {selectedRecord.forensic_explanation && (
-                <div className="p-3.5 rounded-xl bg-[#151515] border border-[#292929] space-y-1">
-                  <span className="text-[#777777] font-semibold text-[10px] uppercase block">
-                    Forensic Explanation
-                  </span>
-                  <p className="text-[#B3B3B3] leading-relaxed text-[11px]">
-                    {selectedRecord.forensic_explanation}
-                  </p>
-                </div>
-              )}
-
-              {/* SHA-256 Hash */}
-              <div className="p-2.5 rounded-lg bg-[#151515] border border-[#292929] font-mono text-[11px] text-[#777777] break-all">
-                <span className="text-[#B3B3B3] font-semibold block mb-0.5">SHA-256 Chain of Custody:</span>
-                {selectedRecord.file_hash}
-              </div>
-            </div>
-
-            <div className="pt-2 flex items-center gap-2">
-              <button
-                onClick={() => handleDownloadArchive(selectedRecord.id)}
-                className="flex-1 py-2.5 rounded-xl bg-[#1C1C1C] hover:bg-[#242424] text-white font-semibold text-xs transition flex items-center justify-center gap-1.5 border border-[#292929]"
-              >
-                <Archive className="w-3.5 h-3.5 text-white" />
-                <span>Export NIST Archive (.zip)</span>
-              </button>
-              <button
-                onClick={() => setSelectedRecord(null)}
-                className="px-5 py-2.5 rounded-xl bg-white hover:bg-[#E5E5E5] text-black font-semibold text-xs transition theme-btn-primary"
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
+        <ForensicReportModal
+          isOpen={Boolean(selectedRecord)}
+          onClose={() => setSelectedRecord(null)}
+          reportData={selectedRecord}
+          previewUrl={selectedRecord.image_preview_b64 || selectedRecord.diff_map_b64 || '/samples/sample_cover.png'}
+        />
       )}
     </div>
   );

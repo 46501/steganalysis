@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import {
-  ShieldCheck,
   LayoutDashboard,
   ScanLine,
   FlaskConical,
@@ -128,8 +127,8 @@ export default function Sidebar({
                 className="flex items-center gap-2.5 cursor-pointer group select-none overflow-hidden"
                 title="StegoShield AI Dashboard"
               >
-                <div className="w-8 h-8 rounded-lg bg-white text-black flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 shadow-sm">
-                  <ShieldCheck className="w-5 h-5 stroke-[2.5]" />
+                <div className="w-8 h-8 rounded-lg overflow-hidden shrink-0 border border-[#292929] bg-black flex items-center justify-center transition-transform group-hover:scale-105 shadow-sm">
+                  <img src="/logo.png" alt="StegoShield AI Logo" className="w-full h-full object-cover" />
                 </div>
 
                 <div className="flex items-center gap-2 overflow-hidden transition-opacity duration-200">

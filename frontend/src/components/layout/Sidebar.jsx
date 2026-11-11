@@ -9,12 +9,10 @@ import {
   GraduationCap,
   Sparkles,
   Search,
-  PanelLeftClose,
-  PanelLeftOpen,
+  PanelLeft,
   X,
 } from 'lucide-react';
 import { steganalysisApi } from '../../services/api';
-import ThemeSwitcher from '../common/ThemeSwitcher';
 
 export default function Sidebar({
   activeTab,
@@ -25,16 +23,18 @@ export default function Sidebar({
   setMobileOpen,
   onOpenVivaTour,
   onOpenCommandPalette,
+  healthStatus: propHealthStatus,
 }) {
-  const [healthStatus, setHealthStatus] = useState({ online: false, model: '', db: '' });
+  const [internalHealth, setInternalHealth] = useState({ online: false, model: '', db: '' });
 
   useEffect(() => {
+    if (propHealthStatus) return;
     let isMounted = true;
     const fetchHealth = async () => {
       try {
         const data = await steganalysisApi.checkHealth();
         if (isMounted) {
-          setHealthStatus({
+          setInternalHealth({
             online: data.status === 'healthy',
             model: data.model?.active_model || 'StegoNet-Lite',
             db: data.database?.type || 'SQLite',
@@ -42,7 +42,7 @@ export default function Sidebar({
         }
       } catch (err) {
         if (isMounted) {
-          setHealthStatus({ online: false, model: '', db: '' });
+          setInternalHealth({ online: false, model: '', db: '' });
         }
       }
     };
@@ -53,7 +53,9 @@ export default function Sidebar({
       isMounted = false;
       clearInterval(interval);
     };
-  }, []);
+  }, [propHealthStatus]);
+
+  const healthStatus = propHealthStatus || internalHealth;
 
   const navGroups = [
     {
@@ -106,39 +108,66 @@ export default function Sidebar({
           mobileOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
         }`}
       >
-        {/* Top Header / Branding */}
+        {/* Top Header / Branding & Collapse Toggle */}
         <div className="h-14 border-b border-[#292929] flex items-center justify-between px-3.5 shrink-0">
-          <div
-            onClick={() => handleNavClick('dashboard')}
-            className={`flex items-center gap-2.5 cursor-pointer group select-none ${
-              collapsed ? 'w-full justify-center' : ''
-            }`}
-            title="StegoShield AI Dashboard"
-          >
-            <div className="w-8 h-8 rounded-lg bg-white text-black flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 shadow-sm">
-              <ShieldCheck className="w-5 h-5 stroke-[2.5]" />
+          {collapsed ? (
+            <div className="w-full flex items-center justify-center">
+              <button
+                type="button"
+                onClick={() => setCollapsed(false)}
+                className="p-2 rounded-lg text-[#888888] hover:text-white hover:bg-[#1A1A1A] border border-transparent hover:border-[#292929] transition group"
+                title="Open sidebar ( [ )"
+                aria-label="Open sidebar"
+              >
+                <PanelLeft className="w-4 h-4 transition-transform group-hover:scale-110" />
+              </button>
             </div>
+          ) : (
+            <>
+              <div
+                onClick={() => handleNavClick('dashboard')}
+                className="flex items-center gap-2.5 cursor-pointer group select-none overflow-hidden"
+                title="StegoShield AI Dashboard"
+              >
+                <div className="w-8 h-8 rounded-lg bg-white text-black flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 shadow-sm">
+                  <ShieldCheck className="w-5 h-5 stroke-[2.5]" />
+                </div>
 
-            {!collapsed && (
-              <div className="flex items-center gap-2 overflow-hidden transition-opacity duration-200">
-                <span className="text-sm font-bold tracking-tight text-white whitespace-nowrap">
-                  StegoShield AI
-                </span>
-                <span className="text-[10px] font-mono text-[#777777] bg-[#151515] px-1.5 py-0.5 rounded border border-[#292929]">
-                  v1.0
-                </span>
+                <div className="flex items-center gap-2 overflow-hidden transition-opacity duration-200">
+                  <span className="text-sm font-bold tracking-tight text-white whitespace-nowrap">
+                    StegoShield AI
+                  </span>
+                  <span className="text-[10px] font-mono text-[#777777] bg-[#151515] px-1.5 py-0.5 rounded border border-[#292929]">
+                    v1.0
+                  </span>
+                </div>
               </div>
-            )}
-          </div>
 
-          {/* Mobile Close Button */}
-          <button
-            type="button"
-            onClick={() => setMobileOpen(false)}
-            className="md:hidden p-1.5 rounded-lg text-[#777777] hover:text-white hover:bg-[#1A1A1A] transition"
-          >
-            <X className="w-4 h-4" />
-          </button>
+              <div className="flex items-center gap-1">
+                {/* ChatGPT-style sidebar collapse button */}
+                <button
+                  type="button"
+                  onClick={() => setCollapsed(true)}
+                  className="hidden md:flex p-1.5 rounded-lg text-[#777777] hover:text-white hover:bg-[#1A1A1A] border border-transparent hover:border-[#292929] transition"
+                  title="Close sidebar ( [ )"
+                  aria-label="Close sidebar"
+                >
+                  <PanelLeft className="w-4 h-4" />
+                </button>
+
+                {/* Mobile close icon */}
+                <button
+                  type="button"
+                  onClick={() => setMobileOpen(false)}
+                  className="md:hidden p-1.5 rounded-lg text-[#777777] hover:text-white hover:bg-[#1A1A1A] transition"
+                  title="Close menu"
+                  aria-label="Close menu"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            </>
+          )}
         </div>
 
         {/* Quick Search Shortcut Trigger */}
@@ -228,9 +257,8 @@ export default function Sidebar({
           </div>
         </div>
 
-        {/* Bottom System Telemetry & Controls Tray */}
-        <div className="p-3 border-t border-[#292929] bg-[#0A0A0A] shrink-0 space-y-2.5">
-          {/* Engine Status Pill */}
+        {/* Bottom System Telemetry Tray (Clean minimal status only) */}
+        <div className="p-3 border-t border-[#292929] bg-[#0A0A0A] shrink-0">
           <div
             className={`flex items-center rounded-lg bg-[#141414] border border-[#242424] text-[11px] font-mono ${
               collapsed ? 'p-2 justify-center' : 'px-2.5 py-1.5 justify-between'
@@ -255,33 +283,6 @@ export default function Sidebar({
               </span>
             )}
           </div>
-
-          {/* Theme Mode Switcher */}
-          <div className={`flex items-center ${collapsed ? 'justify-center' : 'justify-between'}`}>
-            {!collapsed && (
-              <span className="text-xs font-mono text-[#777777]">
-                Theme
-              </span>
-            )}
-            <ThemeSwitcher />
-          </div>
-
-          {/* Desktop Collapse / Expand Toggle */}
-          <button
-            type="button"
-            onClick={() => setCollapsed(!collapsed)}
-            className="hidden md:flex w-full items-center justify-center gap-2 py-1.5 rounded-lg bg-[#141414] hover:bg-[#1F1F1F] text-[#777777] hover:text-white border border-[#242424] text-xs font-mono transition"
-            title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-          >
-            {collapsed ? (
-              <PanelLeftOpen className="w-4 h-4 text-[#B3B3B3]" />
-            ) : (
-              <span className="flex items-center gap-2">
-                <PanelLeftClose className="w-4 h-4 text-[#B3B3B3]" />
-                <span>Collapse</span>
-              </span>
-            )}
-          </button>
         </div>
       </aside>
     </>

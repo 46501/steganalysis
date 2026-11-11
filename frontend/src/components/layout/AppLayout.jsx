@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Sidebar from './Sidebar';
 import TopHeader from './TopHeader';
+import { steganalysisApi } from '../../services/api';
 
 export default function AppLayout({
   activeTab,
@@ -16,6 +17,7 @@ export default function AppLayout({
     return false;
   });
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [healthStatus, setHealthStatus] = useState({ online: false, model: '', db: '' });
 
   useEffect(() => {
     try {
@@ -25,7 +27,35 @@ export default function AppLayout({
     }
   }, [collapsed]);
 
-  // Shortcut key `[` to toggle sidebar collapse
+  // Centralized backend telemetry polling
+  useEffect(() => {
+    let isMounted = true;
+    const fetchHealth = async () => {
+      try {
+        const data = await steganalysisApi.checkHealth();
+        if (isMounted) {
+          setHealthStatus({
+            online: data.status === 'healthy',
+            model: data.model?.active_model || 'StegoNet-Lite',
+            db: data.database?.type || 'SQLite',
+          });
+        }
+      } catch (err) {
+        if (isMounted) {
+          setHealthStatus({ online: false, model: '', db: '' });
+        }
+      }
+    };
+
+    fetchHealth();
+    const interval = setInterval(fetchHealth, 15000);
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, []);
+
+  // Shortcut key `[` to toggle sidebar collapse (matching ChatGPT / Linear pattern)
   useEffect(() => {
     const handleKeyDown = (e) => {
       const tag = e.target.tagName.toLowerCase();
@@ -50,6 +80,7 @@ export default function AppLayout({
         setMobileOpen={setMobileOpen}
         onOpenVivaTour={onOpenVivaTour}
         onOpenCommandPalette={onOpenCommandPalette}
+        healthStatus={healthStatus}
       />
 
       {/* Main Content Area Offset by Sidebar Width */}
@@ -64,6 +95,9 @@ export default function AppLayout({
           setMobileOpen={setMobileOpen}
           onOpenVivaTour={onOpenVivaTour}
           onOpenCommandPalette={onOpenCommandPalette}
+          collapsed={collapsed}
+          setCollapsed={setCollapsed}
+          healthStatus={healthStatus}
         />
 
         {/* Dynamic Workspace Route View */}

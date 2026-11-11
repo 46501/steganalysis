@@ -29,6 +29,7 @@ import BatchTriageWorkstation from '../components/analysis/BatchTriageWorkstatio
 import ComparisonWipeSlider from '../components/analysis/ComparisonWipeSlider';
 import ForensicScanningHUD from '../components/analysis/ForensicScanningHUD';
 import PixelHistogramChart from '../components/analysis/PixelHistogramChart';
+import { playLaserScan, playTargetLock, playCyberClick } from '../utils/cyberSoundEffects';
 
 export default function Detector({ initialFile = null }) {
   const [detectionMode, setDetectionMode] = useState('single'); // 'single' | 'batch'
@@ -130,9 +131,11 @@ export default function Detector({ initialFile = null }) {
       setPreviewUrl(url);
 
       // Instantly run analysis for live demonstration
+      playLaserScan();
       setIsAnalyzing(true);
       const res = await steganalysisApi.analyzeImage(sampleFile, modelChoice);
       setResult(res);
+      playTargetLock((res.verdict || '').toLowerCase().includes('stego'));
       if (res.bitplane_0_b64) {
         setBitplaneCache({ 0: res.bitplane_0_b64 });
       }
@@ -155,8 +158,10 @@ export default function Detector({ initialFile = null }) {
     setError(null);
 
     try {
+      playLaserScan();
       const res = await steganalysisApi.analyzeImage(file, modelChoice);
       setResult(res);
+      playTargetLock((res.verdict || '').toLowerCase().includes('stego'));
       if (res.bitplane_0_b64) {
         setBitplaneCache({ 0: res.bitplane_0_b64 });
       }

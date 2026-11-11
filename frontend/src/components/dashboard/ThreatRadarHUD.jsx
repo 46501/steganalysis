@@ -14,6 +14,7 @@ import {
   Zap,
   ArrowUpRight,
 } from 'lucide-react';
+import { playRadarPing, playCyberClick } from '../../utils/cyberSoundEffects';
 
 export default function ThreatRadarHUD({ stats = {}, recentScans = [], onNavigate }) {
   const [selectedBlip, setSelectedBlip] = useState(null);
@@ -130,7 +131,10 @@ export default function ThreatRadarHUD({ stats = {}, recentScans = [], onNavigat
         {/* Filter Pills */}
         <div className="flex items-center gap-1.5 p-1 rounded-xl bg-[#050914] border border-[#1B2B48] text-xs font-mono">
           <button
-            onClick={() => setRadarFilter('all')}
+            onClick={() => {
+              playCyberClick();
+              setRadarFilter('all');
+            }}
             className={`px-2.5 py-1 rounded-lg transition ${
               radarFilter === 'all'
                 ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-[0_0_8px_rgba(6,182,212,0.2)]'
@@ -140,7 +144,10 @@ export default function ThreatRadarHUD({ stats = {}, recentScans = [], onNavigat
             All ({blips.length})
           </button>
           <button
-            onClick={() => setRadarFilter('stego')}
+            onClick={() => {
+              playCyberClick();
+              setRadarFilter('stego');
+            }}
             className={`px-2.5 py-1 rounded-lg transition ${
               radarFilter === 'stego'
                 ? 'bg-rose-950/60 text-rose-300 border border-rose-500/40 shadow-[0_0_8px_rgba(244,63,94,0.2)]'
@@ -150,7 +157,10 @@ export default function ThreatRadarHUD({ stats = {}, recentScans = [], onNavigat
             Stego ({blips.filter((b) => b.type === 'stego').length})
           </button>
           <button
-            onClick={() => setRadarFilter('cover')}
+            onClick={() => {
+              playCyberClick();
+              setRadarFilter('cover');
+            }}
             className={`px-2.5 py-1 rounded-lg transition ${
               radarFilter === 'cover'
                 ? 'bg-cyan-950/60 text-cyan-300 border border-cyan-500/40 shadow-[0_0_8px_rgba(6,182,212,0.2)]'
@@ -208,7 +218,10 @@ export default function ThreatRadarHUD({ stats = {}, recentScans = [], onNavigat
               return (
                 <button
                   key={blip.id}
-                  onClick={() => setSelectedBlip(blip)}
+                  onClick={() => {
+                    playRadarPing();
+                    setSelectedBlip(blip);
+                  }}
                   style={{
                     left: `${leftPercent}%`,
                     top: `${topPercent}%`,
@@ -385,3 +398,4 @@ export default function ThreatRadarHUD({ stats = {}, recentScans = [], onNavigat
     </div>
   );
 }
+

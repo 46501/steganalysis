@@ -1,5 +1,6 @@
-import React from 'react';
-import { Menu, Search, Sparkles, PanelLeft, Activity } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Menu, Search, Sparkles, PanelLeft, Activity, Volume2, VolumeX } from 'lucide-react';
+import { getSoundEnabled, setSoundEnabled, playCyberClick } from '../../utils/cyberSoundEffects';
 
 export default function TopHeader({
   setMobileOpen,
@@ -8,6 +9,20 @@ export default function TopHeader({
   collapsed,
   setCollapsed,
 }) {
+  const [soundOn, setSoundOn] = useState(getSoundEnabled());
+
+  useEffect(() => {
+    const handleToggle = () => setSoundOn(getSoundEnabled());
+    window.addEventListener('stego-sfx-toggled', handleToggle);
+    return () => window.removeEventListener('stego-sfx-toggled', handleToggle);
+  }, []);
+
+  const toggleSound = () => {
+    const next = !soundOn;
+    setSoundEnabled(next);
+    setSoundOn(next);
+    if (next) playCyberClick();
+  };
   return (
     <header
       className={`fixed top-0 right-0 z-40 h-16 bg-[#070C18]/95 backdrop-blur-md border-b border-[#1B2B48] theme-dark-nav flex items-center justify-between px-4 sm:px-6 shrink-0 transition-all duration-300 ease-in-out ${
@@ -87,6 +102,25 @@ export default function TopHeader({
           <kbd className="text-[10px] bg-[#142340] text-cyan-300 px-1.5 py-0.2 rounded border border-[#233860] font-sans">
             ⌘K
           </kbd>
+        </button>
+
+        {/* Cyber Procedural SFX Toggle Button */}
+        <button
+          type="button"
+          onClick={toggleSound}
+          className={`p-1.5 rounded-lg border transition ${
+            soundOn
+              ? 'bg-[#0E172A] text-cyan-400 border-cyan-500/40 shadow-[0_0_10px_rgba(6,182,212,0.25)]'
+              : 'bg-[#0A101D] text-[#64748B] border-[#1E2E4E] hover:text-[#94A3B8]'
+          }`}
+          title={soundOn ? 'Cyber SFX: ON (Web Audio Synthesizer)' : 'Cyber SFX: MUTED (Click to Enable)'}
+          aria-label="Toggle Cyber Sound Effects"
+        >
+          {soundOn ? (
+            <Volume2 className="w-4 h-4 text-cyan-400" />
+          ) : (
+            <VolumeX className="w-4 h-4 text-[#64748B]" />
+          )}
         </button>
 
         {/* Viva Guide Shortcut (View Guide) */}

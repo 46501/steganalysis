@@ -17,7 +17,7 @@ router = APIRouter()
 async def get_scan_history(
     limit: int = Query(20, ge=1, le=100),
     offset: int = Query(0, ge=0),
-    verdict: Optional[str] = Query(None, description="Filter by 'Cover' or 'Stego'"),
+    verdict: Optional[str] = Query(None, description="Filter by 'Inconclusive', 'Cover', or 'Stego'"),
     db: AsyncSession = Depends(get_db),
 ) -> PaginatedHistoryResponse:
     """Retrieves paginated scan history records."""
@@ -25,8 +25,17 @@ async def get_scan_history(
     count_query = select(func.count(ScanRecord.id))
 
     if verdict:
-        query = query.where(ScanRecord.verdict == verdict)
-        count_query = count_query.where(ScanRecord.verdict == verdict)
+        v_lower = verdict.lower().strip()
+        if v_lower in ("stego", "stego indicated"):
+            clause = ScanRecord.verdict.in_(["Stego", "Stego Indicated"])
+        elif v_lower in ("cover", "cover indicated"):
+            clause = ScanRecord.verdict.in_(["Cover", "Cover Indicated"])
+        elif "inconclusive" in v_lower:
+            clause = ScanRecord.verdict.ilike("%Inconclusive%")
+        else:
+            clause = (ScanRecord.verdict == verdict)
+        query = query.where(clause)
+        count_query = count_query.where(clause)
 
     total_count = (await db.execute(count_query)).scalar_one_or_none() or 0
 
@@ -96,10 +105,13 @@ async def get_forensic_case_report(
         "forensic_verdict": {
             "classifier_model": record.model_name,
             "verdict": record.verdict,
+            "interpretation_state": record.verdict,
+            "score_type": "Uncalibrated Model Score",
             "confidence_score": record.confidence,
             "cover_probability": record.cover_probability,
             "stego_probability": record.stego_probability,
             "spatial_residual_energy": record.residual_energy,
+            "scientific_reliability": "Experimental Baseline (BOSSbase empirical validation accuracy ~50%)",
             "forensic_explanation": record.forensic_explanation,
         },
         "chain_of_custody_verification": {

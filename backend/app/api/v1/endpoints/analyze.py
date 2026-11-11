@@ -67,7 +67,8 @@ async def compare_pair(
 ) -> PairComparisonResponse:
     """
     Compares a matched cover-stego image pair, calculating exact pixel alterations,
-    change rate, spatial residual energy delta, and amplified ternary difference maps.
+    change rate, spatial residual energy delta, Hamming bit distance, and amplified ternary difference maps.
+    Only declares alterations verified when directly measured across identical-dimension paired inputs.
     """
     c_name, c_hash, _, c_tensor, _ = await ImageService.process_upload(cover_file)
     s_name, s_hash, _, s_tensor, _ = await ImageService.process_upload(stego_file)
@@ -75,7 +76,37 @@ async def compare_pair(
     c_arr = c_tensor.squeeze().cpu().numpy().astype(np.uint8)
     s_arr = s_tensor.squeeze().cpu().numpy().astype(np.uint8)
 
+    # 1. Verify image dimensions and spatial alignment
+    if c_arr.shape != s_arr.shape:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=(
+                f"Dimension and alignment mismatch: Cover image is {c_arr.shape[1]}x{c_arr.shape[0]} "
+                f"while Suspected Stego is {s_arr.shape[1]}x{s_arr.shape[0]}. "
+                "Paired reference comparison requires identical dimensions and spatial alignment."
+            ),
+        )
+
+    # 2. Calculate exact bitwise Hamming distance
+    diff_xor = np.bitwise_xor(c_arr, s_arr)
+    hamming_bits = int(np.unpackbits(diff_xor).sum())
+
+    # 3. Shannon Entropy comparison
+    def _calc_entropy(arr: np.ndarray) -> float:
+        counts = np.bincount(arr.flatten(), minlength=256)
+        p = counts[counts > 0] / counts.sum()
+        return float(-np.sum(p * np.log2(p)))
+
+    h_cover = _calc_entropy(c_arr)
+    h_stego = _calc_entropy(s_arr)
+    entropy_delta = round(h_stego - h_cover, 5)
+
     diff_b64, stats = VisualForensicsService.generate_amplified_diff(c_arr, s_arr)
+    stats["changed_bits_hamming"] = hamming_bits
+    stats["entropy_delta"] = entropy_delta
+    stats["cover_entropy"] = round(h_cover, 4)
+    stats["stego_entropy"] = round(h_stego, 4)
+
     c_heat = VisualForensicsService.generate_residual_heatmap(c_arr)
     s_heat = VisualForensicsService.generate_residual_heatmap(s_arr)
     c_lsb = VisualForensicsService.generate_bitplane(c_arr, 0)
@@ -98,6 +129,9 @@ async def compare_pair(
         stego_heatmap_b64=s_heat,
         cover_bitplane_0_b64=c_lsb,
         stego_bitplane_0_b64=s_lsb,
+        changed_bits_hamming=hamming_bits,
+        entropy_delta=entropy_delta,
+        evidence_status="VERIFIED FORENSIC EVIDENCE (Direct Paired Comparison)",
     )
 
 

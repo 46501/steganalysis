@@ -106,7 +106,7 @@ def test_inference_engine_prediction():
     result = engine.predict(dummy_tensor)
 
     assert "verdict" in result
-    assert result["verdict"] in ["Cover", "Stego"]
+    assert result["verdict"] in ["Inconclusive", "Cover Indicated", "Stego Indicated", "Cover", "Stego"]
     assert "cover_probability" in result
     assert "stego_probability" in result
     assert "confidence" in result

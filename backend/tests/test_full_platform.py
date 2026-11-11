@@ -84,7 +84,7 @@ def test_analyze_image_endpoint_png(client):
     data = response.json()
 
     assert data["filename"] == "synthetic_test.png"
-    assert data["verdict"] in ["Cover", "Stego"]
+    assert data["verdict"] in ["Inconclusive", "Cover Indicated", "Stego Indicated", "Cover", "Stego"]
     assert 0.0 <= data["cover_probability"] <= 1.0
     assert 0.0 <= data["stego_probability"] <= 1.0
     assert 0.5 <= data["confidence"] <= 1.0

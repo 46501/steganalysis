@@ -9,6 +9,7 @@ import {
   ArrowRight,
   Clock,
   FileImage,
+  HelpCircle,
 } from 'lucide-react';
 import { steganalysisApi } from '../services/api';
 
@@ -46,10 +47,13 @@ export default function Dashboard({ setActiveTab, onOpenVivaTour }) {
           const total = hist.total_count || 0;
           let stego = 0;
           let cover = 0;
+          let inconclusive = 0;
           let totalLatency = 0;
 
           items.forEach((item) => {
-            if (item.verdict === 'Stego') stego += 1;
+            const v = (item.verdict || '').toLowerCase();
+            if (v.includes('inconclusive')) inconclusive += 1;
+            else if (v.includes('stego')) stego += 1;
             else cover += 1;
             totalLatency += item.execution_time_ms || 0;
           });
@@ -58,6 +62,7 @@ export default function Dashboard({ setActiveTab, onOpenVivaTour }) {
             totalScans: total,
             stegoDetections: stego,
             coverVerified: cover,
+            inconclusiveCount: inconclusive,
             avgLatency: items.length > 0 ? Math.round(totalLatency / items.length) : 0,
           });
         }
@@ -300,7 +305,9 @@ export default function Dashboard({ setActiveTab, onOpenVivaTour }) {
               </thead>
               <tbody className="divide-y divide-[#292929] text-[#B3B3B3]">
                 {recentScans.map((scan) => {
-                  const isStego = scan.verdict === 'Stego';
+                  const v = scan.verdict || '';
+                  const isInconclusive = v.toLowerCase().includes('inconclusive');
+                  const isStego = !isInconclusive && (v === 'Stego' || v === 'Stego Indicated');
                   const dateStr = new Date(scan.created_at).toLocaleTimeString([], {
                     hour: '2-digit',
                     minute: '2-digit',
@@ -320,12 +327,29 @@ export default function Dashboard({ setActiveTab, onOpenVivaTour }) {
                       <td className="py-2.5 px-4">
                         <span
                           className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold font-mono ${
-                            isStego
+                            isInconclusive
+                              ? 'bg-[#1C1C1C] text-[#B3B3B3] border border-[#333333]'
+                              : isStego
                               ? 'bg-[#242424] text-white border border-[#383838]'
                               : 'bg-[#151515] text-[#B3B3B3] border border-[#292929]'
                           }`}
                         >
-                          {scan.verdict}
+                          {isInconclusive ? (
+                            <>
+                              <HelpCircle className="w-2.5 h-2.5 text-[#777777]" />
+                              <span>INCONCLUSIVE</span>
+                            </>
+                          ) : isStego ? (
+                            <>
+                              <AlertTriangle className="w-2.5 h-2.5 text-white" />
+                              <span>STEGO</span>
+                            </>
+                          ) : (
+                            <>
+                              <ShieldCheck className="w-2.5 h-2.5 text-[#B3B3B3]" />
+                              <span>COVER</span>
+                            </>
+                          )}
                         </span>
                       </td>
                       <td className="py-2.5 px-4 font-mono text-white">

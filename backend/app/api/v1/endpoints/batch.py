@@ -23,6 +23,8 @@ async def analyze_batch(
     results = []
     stego_count = 0
     cover_count = 0
+    inconclusive_count = 0
+    inconclusive_count = 0
 
     for file in files:
         try:
@@ -36,10 +38,12 @@ async def analyze_batch(
                 db=db,
             )
             results.append(res)
-            if res.verdict == "Stego":
+            if res.verdict in ("Stego", "Stego Indicated"):
                 stego_count += 1
-            else:
+            elif res.verdict in ("Cover", "Cover Indicated"):
                 cover_count += 1
+            else:
+                inconclusive_count += 1
         except Exception:
             # Skip corrupted individual files in batch
             continue
@@ -50,6 +54,7 @@ async def analyze_batch(
         total_processed=len(results),
         stego_count=stego_count,
         cover_count=cover_count,
+        inconclusive_count=inconclusive_count,
         total_execution_time_ms=round(total_time_ms, 2),
         results=results,
     )
@@ -71,6 +76,7 @@ async def analyze_benchmark_batch(
     results = []
     stego_count = 0
     cover_count = 0
+    inconclusive_count = 0
 
     c_dir = Path("D:/Stego/dataset/processed/S-UNIWARD_0.4bpp/test/cover")
     s_dir = Path("D:/Stego/dataset/processed/S-UNIWARD_0.4bpp/test/stego")
@@ -109,10 +115,12 @@ async def analyze_benchmark_batch(
                 db=db,
             )
             results.append(res)
-            if res.verdict == "Stego":
+            if res.verdict in ("Stego", "Stego Indicated"):
                 stego_count += 1
-            else:
+            elif res.verdict in ("Cover", "Cover Indicated"):
                 cover_count += 1
+            else:
+                inconclusive_count += 1
         except Exception:
             continue
 
@@ -122,6 +130,7 @@ async def analyze_benchmark_batch(
         total_processed=len(results),
         stego_count=stego_count,
         cover_count=cover_count,
+        inconclusive_count=inconclusive_count,
         total_execution_time_ms=round(total_time_ms, 2),
         results=results,
     )

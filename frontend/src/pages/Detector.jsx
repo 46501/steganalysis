@@ -154,7 +154,10 @@ export default function Detector({ initialFile = null }) {
     setVisualTab('heatmap');
   };
 
-  const isStego = result?.verdict === 'Stego';
+  const verdict = result?.verdict || '';
+  const isInconclusive = verdict.toLowerCase().includes('inconclusive') || result?.is_conclusive === false || (result?.verdict_category && result.verdict_category.includes('INCONCLUSIVE'));
+  const isStego = !isInconclusive && (verdict === 'Stego Indicated' || verdict === 'Stego');
+  const isCover = !isInconclusive && (verdict === 'Cover Indicated' || verdict === 'Cover');
 
   return (
     <div className="space-y-8 animate-fadeIn">
@@ -508,42 +511,74 @@ export default function Detector({ initialFile = null }) {
                   {/* Big Verdict Banner */}
                   <div className="p-5 rounded-2xl text-center border border-[#383838] bg-[#151515] text-white shadow-none">
                     <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#242424] border border-[#383838] text-xs font-semibold mb-2">
-                      {isStego ? (
-                        <AlertTriangle className="w-4 h-4 text-white" />
+                      {isInconclusive ? (
+                        <>
+                          <HelpCircle className="w-4 h-4 text-[#B3B3B3]" />
+                          <span className="text-[#B3B3B3]">INCONCLUSIVE — LOW CONFIDENCE</span>
+                        </>
+                      ) : isStego ? (
+                        <>
+                          <AlertTriangle className="w-4 h-4 text-white" />
+                          <span>STEGO INDICATED</span>
+                        </>
                       ) : (
-                        <CheckCircle2 className="w-4 h-4 text-white" />
+                        <>
+                          <CheckCircle2 className="w-4 h-4 text-white" />
+                          <span>COVER INDICATED</span>
+                        </>
                       )}
-                      <span>{isStego ? 'PAYLOAD DETECTED' : 'CLEAN IMAGE'}</span>
                     </div>
 
                     <div className="text-3xl font-black tracking-tight text-white">
-                      {isStego ? 'STEGANOGRAPHY' : 'COVER (CLEAN)'}
+                      {isInconclusive
+                        ? 'INCONCLUSIVE'
+                        : isStego
+                        ? 'STEGO INDICATED'
+                        : 'COVER INDICATED'}
                     </div>
 
                     <div className="text-xs mt-1.5 text-[#B3B3B3] font-mono">
-                      Neural Model Verdict: {(result.confidence * 100).toFixed(1)}% (Experimental Baseline)
+                      {isInconclusive
+                        ? `Decision Margin: ${(Math.abs(result.stego_probability - result.cover_probability) * 100).toFixed(1)}% (Insufficient evidence to classify)`
+                        : `Neural Model Indication: ${(result.confidence * 100).toFixed(1)}% (${result.model_name || 'StegoNet-Lite'})`}
                     </div>
                   </div>
 
                   {/* Dual Probability Bar */}
-                  <div className="space-y-1.5">
-                    <div className="flex justify-between text-xs font-mono">
-                      <span className="text-white">
-                        Cover: {(result.cover_probability * 100).toFixed(1)}%
+                  <div className="p-4 rounded-xl bg-[#151515] border border-[#292929] space-y-2.5">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="font-semibold text-white flex items-center gap-1.5">
+                        <Activity className="w-3.5 h-3.5 text-white" />
+                        <span>Model Output & Scores</span>
                       </span>
-                      <span className="text-[#B3B3B3]">
-                        Stego: {(result.stego_probability * 100).toFixed(1)}%
+                      <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#222222] text-[#B3B3B3] border border-[#333333]">
+                        {result.score_type || 'Uncalibrated Model Score'}
                       </span>
                     </div>
-                    <div className="h-3 w-full rounded-full bg-[#222222] border border-[#292929] overflow-hidden flex p-0.5">
-                      <div
-                        style={{ width: `${result.cover_probability * 100}%` }}
-                        className="h-full bg-white rounded-l-full transition-all duration-500"
-                      ></div>
-                      <div
-                        style={{ width: `${result.stego_probability * 100}%` }}
-                        className="h-full bg-[#555555] rounded-r-full transition-all duration-500"
-                      ></div>
+
+                    <div className="space-y-1.5">
+                      <div className="flex justify-between text-xs font-mono">
+                        <span className="text-white">
+                          Cover Score: {(result.cover_probability * 100).toFixed(1)}%
+                        </span>
+                        <span className="text-[#B3B3B3]">
+                          Stego Score: {(result.stego_probability * 100).toFixed(1)}%
+                        </span>
+                      </div>
+                      <div className="h-3 w-full rounded-full bg-[#222222] border border-[#292929] overflow-hidden flex p-0.5">
+                        <div
+                          style={{ width: `${result.cover_probability * 100}%` }}
+                          className="h-full bg-white rounded-l-full transition-all duration-500"
+                        ></div>
+                        <div
+                          style={{ width: `${result.stego_probability * 100}%` }}
+                          className="h-full bg-[#555555] rounded-r-full transition-all duration-500"
+                        ></div>
+                      </div>
+                      <div className="flex justify-between text-[10px] text-[#777777] font-mono">
+                        <span>Model: {result.model_name || 'StegoNet-Lite'}</span>
+                        <span>Status: {result.model_status || 'Experimental Baseline'}</span>
+                      </div>
                     </div>
                   </div>
 
@@ -574,9 +609,9 @@ export default function Detector({ initialFile = null }) {
                       <div className="flex items-center justify-between text-xs font-semibold text-white">
                         <span className="flex items-center gap-1.5">
                           <Activity className="w-3.5 h-3.5 text-white" />
-                          <span>Statistical Heuristics (SPAM & Spatial Differentials)</span>
+                          <span>Auxiliary Forensic Measurements</span>
                         </span>
-                        <span className="text-[10px] font-mono text-[#777777]">Deterministics</span>
+                        <span className="text-[10px] font-mono text-[#777777]">Diagnostic Only</span>
                       </div>
                       <div className="grid grid-cols-3 gap-2 text-[11px] font-mono pt-1">
                         <div className="p-2 rounded-lg bg-[#111111] border border-[#222222]">
@@ -592,11 +627,14 @@ export default function Detector({ initialFile = null }) {
                           <span className="text-white font-bold block">{result.statistical_metrics.spam_markov_diag_dominance}</span>
                         </div>
                       </div>
+                      <p className="text-[10px] text-[#777777] pt-1 leading-normal">
+                        Note: Auxiliary metrics are empirical measurements of texture and spatial gradient variance, not independent proof of steganography.
+                      </p>
                     </div>
                   )}
 
                   {/* Scientific Rationale Card */}
-                  <div className="p-4 rounded-xl bg-[#151515] border border-[#292929] text-xs space-y-1.5">
+                  <div className="p-4 rounded-xl bg-[#151515] border border-[#292929] text-xs space-y-2">
                     <div className="flex items-center gap-1.5 text-white font-semibold text-[11px]">
                       <FileText className="w-3.5 h-3.5 text-white" />
                       <span>Scientific Forensic Explanation</span>
@@ -604,6 +642,9 @@ export default function Detector({ initialFile = null }) {
                     <p className="text-[#B3B3B3] leading-relaxed text-[11px]">
                       {result.forensic_explanation}
                     </p>
+                    <div className="p-2 rounded-lg bg-[#0A0A0A] border border-[#222222] text-[10px] text-[#777777] leading-relaxed">
+                      Single image analysis: No reference cover image supplied. Exact pixel modifications cannot be verified without a matched reference.
+                    </div>
                   </div>
 
                   {/* Forensic Hash Fingerprint */}

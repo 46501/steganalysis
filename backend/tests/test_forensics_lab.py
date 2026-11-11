@@ -250,7 +250,7 @@ async def test_lab_api_endpoints_workflow(sample_test_png):
         )
         assert analyze_res.status_code == 200
         an_data = analyze_res.json()
-        assert an_data["verdict"] in ("Cover", "Stego")
+        assert an_data["verdict"] in ("Inconclusive", "Cover Indicated", "Stego Indicated", "Cover", "Stego")
         assert "cover_probability" in an_data
         assert "stego_probability" in an_data
         assert "Experimental Baseline" in an_data["model_status"]

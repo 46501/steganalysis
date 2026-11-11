@@ -18,7 +18,7 @@ class ScanRecord(Base, TimestampMixin):
     width: Mapped[int] = mapped_column(Integer, nullable=True)
     height: Mapped[int] = mapped_column(Integer, nullable=True)
 
-    verdict: Mapped[str] = mapped_column(String(16), nullable=False, index=True)
+    verdict: Mapped[str] = mapped_column(String(32), nullable=False, index=True)
     cover_probability: Mapped[float] = mapped_column(Float, nullable=False)
     stego_probability: Mapped[float] = mapped_column(Float, nullable=False)
     confidence: Mapped[float] = mapped_column(Float, nullable=False)

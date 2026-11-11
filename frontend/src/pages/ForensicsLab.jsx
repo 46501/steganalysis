@@ -1251,7 +1251,12 @@ export default function ForensicsLab() {
                 {analysisResult && (
                   <div className="p-4 rounded-xl bg-[#151515] border border-[#292929] space-y-3 font-mono">
                     <div className="flex items-center justify-between">
-                      <span className="text-[#777777]">Classification Verdict:</span>
+                      <div>
+                        <span className="text-[#777777] block text-[10px]">Classification Interpretation:</span>
+                        <span className="text-[10px] text-[#777777]">
+                          {analysisResult.score_type || 'Uncalibrated Model Score'}
+                        </span>
+                      </div>
                       <span className="text-base font-bold text-white px-2.5 py-0.5 rounded bg-[#242424] border border-[#383838]">
                         {analysisResult.verdict}
                       </span>

@@ -8,6 +8,7 @@ import {
   Eye,
   ShieldCheck,
   AlertTriangle,
+  HelpCircle,
   RefreshCw,
   X,
   Hash,
@@ -213,17 +214,22 @@ export default function History() {
             <Filter className="w-3 h-3" />
             Filter:
           </span>
-          {['', 'Cover', 'Stego'].map((type) => (
+          {[
+            { key: '', label: 'All Scans' },
+            { key: 'Inconclusive', label: 'Inconclusive' },
+            { key: 'Cover', label: 'Cover Indicated' },
+            { key: 'Stego', label: 'Stego Indicated' },
+          ].map(({ key, label }) => (
             <button
-              key={type}
-              onClick={() => setVerdictFilter(type)}
+              key={key}
+              onClick={() => setVerdictFilter(key)}
               className={`px-3 py-1.5 rounded-lg text-xs font-medium transition ${
-                verdictFilter === type
+                verdictFilter === key
                   ? 'bg-[#242424] text-white border border-[#383838]'
                   : 'bg-[#151515] text-[#777777] hover:text-white border border-[#292929]'
               }`}
             >
-              {type === '' ? 'All Scans' : type === 'Cover' ? 'Covers Clean' : 'Stego Payloads'}
+              {label}
             </button>
           ))}
         </div>
@@ -257,7 +263,10 @@ export default function History() {
               </thead>
               <tbody className="divide-y divide-[#222222] text-[#B3B3B3]">
                 {filteredRecords.map((r) => {
-                  const isStego = r.verdict === 'Stego';
+                  const v = r.verdict || '';
+                  const isInconclusive = v.toLowerCase().includes('inconclusive');
+                  const isStego = !isInconclusive && (v === 'Stego' || v === 'Stego Indicated');
+                  const isCover = !isInconclusive && (v === 'Cover' || v === 'Cover Indicated');
                   const dateStr = new Date(r.created_at).toLocaleString();
                   return (
                     <tr key={r.id} className="hover:bg-[#1A1A1A] transition">
@@ -270,12 +279,19 @@ export default function History() {
                       <td className="py-3 px-4 whitespace-nowrap">
                         <span
                           className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full font-semibold text-[11px] ${
-                            isStego
+                            isInconclusive
+                              ? 'bg-[#1C1C1C] text-[#B3B3B3] border border-[#333333]'
+                              : isStego
                               ? 'bg-[#242424] text-white border border-[#383838]'
                               : 'bg-[#151515] text-[#B3B3B3] border border-[#292929]'
                           }`}
                         >
-                          {isStego ? (
+                          {isInconclusive ? (
+                            <>
+                              <HelpCircle className="w-3 h-3 text-[#777777]" />
+                              <span>INCONCLUSIVE</span>
+                            </>
+                          ) : isStego ? (
                             <>
                               <AlertTriangle className="w-3 h-3 text-white" />
                               <span>STEGO</span>
@@ -358,10 +374,14 @@ export default function History() {
               {/* Verdict Banner */}
               <div className="p-4 rounded-xl text-center border border-[#383838] bg-[#151515] text-white">
                 <div className="text-xl font-bold">
-                  {selectedRecord.verdict === 'Stego' ? 'STEGANOGRAPHY DETECTED' : 'CLEAN COVER IMAGE'}
+                  {selectedRecord.verdict.toLowerCase().includes('inconclusive')
+                    ? 'INCONCLUSIVE — LOW CONFIDENCE'
+                    : selectedRecord.verdict.includes('Stego')
+                    ? 'STEGO INDICATED (POSSIBLE PAYLOAD)'
+                    : 'COVER INDICATED (POSSIBLE COVER)'}
                 </div>
                 <div className="text-xs mt-1 font-mono text-[#B3B3B3]">
-                  Confidence: {(selectedRecord.confidence * 100).toFixed(1)}%
+                  Score: {(selectedRecord.confidence * 100).toFixed(1)}% ({selectedRecord.model_name || 'StegoNet-Lite'})
                 </div>
               </div>
 

@@ -39,15 +39,24 @@ class SteganalysisService:
         except Exception as e:
             logger.error(f"Prediction engine error for {filename}: {e}", exc_info=True)
             prediction = {
-                "verdict": "Stego",
+                "verdict": "Inconclusive",
+                "verdict_category": "INCONCLUSIVE — INFERENCE ERROR",
+                "interpretation_label": "INCONCLUSIVE — INFERENCE ERROR",
                 "cover_probability": 0.5,
                 "stego_probability": 0.5,
-                "confidence": 0.5,
+                "confidence": 0.0,
+                "decision_margin": 0.0,
+                "is_conclusive": False,
+                "score_type": "Uncalibrated Model Score",
                 "is_trained_weights": False,
                 "device": "cpu",
                 "model_name": model_name or "StegoNet-Lite",
+                "model_status": "Experimental Baseline",
                 "residual_energy": 0.0,
-                "forensic_explanation": f"Inference engine notice: {e}",
+                "forensic_explanation": (
+                    f"Inference execution failure: {e}. Analysis result is inconclusive. "
+                    "Additional investigation or paired-reference comparison is required."
+                ),
             }
 
         duration_ms = (time.perf_counter() - start_time) * 1000.0
@@ -128,13 +137,19 @@ class SteganalysisService:
             file_hash=file_hash,
             file_size_bytes=file_size,
             verdict=prediction["verdict"],
+            verdict_category=prediction.get("verdict_category", "INCONCLUSIVE — LOW CONFIDENCE"),
+            interpretation_label=prediction.get("interpretation_label", prediction.get("verdict_category")),
             cover_probability=prediction["cover_probability"],
             stego_probability=prediction["stego_probability"],
             confidence=prediction["confidence"],
+            decision_margin=prediction.get("decision_margin"),
+            is_conclusive=prediction.get("is_conclusive", False),
+            score_type=prediction.get("score_type", "Uncalibrated Model Score"),
             execution_time_ms=round(duration_ms, 2),
             device=prediction["device"],
             is_trained_weights=prediction["is_trained_weights"],
             model_name=prediction["model_name"],
+            model_status=prediction.get("model_status", "Experimental Baseline"),
             residual_energy=prediction["residual_energy"],
             forensic_explanation=prediction["forensic_explanation"],
             residual_heatmap_b64=residual_heatmap_b64,

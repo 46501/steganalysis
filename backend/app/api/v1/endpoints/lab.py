@@ -243,9 +243,12 @@ async def run_lab_steganalysis(image_b64: str = Form(...), model_name: str = For
 
         return {
             "verdict": result["verdict"],
+            "verdict_category": result.get("verdict_category", "INCONCLUSIVE — LOW CONFIDENCE"),
             "cover_probability": result["cover_probability"],
             "stego_probability": result["stego_probability"],
             "confidence": result["confidence"],
+            "score_type": result.get("score_type", "Uncalibrated Model Score"),
+            "is_conclusive": result.get("is_conclusive", False),
             "execution_time_ms": latency_ms,
             "device_used": result["device"],
             "model_name": result["model_name"],
@@ -253,6 +256,7 @@ async def run_lab_steganalysis(image_b64: str = Form(...), model_name: str = For
             "residual_energy": residual_energy_val,
             "entropy": entropy_val,
             "file_hash": sha,
+            "forensic_explanation": result.get("forensic_explanation"),
             "scientific_disclaimer": (
                 "StegoNet-Lite is an experimental baseline. Genuine model probabilities are shown. "
                 "Residual energy is an auxiliary forensic measurement, not standalone proof."

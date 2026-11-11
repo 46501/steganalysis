@@ -18,7 +18,10 @@ export default function ForensicReportModal({ isOpen, onClose, reportData, previ
   const [isExporting, setIsExporting] = useState(false);
   if (!isOpen || !reportData) return null;
 
-  const isStego = reportData.verdict === 'Stego';
+  const verdict = reportData.verdict || '';
+  const isInconclusive = verdict.toLowerCase().includes('inconclusive') || reportData.is_conclusive === false;
+  const isStego = !isInconclusive && (verdict === 'Stego Indicated' || verdict === 'Stego');
+  const isCover = !isInconclusive && (verdict === 'Cover Indicated' || verdict === 'Cover');
   const timestamp = reportData.created_at
     ? new Date(reportData.created_at).toUTCString()
     : new Date().toUTCString();
@@ -153,12 +156,12 @@ export default function ForensicReportModal({ isOpen, onClose, reportData, previ
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
               <div className="p-3 rounded-xl border border-[#383838] bg-[#151515] print:bg-gray-100 text-white print:text-black">
-                <span className="text-[10px] font-mono block text-[#777777]">Primary Neural Classifier</span>
-                <div className="text-lg font-black mt-1">
-                  {isStego ? 'STEGANOGRAPHY DETECTED' : 'CLEAN COVER (NO PAYLOAD)'}
+                <span className="text-[10px] font-mono block text-[#777777]">Classification Interpretation</span>
+                <div className="text-base font-black mt-1">
+                  {isInconclusive ? 'INCONCLUSIVE — LOW CONFIDENCE' : isStego ? 'STEGO INDICATED' : 'COVER INDICATED'}
                 </div>
                 <div className="text-[11px] font-mono mt-1 text-[#B3B3B3]">
-                  Confidence: {(reportData.confidence * 100).toFixed(1)}% ({reportData.model_name})
+                  Score: {(reportData.confidence * 100).toFixed(1)}% ({reportData.model_name || 'StegoNet-Lite'})
                 </div>
               </div>
 

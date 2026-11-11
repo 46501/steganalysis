@@ -17,14 +17,20 @@ class AnalysisResultResponse(BaseModel):
     filename: str
     file_hash: str
     file_size_bytes: int
-    verdict: str = Field(description="'Cover' or 'Stego'")
+    verdict: str = Field(description="'Inconclusive', 'Stego Indicated', or 'Cover Indicated'")
+    verdict_category: Optional[str] = Field(default="INCONCLUSIVE — LOW CONFIDENCE", description="Verdict interpretation state")
+    interpretation_label: Optional[str] = Field(default="INCONCLUSIVE — LOW CONFIDENCE", description="User-facing interpretation label")
     cover_probability: float
     stego_probability: float
     confidence: float
+    decision_margin: Optional[float] = None
+    is_conclusive: Optional[bool] = False
+    score_type: Optional[str] = "Uncalibrated Model Score"
     execution_time_ms: float
     device: str
     is_trained_weights: bool
     model_name: str = "StegoNet-Lite"
+    model_status: Optional[str] = "Experimental Baseline"
     residual_energy: Optional[float] = None
     forensic_explanation: Optional[str] = None
     residual_heatmap_b64: Optional[str] = None
@@ -52,11 +58,15 @@ class PairComparisonResponse(BaseModel):
     stego_heatmap_b64: str
     cover_bitplane_0_b64: str
     stego_bitplane_0_b64: str
+    changed_bits_hamming: Optional[int] = None
+    entropy_delta: Optional[float] = None
+    evidence_status: Optional[str] = "VERIFIED FORENSIC EVIDENCE (Direct Paired Comparison)"
 
 
 class BatchAnalysisResponse(BaseModel):
     total_processed: int
     stego_count: int
     cover_count: int
+    inconclusive_count: Optional[int] = 0
     total_execution_time_ms: float
     results: List[AnalysisResultResponse]

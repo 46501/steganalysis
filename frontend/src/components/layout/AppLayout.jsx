@@ -104,10 +104,10 @@ export default function AppLayout({
         </main>
 
         {/* Footer */}
-        <footer className="border-t border-[#292929] py-4 bg-[#090909] shrink-0">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-[#777777] font-mono">
-            <div className="text-[#B3B3B3]">StegoShield AI • Digital Image Steganalysis Research Platform</div>
-            <div className="flex items-center space-x-3 text-[#777777]">
+        <footer className="border-t border-[#1B2B48] py-4 bg-[#070C18] shrink-0">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-[#64748B] font-mono">
+            <div className="text-cyan-200/80 font-medium">StegoShield AI • Digital Image Steganalysis Research Platform</div>
+            <div className="flex items-center space-x-3 text-[#64748B]">
               <span>BOSSbase 1.01</span>
               <span>•</span>
               <span>PyTorch 2.x</span>

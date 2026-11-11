@@ -11,17 +11,17 @@ export default function TopHeader({
 }) {
   return (
     <header
-      className={`fixed top-0 right-0 z-40 h-16 bg-[#111111] border-b border-[#292929] theme-dark-nav flex items-center justify-between px-4 sm:px-6 shrink-0 transition-all duration-300 ease-in-out ${
+      className={`fixed top-0 right-0 z-40 h-16 bg-[#070C18]/95 backdrop-blur-md border-b border-[#1B2B48] theme-dark-nav flex items-center justify-between px-4 sm:px-6 shrink-0 transition-all duration-300 ease-in-out ${
         collapsed ? 'left-0 md:left-16' : 'left-0 md:left-64'
       }`}
     >
-      {/* Left: Mobile Toggle / Collapse Expand + Premium Branding Section */}
+      {/* Left: Mobile Toggle / Collapse Expand + Premium Cyber Branding Section */}
       <div className="flex items-center gap-2.5 sm:gap-3.5 min-w-0 pr-2">
         {/* Mobile Hamburger Toggle */}
         <button
           type="button"
           onClick={() => setMobileOpen(true)}
-          className="md:hidden p-1.5 rounded-lg text-[#777777] hover:text-white hover:bg-[#1A1A1A] border border-[#292929] transition shrink-0"
+          className="md:hidden p-1.5 rounded-lg text-cyan-400 hover:text-white hover:bg-cyan-950/40 border border-[#1B2B48] transition shrink-0"
           aria-label="Open navigation sidebar"
         >
           <Menu className="w-4 h-4" />
@@ -32,7 +32,7 @@ export default function TopHeader({
           <button
             type="button"
             onClick={() => setCollapsed(false)}
-            className="hidden md:flex p-1.5 rounded-lg text-[#777777] hover:text-white hover:bg-[#1A1A1A] border border-[#242424] hover:border-[#383838] transition shrink-0"
+            className="hidden md:flex p-1.5 rounded-lg text-cyan-400 hover:text-white hover:bg-cyan-950/40 border border-[#1B2B48] hover:border-cyan-500/40 transition shrink-0 shadow-[0_0_8px_rgba(6,182,212,0.15)]"
             title="Open sidebar ( [ )"
             aria-label="Open sidebar"
           >
@@ -40,19 +40,19 @@ export default function TopHeader({
           </button>
         )}
 
-        {/* Premium StegoShield AI Branding Section */}
+        {/* Premium StegoShield AI Cyber Branding Section */}
         <div className="flex items-center gap-2.5 sm:gap-3.5 min-w-0">
-          {/* Minimal Teal Waveform / Signal Icon */}
+          {/* Minimal Teal Waveform / Signal Icon with Cyber Glow */}
           <div
-            className="flex items-center justify-center text-[#14B8A6] shrink-0"
+            className="flex items-center justify-center text-cyan-400 shrink-0"
             aria-hidden="true"
           >
-            <Activity className="w-5 h-5 sm:w-6 sm:h-6 text-[#14B8A6] stroke-[2.2]" />
+            <Activity className="w-5 h-5 sm:w-6 sm:h-6 text-cyan-400 stroke-[2.2] drop-shadow-[0_0_8px_rgba(6,182,212,0.6)]" />
           </div>
 
-          {/* Thin Vertical Teal Divider */}
+          {/* Thin Vertical Teal Divider with Gradient Glow */}
           <div
-            className="h-7 sm:h-8 w-[1.5px] bg-[#14B8A6]/70 rounded-full shrink-0"
+            className="h-7 sm:h-8 w-[1.5px] bg-gradient-to-b from-cyan-400/90 via-cyan-400 to-cyan-400/20 rounded-full shrink-0 shadow-[0_0_8px_rgba(6,182,212,0.5)]"
             aria-hidden="true"
           />
 
@@ -61,7 +61,7 @@ export default function TopHeader({
             <span className="text-white font-bold tracking-tight text-base sm:text-lg lg:text-[22px] leading-tight truncate">
               Uncover the Invisible.
             </span>
-            <span className="text-[#A3A3A3] text-xs sm:text-[13px] lg:text-[14px] leading-tight font-normal truncate hidden sm:block">
+            <span className="text-cyan-200/70 text-xs sm:text-[13px] lg:text-[14px] leading-tight font-normal truncate hidden sm:block">
               Advanced Image Steganalysis & Digital Forensics
             </span>
           </div>
@@ -74,12 +74,12 @@ export default function TopHeader({
         <button
           type="button"
           onClick={onOpenCommandPalette}
-          className="hidden sm:flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-[#141414] hover:bg-[#1C1C1C] text-[#888888] hover:text-white border border-[#292929] text-xs font-mono transition"
+          className="hidden sm:flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-[#0E172A] hover:bg-[#162444] text-[#94A3B8] hover:text-white border border-[#1E2E4E] hover:border-cyan-500/40 text-xs font-mono transition shadow-sm hover:shadow-[0_0_10px_rgba(6,182,212,0.15)]"
           title="Command Palette (⌘K / Ctrl+K)"
         >
-          <Search className="w-3.5 h-3.5 text-[#B3B3B3]" />
+          <Search className="w-3.5 h-3.5 text-cyan-400" />
           <span>Quick search...</span>
-          <kbd className="text-[10px] bg-[#1F1F1F] text-[#B3B3B3] px-1.5 py-0.2 rounded border border-[#333333] font-sans">
+          <kbd className="text-[10px] bg-[#142340] text-cyan-300 px-1.5 py-0.2 rounded border border-[#233860] font-sans">
             ⌘K
           </kbd>
         </button>
@@ -91,10 +91,10 @@ export default function TopHeader({
         <button
           type="button"
           onClick={onOpenVivaTour}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#151515] hover:bg-[#202020] text-white border border-[#292929] hover:border-[#383838] text-xs font-medium transition shadow-sm"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r from-cyan-950/70 to-indigo-950/60 hover:from-cyan-900/80 hover:to-indigo-900/70 text-cyan-200 border border-cyan-500/40 hover:border-cyan-400/60 text-xs font-medium transition shadow-[0_0_12px_rgba(6,182,212,0.2)]"
           title="Launch Viva Defense Guided Tour"
         >
-          <Sparkles className="w-3.5 h-3.5 text-white" />
+          <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
           <span className="hidden sm:inline">Viva Guide</span>
         </button>
       </div>

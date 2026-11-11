@@ -100,20 +100,20 @@ export default function Sidebar({
 
       {/* Sidebar Container */}
       <aside
-        className={`fixed top-0 bottom-0 left-0 z-50 flex flex-col bg-[#090909] border-r border-[#292929] theme-dark-nav transition-all duration-300 ease-in-out ${
+        className={`fixed top-0 bottom-0 left-0 z-50 flex flex-col bg-[#070C18] border-r border-[#1B2B48] theme-dark-nav transition-all duration-300 ease-in-out ${
           collapsed ? 'w-16' : 'w-64'
         } ${
           mobileOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
         }`}
       >
         {/* Top Header / Branding & Collapse Toggle */}
-        <div className="h-14 border-b border-[#292929] flex items-center justify-between px-3.5 shrink-0">
+        <div className="h-16 border-b border-[#1B2B48] flex items-center justify-between px-3.5 shrink-0">
           {collapsed ? (
             <div className="w-full flex items-center justify-center">
               <button
                 type="button"
                 onClick={() => setCollapsed(false)}
-                className="p-2 rounded-lg text-[#888888] hover:text-white hover:bg-[#1A1A1A] border border-transparent hover:border-[#292929] transition group"
+                className="p-2 rounded-lg text-cyan-400/80 hover:text-cyan-200 hover:bg-cyan-950/40 border border-transparent hover:border-cyan-500/30 transition group"
                 title="Open sidebar ( [ )"
                 aria-label="Open sidebar"
               >
@@ -127,15 +127,15 @@ export default function Sidebar({
                 className="flex items-center gap-2.5 cursor-pointer group select-none overflow-hidden"
                 title="StegoShield AI Dashboard"
               >
-                <div className="w-8 h-8 rounded-lg overflow-hidden shrink-0 border border-[#292929] bg-black flex items-center justify-center transition-transform group-hover:scale-105 shadow-sm">
+                <div className="w-8 h-8 rounded-lg overflow-hidden shrink-0 border border-cyan-500/30 bg-[#0A1224] flex items-center justify-center transition-transform group-hover:scale-105 shadow-[0_0_10px_rgba(6,182,212,0.2)]">
                   <img src="/logo.png" alt="StegoShield AI Logo" className="w-full h-full object-cover" />
                 </div>
 
                 <div className="flex items-center gap-2 overflow-hidden transition-opacity duration-200">
-                  <span className="text-sm font-bold tracking-tight text-white whitespace-nowrap">
+                  <span className="text-sm font-bold tracking-tight text-white whitespace-nowrap group-hover:text-cyan-300 transition-colors">
                     StegoShield AI
                   </span>
-                  <span className="text-[10px] font-mono text-[#777777] bg-[#151515] px-1.5 py-0.5 rounded border border-[#292929]">
+                  <span className="text-[10px] font-mono text-cyan-300 bg-cyan-950/60 px-1.5 py-0.5 rounded border border-cyan-500/30">
                     v1.0
                   </span>
                 </div>
@@ -146,7 +146,7 @@ export default function Sidebar({
                 <button
                   type="button"
                   onClick={() => setCollapsed(true)}
-                  className="hidden md:flex p-1.5 rounded-lg text-[#777777] hover:text-white hover:bg-[#1A1A1A] border border-transparent hover:border-[#292929] transition"
+                  className="hidden md:flex p-1.5 rounded-lg text-[#777777] hover:text-cyan-300 hover:bg-cyan-950/40 border border-transparent hover:border-cyan-500/30 transition"
                   title="Close sidebar ( [ )"
                   aria-label="Close sidebar"
                 >
@@ -173,7 +173,7 @@ export default function Sidebar({
           {navGroups.map((group) => (
             <div key={group.group} className="space-y-1">
               {!collapsed && (
-                <div className="px-2 pb-1 text-[10px] font-mono font-semibold text-[#555555] tracking-wider uppercase">
+                <div className="px-2 pb-1 text-[10px] font-mono font-semibold text-cyan-500/70 tracking-wider uppercase">
                   {group.group}
                 </div>
               )}
@@ -192,12 +192,12 @@ export default function Sidebar({
                         : 'h-9 px-2.5 gap-2.5'
                     } ${
                       isActive
-                        ? 'bg-[#242424] text-white font-semibold border border-[#383838] shadow-sm'
-                        : 'text-[#888888] hover:text-white hover:bg-[#141414]'
+                        ? 'bg-gradient-to-r from-cyan-950/70 via-cyan-900/30 to-transparent text-cyan-200 font-semibold border border-cyan-500/40 shadow-[0_0_12px_rgba(6,182,212,0.18)]'
+                        : 'text-[#94A3B8] hover:text-white hover:bg-[#0F1A30] hover:border-cyan-500/20'
                     }`}
                     title={collapsed ? item.label : undefined}
                   >
-                    <Icon className={`w-4 h-4 shrink-0 transition-colors ${isActive ? 'text-white' : 'text-[#888888]'}`} />
+                    <Icon className={`w-4 h-4 shrink-0 transition-colors ${isActive ? 'text-cyan-400 drop-shadow-[0_0_6px_rgba(6,182,212,0.6)]' : 'text-[#64748B]'}`} />
                     {!collapsed && <span className="truncate">{item.label}</span>}
                   </button>
                 );
@@ -206,9 +206,9 @@ export default function Sidebar({
           ))}
 
           {/* Interactive Viva Tour Action */}
-          <div className="pt-2 border-t border-[#222222]">
+          <div className="pt-2 border-t border-[#1B2B48]">
             {!collapsed && (
-              <div className="px-2 pb-1 text-[10px] font-mono font-semibold text-[#555555] tracking-wider uppercase">
+              <div className="px-2 pb-1 text-[10px] font-mono font-semibold text-cyan-500/70 tracking-wider uppercase">
                 EXAMINATION
               </div>
             )}
@@ -218,23 +218,23 @@ export default function Sidebar({
                 onOpenVivaTour();
                 if (mobileOpen) setMobileOpen(false);
               }}
-              className={`w-full flex items-center rounded-lg transition-all text-xs font-medium text-[#B3B3B3] hover:text-white hover:bg-[#1C1C1C] border border-transparent hover:border-[#292929] ${
+              className={`w-full flex items-center rounded-lg transition-all text-xs font-medium text-cyan-300/80 hover:text-cyan-100 hover:bg-cyan-950/40 border border-transparent hover:border-cyan-500/30 ${
                 collapsed
                   ? 'h-10 justify-center p-0'
                   : 'h-9 px-2.5 gap-2.5'
               }`}
               title="Viva Defense Guided Examination"
             >
-              <Sparkles className="w-4 h-4 text-[#B3B3B3] shrink-0" />
+              <Sparkles className="w-4 h-4 text-cyan-400 shrink-0" />
               {!collapsed && <span className="truncate font-semibold">Viva Defense Tour</span>}
             </button>
           </div>
         </div>
 
-        {/* Bottom System Telemetry Tray (Clean minimal status only) */}
-        <div className="p-3 border-t border-[#292929] bg-[#0A0A0A] shrink-0">
+        {/* Bottom System Telemetry Tray (Cyber status) */}
+        <div className="p-3 border-t border-[#1B2B48] bg-[#060A14] shrink-0">
           <div
-            className={`flex items-center rounded-lg bg-[#141414] border border-[#242424] text-[11px] font-mono ${
+            className={`flex items-center rounded-lg bg-[#0B1222] border border-[#1C2C4A] text-[11px] font-mono ${
               collapsed ? 'p-2 justify-center' : 'px-2.5 py-1.5 justify-between'
             }`}
             title={statusTooltip}
@@ -242,17 +242,19 @@ export default function Sidebar({
             <div className="flex items-center gap-1.5 truncate">
               <span
                 className={`w-2 h-2 rounded-full shrink-0 ${
-                  healthStatus.online ? 'bg-white animate-pulse' : 'bg-[#555555]'
+                  healthStatus.online
+                    ? 'bg-cyan-400 shadow-[0_0_8px_#00F0FF] animate-pulse'
+                    : 'bg-[#555555]'
                 }`}
               />
               {!collapsed && (
-                <span className="text-[#B3B3B3] truncate">
+                <span className="text-[#94A3B8] truncate">
                   PyTorch CPU
                 </span>
               )}
             </div>
             {!collapsed && (
-              <span className="text-[10px] text-[#777777]">
+              <span className="text-[10px] font-mono text-cyan-400 font-semibold">
                 {healthStatus.online ? 'LIVE' : 'OFFLINE'}
               </span>
             )}

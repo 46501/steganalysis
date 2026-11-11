@@ -6,7 +6,6 @@ import {
   Layers,
   History,
   GraduationCap,
-  Sparkles,
   PanelLeft,
   X,
 } from 'lucide-react';
@@ -204,31 +203,6 @@ export default function Sidebar({
               })}
             </div>
           ))}
-
-          {/* Interactive Viva Tour Action */}
-          <div className="pt-2 border-t border-[#1B2B48]">
-            {!collapsed && (
-              <div className="px-2 pb-1 text-[10px] font-mono font-semibold text-cyan-500/70 tracking-wider uppercase">
-                EXAMINATION
-              </div>
-            )}
-            <button
-              type="button"
-              onClick={() => {
-                onOpenVivaTour();
-                if (mobileOpen) setMobileOpen(false);
-              }}
-              className={`w-full flex items-center rounded-lg transition-all text-xs font-medium text-cyan-300/80 hover:text-cyan-100 hover:bg-cyan-950/40 border border-transparent hover:border-cyan-500/30 ${
-                collapsed
-                  ? 'h-10 justify-center p-0'
-                  : 'h-9 px-2.5 gap-2.5'
-              }`}
-              title="Viva Defense Guided Examination"
-            >
-              <Sparkles className="w-4 h-4 text-cyan-400 shrink-0" />
-              {!collapsed && <span className="truncate font-semibold">Viva Defense Tour</span>}
-            </button>
-          </div>
         </div>
 
         {/* Bottom System Telemetry Tray (Cyber status) */}

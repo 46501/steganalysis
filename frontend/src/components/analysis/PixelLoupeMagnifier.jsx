@@ -156,33 +156,33 @@ export default function PixelLoupeMagnifier({
   const localPerturbationRate = ((totalDeltas / totalWindowPixels) * 100).toFixed(1);
 
   return (
-    <div className="p-6 rounded-2xl bg-[#111111] border border-[#292929] shadow-xl space-y-6 animate-fadeIn">
+    <div className="p-6 rounded-2xl bg-[#070D1A]/95 border border-[#1B2B48] shadow-[0_4px_30px_rgba(0,0,0,0.6)] space-y-6 animate-fadeIn">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-[#292929] pb-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-[#1B2B48] pb-4">
         <div>
           <div className="flex items-center gap-2">
-            <ZoomIn className="w-5 h-5 text-white" />
-            <h3 className="text-base font-bold text-white">
+            <ZoomIn className="w-5 h-5 text-cyan-400" />
+            <h3 className="text-base font-bold text-white tracking-wide">
               Synchronized 8× Pixel-Level Magnifier Loupe
             </h3>
-            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#151515] text-[#B3B3B3] border border-[#292929]">
+            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#0A1224] text-cyan-300 border border-cyan-500/30">
               Integer Precision Inspection
             </span>
           </div>
-          <p className="text-xs text-[#777777] mt-1">
+          <p className="text-xs text-[#94A3B8] mt-1">
             Hover over the image or select preset coordinates to inspect discrete ±1 S-UNIWARD pixel alterations and exact 8-bit integer grayscale values.
           </p>
         </div>
 
         {/* Loupe Mode Tabs */}
         {isPaired && (
-          <div className="flex items-center gap-1.5 p-1 rounded-xl bg-[#0A0A0A] border border-[#292929] text-xs font-mono">
+          <div className="flex items-center gap-1.5 p-1 rounded-xl bg-[#050914] border border-[#1B2B48] text-xs font-mono">
             <button
               onClick={() => setLoupeMode('diff')}
               className={`px-3 py-1.5 rounded-lg transition ${
                 loupeMode === 'diff'
-                  ? 'bg-[#242424] text-white border border-[#383838]'
-                  : 'text-[#777777] hover:text-white'
+                  ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-[0_0_10px_rgba(6,182,212,0.2)]'
+                  : 'text-[#64748B] hover:text-white'
               }`}
             >
               ±1 Perturbations
@@ -191,8 +191,8 @@ export default function PixelLoupeMagnifier({
               onClick={() => setLoupeMode('dual')}
               className={`px-3 py-1.5 rounded-lg transition ${
                 loupeMode === 'dual'
-                  ? 'bg-[#242424] text-white border border-[#383838]'
-                  : 'text-[#777777] hover:text-white'
+                  ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-[0_0_10px_rgba(6,182,212,0.2)]'
+                  : 'text-[#64748B] hover:text-white'
               }`}
             >
               Side-by-Side Values
@@ -205,7 +205,7 @@ export default function PixelLoupeMagnifier({
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* Left Column: Interactive Thumbnail with Reticle (5 cols) */}
         <div className="lg:col-span-5 space-y-3">
-          <div className="relative w-full aspect-square max-w-[320px] mx-auto rounded-xl overflow-hidden border border-[#292929] bg-black shadow-xl cursor-crosshair group select-none">
+          <div className="relative w-full aspect-square max-w-[320px] mx-auto rounded-xl overflow-hidden border border-[#1B2B48] bg-black shadow-xl cursor-crosshair group select-none">
             <div
               ref={containerRef}
               onMouseMove={handlePointerMove}
@@ -227,16 +227,16 @@ export default function PixelLoupeMagnifier({
                   height: `${(windowSize / 512) * 100 * 2.5}%`,
                   transform: 'translate(-50%, -50%)',
                 }}
-                className="absolute border-2 border-white bg-white/10 rounded shadow-[0_0_10px_rgba(255,255,255,0.5)] pointer-events-none transition-all duration-75"
+                className="absolute border-2 border-cyan-400 bg-cyan-400/20 rounded shadow-[0_0_14px_#00F0FF] pointer-events-none transition-all duration-75"
               >
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-1.5 h-1.5 rounded-full bg-white shadow"></div>
+                  <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 shadow-[0_0_6px_#00F0FF]"></div>
                 </div>
               </div>
 
               {/* Floating Coordinate Pill */}
-              <div className="absolute bottom-2 left-2 px-2.5 py-1 rounded-md bg-black/85 backdrop-blur border border-[#292929] text-[11px] font-mono text-white flex items-center gap-1.5">
-                <Crosshair className="w-3.5 h-3.5 text-white" />
+              <div className="absolute bottom-2 left-2 px-2.5 py-1 rounded-md bg-[#070D1A]/90 backdrop-blur border border-cyan-500/40 text-[11px] font-mono text-cyan-200 flex items-center gap-1.5 shadow-[0_0_10px_rgba(6,182,212,0.2)]">
+                <Crosshair className="w-3.5 h-3.5 text-cyan-400" />
                 <span>X: {coords.x}, Y: {coords.y}</span>
               </div>
             </div>
@@ -244,7 +244,7 @@ export default function PixelLoupeMagnifier({
 
           {/* Quick-Jump Coordinate Presets */}
           <div className="space-y-1.5">
-            <span className="text-[10px] uppercase font-bold text-[#777777] tracking-wider block">
+            <span className="text-[10px] uppercase font-bold text-[#64748B] tracking-wider block">
               Examiner Demonstration Quick Jumps:
             </span>
             <div className="grid grid-cols-2 gap-2 text-xs">
@@ -252,15 +252,15 @@ export default function PixelLoupeMagnifier({
                 onClick={() => setCoords({ x: 190, y: 410 })}
                 className={`p-2 rounded-lg text-left border transition ${
                   coords.x === 190 && coords.y === 410
-                    ? 'bg-[#242424] border-[#383838] text-white'
-                    : 'bg-[#151515] border-[#292929] text-[#B3B3B3] hover:text-white'
+                    ? 'bg-rose-950/40 border-rose-500/50 text-rose-200 shadow-[0_0_12px_rgba(244,63,94,0.25)]'
+                    : 'bg-[#0A1224] border-[#1B2B48] text-[#94A3B8] hover:text-white hover:border-cyan-500/40'
                 }`}
               >
                 <div className="flex items-center gap-1 font-semibold text-[11px]">
-                  <AlertTriangle className="w-3.5 h-3.5 text-white" />
+                  <AlertTriangle className="w-3.5 h-3.5 text-rose-400" />
                   <span>Dense Texture (190, 410)</span>
                 </div>
-                <span className="text-[10px] text-[#777777] block mt-0.5">
+                <span className="text-[10px] text-[#64748B] block mt-0.5">
                   High embedding: 46/81 flips (56.8%)
                 </span>
               </button>
@@ -269,15 +269,15 @@ export default function PixelLoupeMagnifier({
                 onClick={() => setCoords({ x: 130, y: 50 })}
                 className={`p-2 rounded-lg text-left border transition ${
                   coords.x === 130 && coords.y === 50
-                    ? 'bg-[#242424] border-[#383838] text-white'
-                    : 'bg-[#151515] border-[#292929] text-[#B3B3B3] hover:text-white'
+                    ? 'bg-cyan-950/40 border-cyan-500/50 text-cyan-200 shadow-[0_0_12px_rgba(6,182,212,0.25)]'
+                    : 'bg-[#0A1224] border-[#1B2B48] text-[#94A3B8] hover:text-white hover:border-cyan-500/40'
                 }`}
               >
                 <div className="flex items-center gap-1 font-semibold text-[11px]">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-white" />
+                  <CheckCircle2 className="w-3.5 h-3.5 text-cyan-400" />
                   <span>Smooth Sky (130, 50)</span>
                 </div>
-                <span className="text-[10px] text-[#777777] block mt-0.5">
+                <span className="text-[10px] text-[#64748B] block mt-0.5">
                   Untouched: 0/81 flips (S-UNIWARD Cost)
                 </span>
               </button>
@@ -288,13 +288,13 @@ export default function PixelLoupeMagnifier({
         {/* Right Column: Magnified Micro-Grid & Integer Matrix (7 cols) */}
         <div className="lg:col-span-7 space-y-4">
           {/* Microscopic Grid Canvas */}
-          <div className="p-4 rounded-xl bg-[#0A0A0A] border border-[#292929] shadow-inner">
+          <div className="p-4 rounded-xl bg-[#050914] border border-[#1B2B48] shadow-inner">
             <div className="flex justify-between items-center mb-3 text-xs">
               <span className="font-semibold text-white flex items-center gap-1.5 font-mono">
-                <Layers className="w-3.5 h-3.5 text-white" />
+                <Layers className="w-3.5 h-3.5 text-cyan-400" />
                 <span>8× Magnified {windowSize}×{windowSize} Micro-Matrix</span>
               </span>
-              <span className="text-[11px] font-mono text-[#777777]">
+              <span className="text-[11px] font-mono text-[#64748B]">
                 Window: [{coords.x - half}..{coords.x + half}, {coords.y - half}..{coords.y + half}]
               </span>
             </div>
@@ -320,13 +320,13 @@ export default function PixelLoupeMagnifier({
                     let textClass = cell.sVal > 140 ? 'text-black font-extrabold' : 'text-white font-extrabold';
 
                     if (cell.isCenter) {
-                      borderClass = 'ring-2 ring-white ring-offset-1 ring-offset-black';
+                      borderClass = 'ring-2 ring-cyan-400 ring-offset-1 ring-offset-[#070D1A]';
                     }
 
                     if (isPlus) {
-                      borderClass += ' border-white shadow-[0_0_6px_rgba(255,255,255,0.6)]';
+                      borderClass += ' border-rose-400 bg-rose-950/70 text-rose-300 shadow-[0_0_8px_rgba(244,63,94,0.7)]';
                     } else if (isMinus) {
-                      borderClass += ' border-[#777777] shadow-[0_0_6px_rgba(120,120,120,0.6)]';
+                      borderClass += ' border-cyan-400 bg-cyan-950/70 text-cyan-300 shadow-[0_0_8px_rgba(6,182,212,0.7)]';
                     }
 
                     return (
@@ -348,8 +348,8 @@ export default function PixelLoupeMagnifier({
                         {/* Delta indicator badge */}
                         {cell.delta !== 0 && (
                           <span
-                            className={`absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full flex items-center justify-center text-[7px] font-extrabold ${
-                              isPlus ? 'bg-white text-black' : 'bg-[#151515] text-white border border-[#555555]'
+                            className={`absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full flex items-center justify-center text-[7px] font-extrabold shadow-sm ${
+                              isPlus ? 'bg-rose-500 text-white' : 'bg-cyan-500 text-black'
                             }`}
                           >
                             {isPlus ? '+' : '-'}
@@ -363,55 +363,55 @@ export default function PixelLoupeMagnifier({
             </div>
 
             {/* Legend */}
-            <div className="flex flex-wrap items-center justify-between gap-3 text-[11px] pt-3 border-t border-[#292929] text-[#777777] font-mono">
+            <div className="flex flex-wrap items-center justify-between gap-3 text-[11px] pt-3 border-t border-[#1B2B48] text-[#94A3B8] font-mono">
               <div className="flex items-center gap-3">
-                <span className="flex items-center gap-1">
-                  <span className="w-2.5 h-2.5 rounded bg-white"></span>
-                  <span className="text-white">+1 Perturbation</span>
+                <span className="flex items-center gap-1.5">
+                  <span className="w-2.5 h-2.5 rounded bg-rose-500 shadow-[0_0_6px_#f43f5e]"></span>
+                  <span className="text-rose-400 font-semibold">+1 Perturbation</span>
                 </span>
-                <span className="flex items-center gap-1">
-                  <span className="w-2.5 h-2.5 rounded bg-[#777777]"></span>
-                  <span className="text-[#B3B3B3]">-1 Perturbation</span>
+                <span className="flex items-center gap-1.5">
+                  <span className="w-2.5 h-2.5 rounded bg-cyan-400 shadow-[0_0_6px_#00f0ff]"></span>
+                  <span className="text-cyan-400 font-semibold">-1 Perturbation</span>
                 </span>
-                <span className="flex items-center gap-1">
-                  <span className="w-2.5 h-2.5 rounded bg-[#242424] border border-[#383838]"></span>
-                  <span>0 (Untouched)</span>
+                <span className="flex items-center gap-1.5">
+                  <span className="w-2.5 h-2.5 rounded bg-[#0F1A30] border border-[#1B2B48]"></span>
+                  <span className="text-[#64748B]">0 (Untouched)</span>
                 </span>
               </div>
-              <div className="text-white font-semibold">
-                Center Target: (X: {coords.x}, Y: {coords.y})
+              <div className="text-cyan-200 font-semibold">
+                Target Coordinate: <span className="text-white">(X: {coords.x}, Y: {coords.y})</span>
               </div>
             </div>
           </div>
 
           {/* Focal Center Telemetry Card */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs font-mono">
-            <div className="p-2.5 rounded-lg bg-[#151515] border border-[#292929]">
-              <span className="text-[#777777] block text-[10px]">Cover Value P</span>
+            <div className="p-2.5 rounded-lg bg-[#070D1A] border border-[#1B2B48]">
+              <span className="text-[#64748B] block text-[10px]">Cover Value P</span>
               <span className="text-white font-bold block text-sm mt-0.5">
-                {centerPixel.cVal} <span className="text-[10px] text-[#777777] font-normal">(LSB: {centerPixel.lsbC})</span>
+                {centerPixel.cVal} <span className="text-[10px] text-[#64748B] font-normal">(LSB: {centerPixel.lsbC})</span>
               </span>
             </div>
 
-            <div className="p-2.5 rounded-lg bg-[#151515] border border-[#292929]">
-              <span className="text-[#777777] block text-[10px]">Stego Value P'</span>
-              <span className="text-white font-bold block text-sm mt-0.5">
-                {centerPixel.sVal} <span className="text-[10px] text-[#777777] font-normal">(LSB: {centerPixel.lsbS})</span>
+            <div className="p-2.5 rounded-lg bg-[#070D1A] border border-[#1B2B48]">
+              <span className="text-[#64748B] block text-[10px]">Stego Value P'</span>
+              <span className="text-cyan-300 font-bold block text-sm mt-0.5">
+                {centerPixel.sVal} <span className="text-[10px] text-[#64748B] font-normal">(LSB: {centerPixel.lsbS})</span>
               </span>
             </div>
 
-            <div className="p-2.5 rounded-lg bg-[#151515] border border-[#292929]">
-              <span className="text-[#777777] block text-[10px]">Center Delta Δ</span>
-              <span className="font-bold block text-sm mt-0.5 text-white">
+            <div className="p-2.5 rounded-lg bg-[#070D1A] border border-[#1B2B48]">
+              <span className="text-[#64748B] block text-[10px]">Center Delta Δ</span>
+              <span className={`font-bold block text-sm mt-0.5 ${centerPixel.delta > 0 ? 'text-rose-400' : centerPixel.delta < 0 ? 'text-cyan-400' : 'text-slate-300'}`}>
                 {centerPixel.delta > 0 ? `+${centerPixel.delta}` : centerPixel.delta}
                 {centerPixel.delta !== 0 ? ' (Flipped)' : ' (Clean)'}
               </span>
             </div>
 
-            <div className="p-2.5 rounded-lg bg-[#151515] border border-[#292929]">
-              <span className="text-[#777777] block text-[10px]">9×9 Local Flips</span>
+            <div className="p-2.5 rounded-lg bg-[#070D1A] border border-[#1B2B48]">
+              <span className="text-[#64748B] block text-[10px]">9×9 Local Flips</span>
               <span className="text-white font-bold block text-sm mt-0.5">
-                {totalDeltas} / {totalWindowPixels} <span className="text-[10px] text-[#777777] font-normal">({localPerturbationRate}%)</span>
+                {totalDeltas} / {totalWindowPixels} <span className="text-[10px] text-cyan-400 font-normal">({localPerturbationRate}%)</span>
               </span>
             </div>
           </div>

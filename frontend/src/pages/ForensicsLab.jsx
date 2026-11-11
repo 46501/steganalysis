@@ -30,6 +30,7 @@ import {
 } from 'lucide-react';
 import { steganalysisApi } from '../services/api';
 import { useTheme } from '../context/ThemeContext';
+import PixelLoupeMagnifier from '../components/analysis/PixelLoupeMagnifier';
 
 export default function ForensicsLab() {
   const { theme } = useTheme();
@@ -1375,6 +1376,17 @@ export default function ForensicsLab() {
                             White = +1 Perturbation • Gray = -1 Perturbation • Black = Unaltered Pixel
                           </span>
                         </div>
+                      </div>
+                    )}
+
+                    {/* Synchronized 8x Micro-Loupe Inspector */}
+                    {originalImageB64 && modifiedImageB64 && (
+                      <div className="pt-2">
+                        <PixelLoupeMagnifier
+                          coverSrc={originalImageB64}
+                          stegoSrc={modifiedImageB64}
+                          isPaired={true}
+                        />
                       </div>
                     )}
                   </div>

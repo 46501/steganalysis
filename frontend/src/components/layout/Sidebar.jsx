@@ -12,9 +12,6 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   X,
-  Activity,
-  Database,
-  Cpu,
 } from 'lucide-react';
 import { steganalysisApi } from '../../services/api';
 import ThemeSwitcher from '../common/ThemeSwitcher';
@@ -87,6 +84,10 @@ export default function Sidebar({
     if (mobileOpen) setMobileOpen(false);
   };
 
+  const statusTooltip = healthStatus.online
+    ? 'Backend: Online • Engine: PyTorch CPU'
+    : 'Backend: Offline';
+
   return (
     <>
       {/* Mobile Backdrop Overlay */}
@@ -132,6 +133,7 @@ export default function Sidebar({
 
           {/* Mobile Close Button */}
           <button
+            type="button"
             onClick={() => setMobileOpen(false)}
             className="md:hidden p-1.5 rounded-lg text-[#777777] hover:text-white hover:bg-[#1A1A1A] transition"
           >
@@ -142,6 +144,7 @@ export default function Sidebar({
         {/* Quick Search Shortcut Trigger */}
         <div className="p-3 pb-1 shrink-0">
           <button
+            type="button"
             onClick={onOpenCommandPalette}
             className={`w-full flex items-center rounded-lg bg-[#141414] hover:bg-[#1C1C1C] text-[#777777] hover:text-white border border-[#292929] transition-all group ${
               collapsed
@@ -178,6 +181,7 @@ export default function Sidebar({
                 return (
                   <button
                     key={item.id}
+                    type="button"
                     onClick={() => handleNavClick(item.id)}
                     className={`w-full flex items-center rounded-lg transition-all text-xs font-medium ${
                       collapsed
@@ -206,6 +210,7 @@ export default function Sidebar({
               </div>
             )}
             <button
+              type="button"
               onClick={() => {
                 onOpenVivaTour();
                 if (mobileOpen) setMobileOpen(false);
@@ -230,7 +235,7 @@ export default function Sidebar({
             className={`flex items-center rounded-lg bg-[#141414] border border-[#242424] text-[11px] font-mono ${
               collapsed ? 'p-2 justify-center' : 'px-2.5 py-1.5 justify-between'
             }`}
-            title={`Backend: ${healthStatus.online ? 'Online' : 'Offline'} • Engine: PyTorch CPU • Database: ${healthStatus.db || 'SQLite'}`}
+            title={statusTooltip}
           >
             <div className="flex items-center gap-1.5 truncate">
               <span
@@ -263,17 +268,18 @@ export default function Sidebar({
 
           {/* Desktop Collapse / Expand Toggle */}
           <button
+            type="button"
             onClick={() => setCollapsed(!collapsed)}
             className="hidden md:flex w-full items-center justify-center gap-2 py-1.5 rounded-lg bg-[#141414] hover:bg-[#1F1F1F] text-[#777777] hover:text-white border border-[#242424] text-xs font-mono transition"
-            title={collapsed ? 'Expand sidebar ( [ )' : 'Collapse sidebar ( [ )'}
+            title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           >
             {collapsed ? (
               <PanelLeftOpen className="w-4 h-4 text-[#B3B3B3]" />
             ) : (
-              <>
+              <span className="flex items-center gap-2">
                 <PanelLeftClose className="w-4 h-4 text-[#B3B3B3]" />
                 <span>Collapse</span>
-              </>
+              </span>
             )}
           </button>
         </div>

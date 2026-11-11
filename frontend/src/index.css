@@ -243,6 +243,16 @@ html:not(.dark) :not(.theme-dark-nav):not(.theme-dark-nav *):not(.theme-btn-prim
   color: #0A0A0A !important;
 }
 
+/* Explicit Dark Nav text protections so navigation never inverts to black */
+.theme-dark-nav .text-white,
+.theme-dark-nav *.text-white {
+  color: #FFFFFF !important;
+}
+.theme-dark-nav .text-cyan-400,
+.theme-dark-nav *.text-cyan-400 {
+  color: #22D3EE !important;
+}
+
 html.light :not(.theme-dark-nav):not(.theme-dark-nav *) .text-\[\#B3B3B3\],
 html:not(.dark) :not(.theme-dark-nav):not(.theme-dark-nav *) .text-\[\#B3B3B3\] {
   color: #4B5563 !important;

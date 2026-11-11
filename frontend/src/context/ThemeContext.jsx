@@ -18,12 +18,12 @@ export function ThemeProvider({ children }) {
         return savedTheme;
       }
       // 2. Check system OS preference
-      if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-        return 'dark';
+      if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
+        return 'light';
       }
     }
-    // 3. Default to light mode per specification
-    return 'light';
+    // 3. Default to dark cyber mode for StegoShield AI
+    return 'dark';
   });
 
   const applyThemeToDOM = (activeTheme) => {

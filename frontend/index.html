@@ -11,7 +11,7 @@
       (function() {
         try {
           var saved = localStorage.getItem('stegoshield-theme');
-          var isDark = saved === 'dark' || (!saved && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+          var isDark = saved ? saved === 'dark' : true; // Default to dark cyber mode for StegoShield AI
           if (isDark) {
             document.documentElement.classList.add('dark');
             document.documentElement.classList.remove('light');

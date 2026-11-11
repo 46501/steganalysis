@@ -58,10 +58,16 @@ export default function TopHeader({
 
           {/* Left-Aligned Typography: Heading & Subtitle */}
           <div className="flex flex-col justify-center min-w-0 text-left">
-            <span className="text-white font-bold tracking-tight text-base sm:text-lg lg:text-[22px] leading-tight truncate">
+            <span
+              className="font-bold tracking-tight text-base sm:text-lg lg:text-[22px] leading-tight truncate text-white"
+              style={{ color: '#FFFFFF' }}
+            >
               Uncover the Invisible.
             </span>
-            <span className="text-cyan-200/70 text-xs sm:text-[13px] lg:text-[14px] leading-tight font-normal truncate hidden sm:block">
+            <span
+              className="text-xs sm:text-[13px] lg:text-[14px] leading-tight font-normal truncate hidden sm:block"
+              style={{ color: 'rgba(165, 243, 252, 0.8)' }}
+            >
               Advanced Image Steganalysis & Digital Forensics
             </span>
           </div>

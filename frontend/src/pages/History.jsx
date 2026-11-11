@@ -420,7 +420,7 @@ export default function History() {
               </button>
               <button
                 onClick={() => setSelectedRecord(null)}
-                className="px-5 py-2.5 rounded-xl bg-white hover:bg-[#E5E5E5] text-black font-semibold text-xs transition"
+                className="px-5 py-2.5 rounded-xl bg-white hover:bg-[#E5E5E5] text-black font-semibold text-xs transition theme-btn-primary"
               >
                 Close
               </button>

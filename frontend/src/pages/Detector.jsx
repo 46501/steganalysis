@@ -424,7 +424,7 @@ export default function Detector({ initialFile = null }) {
               className={`flex-1 py-3.5 px-6 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 shadow-lg ${
                 !file || isAnalyzing
                   ? 'bg-[#1A1A1A] text-[#555555] cursor-not-allowed border border-[#292929]'
-                  : 'bg-white hover:bg-[#E5E5E5] text-black shadow-white/5 hover:scale-[1.005]'
+                  : 'bg-white hover:bg-[#E5E5E5] text-black shadow-white/5 hover:scale-[1.005] theme-btn-primary'
               }`}
             >
               {isAnalyzing ? (

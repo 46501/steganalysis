@@ -7,6 +7,7 @@ import {
   X,
 } from 'lucide-react';
 import { steganalysisApi } from '../../services/api';
+import ThemeSwitcher from './ThemeSwitcher';
 
 export default function Navbar({
   activeTab,
@@ -58,7 +59,7 @@ export default function Navbar({
   };
 
   return (
-    <header className="sticky top-0 z-50 bg-[#090909]/95 backdrop-blur-md border-b border-[#292929]">
+    <header className="sticky top-0 z-50 bg-[#090909]/95 backdrop-blur-md border-b border-[#292929] theme-dark-nav">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-14">
         {/* Left Branding */}
         <div
@@ -139,6 +140,9 @@ export default function Navbar({
             )}
           </div>
 
+          {/* Theme Switcher (Light / Dark Mode) */}
+          <ThemeSwitcher />
+
           {/* Mobile Menu Button */}
           <button
             onClick={() => setMobileMenuOpen((prev) => !prev)}
@@ -181,6 +185,12 @@ export default function Navbar({
               <span>Viva Defense Tour</span>
             </button>
           )}
+
+          {/* Mobile Theme Switcher */}
+          <div className="pt-2 border-t border-[#292929] flex items-center justify-between px-3 py-1">
+            <span className="text-xs text-[#777777] font-mono">Theme Mode</span>
+            <ThemeSwitcher />
+          </div>
         </div>
       )}
     </header>

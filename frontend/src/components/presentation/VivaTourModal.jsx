@@ -248,7 +248,7 @@ export default function VivaTourModal({ isOpen, onClose, onNavigateTab }) {
           {/* Jump directly to live workspace */}
           <button
             onClick={handleAction}
-            className="py-2.5 px-4 rounded-xl bg-white hover:bg-[#E5E5E5] text-black font-semibold text-xs flex items-center gap-2 transition-all"
+            className="py-2.5 px-4 rounded-xl bg-white hover:bg-[#E5E5E5] text-black font-semibold text-xs flex items-center gap-2 transition-all theme-btn-primary"
           >
             <span>{current.actionLabel}</span>
             <ArrowRight className="w-3.5 h-3.5" />

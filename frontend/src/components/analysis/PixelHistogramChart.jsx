@@ -8,6 +8,7 @@ import {
   Sparkles,
   Info,
 } from 'lucide-react';
+import { useTheme } from '../../context/ThemeContext';
 
 /**
  * PixelHistogramChart
@@ -21,6 +22,13 @@ export default function PixelHistogramChart({
   coverSrc = '/samples/sample_cover.png',
   isPaired = false,
 }) {
+  const { theme } = useTheme();
+  const isLight = theme === 'light';
+  const primaryStroke = isLight ? '#0A0A0A' : '#FFFFFF';
+  const secondaryStroke = isLight ? '#4B5563' : '#B3B3B3';
+  const gridStroke = isLight ? '#E5E7EB' : '#222222';
+  const gradStart = isLight ? '#0A0A0A' : '#FFFFFF';
+
   const [chartMode, setChartMode] = useState('intensity'); // 'intensity' | 'diff' | 'compare'
   const [histData, setHistData] = useState(null);
   const [hoveredBin, setHoveredBin] = useState(null);
@@ -239,19 +247,19 @@ export default function PixelHistogramChart({
             >
               <defs>
                 <linearGradient id="intensityGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.35" />
-                  <stop offset="100%" stopColor="#FFFFFF" stopOpacity="0.02" />
+                  <stop offset="0%" stopColor={gradStart} stopOpacity="0.35" />
+                  <stop offset="100%" stopColor={gradStart} stopOpacity="0.02" />
                 </linearGradient>
                 <linearGradient id="diffGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#B3B3B3" stopOpacity="0.35" />
-                  <stop offset="100%" stopColor="#777777" stopOpacity="0.02" />
+                  <stop offset="0%" stopColor={secondaryStroke} stopOpacity="0.35" />
+                  <stop offset="100%" stopColor={secondaryStroke} stopOpacity="0.02" />
                 </linearGradient>
               </defs>
 
               {/* Horizontal grid lines */}
-              <line x1="0" y1={svgHeight * 0.25} x2={svgWidth} y2={svgHeight * 0.25} stroke="#222222" strokeDasharray="3 3" />
-              <line x1="0" y1={svgHeight * 0.5} x2={svgWidth} y2={svgHeight * 0.5} stroke="#222222" strokeDasharray="3 3" />
-              <line x1="0" y1={svgHeight * 0.75} x2={svgWidth} y2={svgHeight * 0.75} stroke="#222222" strokeDasharray="3 3" />
+              <line x1="0" y1={svgHeight * 0.25} x2={svgWidth} y2={svgHeight * 0.25} stroke={gridStroke} strokeDasharray="3 3" />
+              <line x1="0" y1={svgHeight * 0.5} x2={svgWidth} y2={svgHeight * 0.5} stroke={gridStroke} strokeDasharray="3 3" />
+              <line x1="0" y1={svgHeight * 0.75} x2={svgWidth} y2={svgHeight * 0.75} stroke={gridStroke} strokeDasharray="3 3" />
 
               {/* Intensity Path */}
               {chartMode === 'intensity' && (
@@ -260,7 +268,7 @@ export default function PixelHistogramChart({
                   <path
                     d={`M ${intensityPoints.join(' L ')}`}
                     fill="none"
-                    stroke="#FFFFFF"
+                    stroke={primaryStroke}
                     strokeWidth="1.5"
                   />
                   {/* Invisible hitboxes for hovering */}
@@ -285,7 +293,7 @@ export default function PixelHistogramChart({
                   <path
                     d={`M ${diffPoints.join(' L ')}`}
                     fill="none"
-                    stroke="#B3B3B3"
+                    stroke={secondaryStroke}
                     strokeWidth="1.5"
                   />
                   {/* Center Delta = 0 vertical line */}

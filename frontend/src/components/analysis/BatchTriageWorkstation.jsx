@@ -178,7 +178,7 @@ export default function BatchTriageWorkstation({ onSelectImageForInspection }) {
         <button
           onClick={handleBenchmarkRun}
           disabled={isProcessing}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white hover:bg-[#E5E5E5] text-black text-xs font-semibold transition shadow-md disabled:opacity-50 cursor-pointer"
+          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white hover:bg-[#E5E5E5] text-black text-xs font-semibold transition shadow-md disabled:opacity-50 cursor-pointer theme-btn-primary"
         >
           <Sparkles className="w-4 h-4 text-black" />
           <span>Triage 10-Image Test Benchmark</span>

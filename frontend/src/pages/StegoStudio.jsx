@@ -367,7 +367,7 @@ export default function StegoStudio({ onSendToDetector }) {
                 className={`w-full py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all ${
                   isEmbedding || !embedFile
                     ? 'bg-[#1A1A1A] text-[#555555] cursor-not-allowed border border-[#292929]'
-                    : 'bg-white hover:bg-[#E5E5E5] text-black shadow-md'
+                    : 'bg-white hover:bg-[#E5E5E5] text-black shadow-md theme-btn-primary'
                 }`}
               >
                 {isEmbedding ? (
@@ -510,7 +510,7 @@ export default function StegoStudio({ onSendToDetector }) {
                   <button
                     type="button"
                     onClick={handleSendToDetector}
-                    className="w-full py-3 rounded-xl bg-white hover:bg-[#E5E5E5] text-black font-semibold text-sm flex items-center justify-center gap-2 shadow-md transition-all"
+                    className="w-full py-3 rounded-xl bg-white hover:bg-[#E5E5E5] text-black font-semibold text-sm flex items-center justify-center gap-2 shadow-md transition-all theme-btn-primary"
                   >
                     <ArrowRight className="w-4 h-4 text-black" />
                     Send to StegoShield Detector Workspace
@@ -593,7 +593,7 @@ export default function StegoStudio({ onSendToDetector }) {
               className={`w-full py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all ${
                 isExtracting || !extractFile
                   ? 'bg-[#1A1A1A] text-[#555555] cursor-not-allowed border border-[#292929]'
-                  : 'bg-white hover:bg-[#E5E5E5] text-black shadow-md'
+                  : 'bg-white hover:bg-[#E5E5E5] text-black shadow-md theme-btn-primary'
               }`}
             >
               {isExtracting ? (

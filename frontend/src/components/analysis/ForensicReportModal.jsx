@@ -71,7 +71,7 @@ export default function ForensicReportModal({ isOpen, onClose, reportData, previ
             </button>
             <button
               onClick={handlePrint}
-              className="flex items-center gap-2 px-3.5 py-1.5 rounded-lg bg-white hover:bg-[#E5E5E5] text-black text-xs font-semibold transition shadow-none"
+              className="flex items-center gap-2 px-3.5 py-1.5 rounded-lg bg-white hover:bg-[#E5E5E5] text-black text-xs font-semibold transition shadow-none theme-btn-primary"
             >
               <Printer className="w-3.5 h-3.5 text-black" />
               <span>Print / Save as PDF</span>

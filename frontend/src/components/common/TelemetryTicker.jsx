@@ -18,7 +18,7 @@ export default function TelemetryTicker({ onOpenVivaTour, onOpenCommandPalette }
   return (
     <aside
       aria-label="System Telemetry Ticker"
-      className="fixed bottom-0 left-0 right-0 z-40 bg-[#090909]/95 backdrop-blur-md border-t border-[#292929] text-[11px] font-mono select-none"
+      className="fixed bottom-0 left-0 right-0 z-40 bg-[#090909]/95 backdrop-blur-md border-t border-[#292929] text-[11px] font-mono select-none theme-dark-nav"
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-9 text-[#777777]">
         {/* Left Telemetry Group */}

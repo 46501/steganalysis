@@ -90,7 +90,7 @@ export default function Dashboard({ setActiveTab, onOpenVivaTour }) {
         <div className="flex items-center gap-2.5 shrink-0">
           <button
             onClick={() => setActiveTab('detector')}
-            className="flex items-center gap-2 px-4 py-2.5 bg-white hover:bg-[#E5E5E5] text-black rounded-lg text-xs font-semibold transition"
+            className="flex items-center gap-2 px-4 py-2.5 bg-white hover:bg-[#E5E5E5] text-black rounded-lg text-xs font-semibold transition theme-btn-primary"
           >
             <span>Launch Detector</span>
             <ArrowRight className="w-3.5 h-3.5" />

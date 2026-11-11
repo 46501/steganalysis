@@ -3,34 +3,213 @@
 @tailwind utilities;
 
 :root {
+  color-scheme: light;
+}
+
+html.dark {
   color-scheme: dark;
 }
 
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-  background-color: #000000;
-  color: #FFFFFF;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Custom minimal monochrome scrollbar */
-::-webkit-scrollbar {
-  width: 5px;
-  height: 5px;
+/* Smooth transitions for theme switching */
+html, body, div, section, main, header, footer, aside, nav, article,
+button, input, textarea, select, table, th, td, p, h1, h2, h3, h4, h5, h6, span {
+  transition-property: background-color, border-color, color, box-shadow;
+  transition-duration: 180ms;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
 }
-::-webkit-scrollbar-track {
+
+/* Custom scrollbars */
+html.dark ::-webkit-scrollbar-track {
   background: #000000;
 }
-::-webkit-scrollbar-thumb {
+html.dark ::-webkit-scrollbar-thumb {
   background: #242424;
   border-radius: 2px;
 }
-::-webkit-scrollbar-thumb:hover {
+html.dark ::-webkit-scrollbar-thumb:hover {
   background: #383838;
 }
 
+html.light ::-webkit-scrollbar-track {
+  background: #F4F4F6;
+}
+html.light ::-webkit-scrollbar-thumb {
+  background: #D1D5DB;
+  border-radius: 2px;
+}
+html.light ::-webkit-scrollbar-thumb:hover {
+  background: #9CA3AF;
+}
+
+/* ========================================================
+   1. DARK THEME RULES (Default / Explicit class 'dark')
+   ======================================================== */
+html.dark body {
+  background-color: #000000;
+  color: #FFFFFF;
+}
+
+/* ========================================================
+   2. LIGHT THEME RULES (Explicit class 'light' or not .dark)
+   ======================================================== */
+html.light body,
+html:not(.dark) body {
+  background-color: #FAFAFA !important;
+  color: #0A0A0A !important;
+}
+
+/* Light Mode Page Background */
+html.light :not(.theme-dark-nav):not(.theme-dark-nav *) .bg-\[\#000000\],
+html:not(.dark) :not(.theme-dark-nav):not(.theme-dark-nav *) .bg-\[\#000000\] {
+  background-color: #FAFAFA !important;
+}
+
+/* Light Mode Surfaces / Cards */
+html.light :not(.theme-dark-nav):not(.theme-dark-nav *) .bg-\[\#090909\],
+html:not(.dark) :not(.theme-dark-nav):not(.theme-dark-nav *) .bg-\[\#090909\] {
+  background-color: #FFFFFF !important;
+}
+
+html.light :not(.theme-dark-nav):not(.theme-dark-nav *) .bg-\[\#0A0A0A\],
+html:not(.dark) :not(.theme-dark-nav):not(.theme-dark-nav *) .bg-\[\#0A0A0A\] {
+  background-color: #F4F4F6 !important;
+}
+
+html.light :not(.theme-dark-nav):not(.theme-dark-nav *) .bg-\[\#111111\],
+html:not(.dark) :not(.theme-dark-nav):not(.theme-dark-nav *) .bg-\[\#111111\] {
+  background-color: #FFFFFF !important;
+}
+
+html.light :not(.theme-dark-nav):not(.theme-dark-nav *) .bg-\[\#151515\],
+html:not(.dark) :not(.theme-dark-nav):not(.theme-dark-nav *) .bg-\[\#151515\] {
+  background-color: #F4F4F6 !important;
+}
+
+html.light :not(.theme-dark-nav):not(.theme-dark-nav *) .bg-\[\#181818\],
+html.light :not(.theme-dark-nav):not(.theme-dark-nav *) .bg-\[\#1A1A1A\],
+html.light :not(.theme-dark-nav):not(.theme-dark-nav *) .bg-\[\#1C1C1C\],
+html.light :not(.theme-dark-nav):not(.theme-dark-nav *) .bg-\[\#222222\],
+html.light :not(.theme-dark-nav):not(.theme-dark-nav *) .bg-\[\#242424\],
+html.light :not(.theme-dark-nav):not(.theme-dark-nav *) .bg-\[\#2E2E2E\],
+html:not(.dark) :not(.theme-dark-nav):not(.theme-dark-nav *) .bg-\[\#181818\],
+html:not(.dark) :not(.theme-dark-nav):not(.theme-dark-nav *) .bg-\[\#1A1A1A\],
+html:not(.dark) :not(.theme-dark-nav):not(.theme-dark-nav *) .bg-\[\#1C1C1C\],
+html:not(.dark) :not(.theme-dark-nav):not(.theme-dark-nav *) .bg-\[\#222222\],
+html:not(.dark) :not(.theme-dark-nav):not(.theme-dark-nav *) .bg-\[\#242424\],
+html:not(.dark) :not(.theme-dark-nav):not(.theme-dark-nav *) .bg-\[\#2E2E2E\] {
+  background-color: #E9ECEF !important;
+}
+
+/* Light Mode Hover States */
+html.light :not(.theme-dark-nav):not(.theme-dark-nav *) .hover\:bg-\[\#151515\]:hover,
+html:not(.dark) :not(.theme-dark-nav):not(.theme-dark-nav *) .hover\:bg-\[\#151515\]:hover {
+  background-color: #E9ECEF !important;
+}
+
+html.light :not(.theme-dark-nav):not(.theme-dark-nav *) .hover\:bg-\[\#242424\]:hover,
+html.light :not(.theme-dark-nav):not(.theme-dark-nav *) .hover\:bg-\[\#222222\]:hover,
+html.light :not(.theme-dark-nav):not(.theme-dark-nav *) .hover\:bg-\[\#1C1C1C\]:hover,
+html.light :not(.theme-dark-nav):not(.theme-dark-nav *) .hover\:bg-\[\#181818\]:hover,
+html:not(.dark) :not(.theme-dark-nav):not(.theme-dark-nav *) .hover\:bg-\[\#242424\]:hover,
+html:not(.dark) :not(.theme-dark-nav):not(.theme-dark-nav *) .hover\:bg-\[\#222222\]:hover,
+html:not(.dark) :not(.theme-dark-nav):not(.theme-dark-nav *) .hover\:bg-\[\#1C1C1C\]:hover,
+html:not(.dark) :not(.theme-dark-nav):not(.theme-dark-nav *) .hover\:bg-\[\#181818\]:hover {
+  background-color: #DEE2E6 !important;
+}
+
+/* Light Mode Borders */
+html.light :not(.theme-dark-nav):not(.theme-dark-nav *) .border-\[\#292929\],
+html:not(.dark) :not(.theme-dark-nav):not(.theme-dark-nav *) .border-\[\#292929\] {
+  border-color: #E5E7EB !important;
+}
+
+html.light :not(.theme-dark-nav):not(.theme-dark-nav *) .border-\[\#383838\],
+html:not(.dark) :not(.theme-dark-nav):not(.theme-dark-nav *) .border-\[\#383838\] {
+  border-color: #D1D5DB !important;
+}
+
+html.light :not(.theme-dark-nav):not(.theme-dark-nav *) .border-\[\#222222\],
+html:not(.dark) :not(.theme-dark-nav):not(.theme-dark-nav *) .border-\[\#222222\] {
+  border-color: #E5E7EB !important;
+}
+
+/* Light Mode Typography */
+html.light :not(.theme-dark-nav):not(.theme-dark-nav *):not(.theme-btn-primary):not(.theme-btn-primary *) .text-white,
+html:not(.dark) :not(.theme-dark-nav):not(.theme-dark-nav *):not(.theme-btn-primary):not(.theme-btn-primary *) .text-white {
+  color: #0A0A0A !important;
+}
+
+html.light :not(.theme-dark-nav):not(.theme-dark-nav *) .text-\[\#B3B3B3\],
+html:not(.dark) :not(.theme-dark-nav):not(.theme-dark-nav *) .text-\[\#B3B3B3\] {
+  color: #4B5563 !important;
+}
+
+html.light :not(.theme-dark-nav):not(.theme-dark-nav *) .text-\[\#777777\],
+html:not(.dark) :not(.theme-dark-nav):not(.theme-dark-nav *) .text-\[\#777777\] {
+  color: #6B7280 !important;
+}
+
+html.light :not(.theme-dark-nav):not(.theme-dark-nav *) .text-\[\#555555\],
+html.light :not(.theme-dark-nav):not(.theme-dark-nav *) .text-\[\#444444\],
+html:not(.dark) :not(.theme-dark-nav):not(.theme-dark-nav *) .text-\[\#555555\],
+html:not(.dark) :not(.theme-dark-nav):not(.theme-dark-nav *) .text-\[\#444444\] {
+  color: #9CA3AF !important;
+}
+
+/* Light Mode Inputs, Textareas, Selects */
+html.light input,
+html.light textarea,
+html.light select,
+html:not(.dark) input,
+html:not(.dark) textarea,
+html:not(.dark) select {
+  background-color: #FFFFFF !important;
+  color: #0A0A0A !important;
+  border-color: #D1D5DB !important;
+}
+
+html.light input::placeholder,
+html.light textarea::placeholder,
+html:not(.dark) input::placeholder,
+html:not(.dark) textarea::placeholder {
+  color: #9CA3AF !important;
+}
+
+/* Primary Action Buttons in Light Mode */
+html.light .theme-btn-primary,
+html:not(.dark) .theme-btn-primary {
+  background-color: #0A0A0A !important;
+  color: #FFFFFF !important;
+  border-color: transparent !important;
+}
+
+html.light .theme-btn-primary:hover,
+html:not(.dark) .theme-btn-primary:hover {
+  background-color: #262626 !important;
+}
+
+html.light .theme-btn-primary *,
+html:not(.dark) .theme-btn-primary * {
+  color: #FFFFFF !important;
+}
+
+/* Modals & Backdrop */
+html.light .bg-black\/80,
+html.light .bg-black\/75,
+html:not(.dark) .bg-black\/80,
+html:not(.dark) .bg-black\/75 {
+  background-color: rgba(0, 0, 0, 0.45) !important;
+  backdrop-filter: blur(6px);
+}
+
+/* Keyframe animations */
 @keyframes laserScan {
   0% {
     top: 0%;
@@ -61,4 +240,3 @@ body {
 .animate-radar-sweep {
   animation: radarSweep 4s linear infinite;
 }
-

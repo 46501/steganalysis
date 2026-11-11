@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Menu, Search, Sparkles, PanelLeft, Activity, Volume2, VolumeX } from 'lucide-react';
+import { Menu, Search, Sparkles, BookOpen, PanelLeft, Activity, Volume2, VolumeX } from 'lucide-react';
 import { getSoundEnabled, setSoundEnabled, playCyberClick } from '../../utils/cyberSoundEffects';
 
 export default function TopHeader({
@@ -123,15 +123,15 @@ export default function TopHeader({
           )}
         </button>
 
-        {/* Viva Guide Shortcut (View Guide) */}
+        {/* User Guide Shortcut */}
         <button
           type="button"
           onClick={onOpenVivaTour}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r from-cyan-950/70 to-indigo-950/60 hover:from-cyan-900/80 hover:to-indigo-900/70 text-cyan-200 border border-cyan-500/40 hover:border-cyan-400/60 text-xs font-medium transition shadow-[0_0_12px_rgba(6,182,212,0.2)]"
-          title="Launch Viva Defense Guided Tour"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r from-cyan-950/70 to-indigo-950/60 hover:from-cyan-900/80 hover:to-indigo-900/70 text-cyan-200 border border-cyan-500/40 hover:border-cyan-400/60 text-xs font-semibold transition shadow-[0_0_12px_rgba(6,182,212,0.2)]"
+          title="Open StegoShield AI User Guide & Examination Walkthrough"
         >
-          <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
-          <span className="hidden sm:inline">Viva Guide</span>
+          <BookOpen className="w-3.5 h-3.5 text-cyan-400" />
+          <span className="hidden sm:inline">User Guide</span>
         </button>
       </div>
     </header>

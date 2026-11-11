@@ -21,6 +21,7 @@ import {
   ZoomIn,
   FolderArchive,
   BarChart2,
+  FileCode,
 } from 'lucide-react';
 import { steganalysisApi } from '../services/api';
 import ForensicReportModal from '../components/analysis/ForensicReportModal';
@@ -29,6 +30,7 @@ import BatchTriageWorkstation from '../components/analysis/BatchTriageWorkstatio
 import ComparisonWipeSlider from '../components/analysis/ComparisonWipeSlider';
 import ForensicScanningHUD from '../components/analysis/ForensicScanningHUD';
 import PixelHistogramChart from '../components/analysis/PixelHistogramChart';
+import FileStructureCarver from '../components/analysis/FileStructureCarver';
 import { playLaserScan, playTargetLock, playCyberClick } from '../utils/cyberSoundEffects';
 
 export default function Detector({ initialFile = null }) {
@@ -748,83 +750,118 @@ export default function Detector({ initialFile = null }) {
             </div>
 
             {/* Visual Tabs */}
-            <div className="flex items-center gap-1.5 p-1 rounded-xl bg-[#0A0A0A] border border-[#292929] text-xs">
+            <div className="flex flex-wrap items-center gap-1.5 p-1 rounded-xl bg-[#050914] border border-[#1B2B48] text-xs font-mono">
               <button
-                onClick={() => setVisualTab('heatmap')}
-                className={`px-3 py-1.5 rounded-lg font-medium transition ${
+                onClick={() => {
+                  playCyberClick();
+                  setVisualTab('heatmap');
+                }}
+                className={`px-3 py-1.5 rounded-lg transition ${
                   visualTab === 'heatmap'
-                    ? 'bg-[#242424] text-white border border-[#383838] shadow-sm'
-                    : 'text-[#777777] hover:text-white'
+                    ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-[0_0_8px_rgba(6,182,212,0.2)] font-bold'
+                    : 'text-[#64748B] hover:text-white'
                 }`}
               >
                 Residual Heatmap
               </button>
               {result.fft_spectrum_b64 && (
                 <button
-                  onClick={() => setVisualTab('fft')}
-                  className={`px-3 py-1.5 rounded-lg font-medium transition ${
+                  onClick={() => {
+                    playCyberClick();
+                    setVisualTab('fft');
+                  }}
+                  className={`px-3 py-1.5 rounded-lg transition ${
                     visualTab === 'fft'
-                      ? 'bg-[#242424] text-white border border-[#383838] shadow-sm'
-                      : 'text-[#777777] hover:text-white'
+                      ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-[0_0_8px_rgba(6,182,212,0.2)] font-bold'
+                      : 'text-[#64748B] hover:text-white'
                   }`}
                 >
                   2D FFT Spectrum
                 </button>
               )}
               <button
-                onClick={() => setVisualTab('histogram')}
-                className={`px-3 py-1.5 rounded-lg font-medium transition flex items-center gap-1.5 ${
+                onClick={() => {
+                  playCyberClick();
+                  setVisualTab('histogram');
+                }}
+                className={`px-3 py-1.5 rounded-lg transition flex items-center gap-1.5 ${
                   visualTab === 'histogram'
-                    ? 'bg-[#242424] text-white border border-[#383838] shadow-sm'
-                    : 'text-[#777777] hover:text-white'
+                    ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-[0_0_8px_rgba(6,182,212,0.2)] font-bold'
+                    : 'text-[#64748B] hover:text-white'
                 }`}
               >
-                <BarChart2 className="w-3.5 h-3.5 text-white" />
+                <BarChart2 className="w-3.5 h-3.5 text-cyan-400" />
                 <span>Pixel Histogram</span>
               </button>
               <button
-                onClick={() => setVisualTab('bitplane')}
-                className={`px-3 py-1.5 rounded-lg font-medium transition ${
+                onClick={() => {
+                  playCyberClick();
+                  setVisualTab('bitplane');
+                }}
+                className={`px-3 py-1.5 rounded-lg transition ${
                   visualTab === 'bitplane'
-                    ? 'bg-[#242424] text-white border border-[#383838] shadow-sm'
-                    : 'text-[#777777] hover:text-white'
+                    ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-[0_0_8px_rgba(6,182,212,0.2)] font-bold'
+                    : 'text-[#64748B] hover:text-white'
                 }`}
               >
                 Bit-Plane Slicer
               </button>
               {result.diff_map_b64 && (
                 <button
-                  onClick={() => setVisualTab('diff')}
-                  className={`px-3 py-1.5 rounded-lg font-medium transition ${
+                  onClick={() => {
+                    playCyberClick();
+                    setVisualTab('diff');
+                  }}
+                  className={`px-3 py-1.5 rounded-lg transition ${
                     visualTab === 'diff'
-                      ? 'bg-[#242424] text-white border border-[#383838] shadow-sm'
-                      : 'text-[#777777] hover:text-white'
+                      ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-[0_0_8px_rgba(6,182,212,0.2)] font-bold'
+                      : 'text-[#64748B] hover:text-white'
                   }`}
                 >
                   Amplified Diff (×50)
                 </button>
               )}
               <button
-                onClick={() => setVisualTab('loupe')}
-                className={`px-3 py-1.5 rounded-lg font-medium transition flex items-center gap-1.5 ${
+                onClick={() => {
+                  playCyberClick();
+                  setVisualTab('loupe');
+                }}
+                className={`px-3 py-1.5 rounded-lg transition flex items-center gap-1.5 ${
                   visualTab === 'loupe'
-                    ? 'bg-[#242424] text-white border border-[#383838] shadow-sm'
-                    : 'text-[#777777] hover:text-white'
+                    ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-[0_0_8px_rgba(6,182,212,0.2)] font-bold'
+                    : 'text-[#64748B] hover:text-white'
                 }`}
               >
-                <ZoomIn className="w-3.5 h-3.5 text-white" />
+                <ZoomIn className="w-3.5 h-3.5 text-cyan-400" />
                 <span>8× Pixel Loupe</span>
               </button>
               <button
-                onClick={() => setVisualTab('wipe')}
-                className={`px-3 py-1.5 rounded-lg font-medium transition flex items-center gap-1.5 ${
+                onClick={() => {
+                  playCyberClick();
+                  setVisualTab('wipe');
+                }}
+                className={`px-3 py-1.5 rounded-lg transition flex items-center gap-1.5 ${
                   visualTab === 'wipe'
-                    ? 'bg-[#242424] text-white border border-[#383838] shadow-sm'
-                    : 'text-[#777777] hover:text-white'
+                    ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-[0_0_8px_rgba(6,182,212,0.2)] font-bold'
+                    : 'text-[#64748B] hover:text-white'
                 }`}
               >
-                <Split className="w-3.5 h-3.5 text-white" />
+                <Split className="w-3.5 h-3.5 text-cyan-400" />
                 <span>Split Curtain Wipe</span>
+              </button>
+              <button
+                onClick={() => {
+                  playCyberClick();
+                  setVisualTab('structure');
+                }}
+                className={`px-3 py-1.5 rounded-lg transition flex items-center gap-1.5 ${
+                  visualTab === 'structure'
+                    ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-[0_0_8px_rgba(6,182,212,0.2)] font-bold'
+                    : 'text-[#64748B] hover:text-white'
+                }`}
+              >
+                <FileCode className="w-3.5 h-3.5 text-cyan-400" />
+                <span>Binary Carving</span>
               </button>
             </div>
           </div>
@@ -1061,6 +1098,11 @@ export default function Detector({ initialFile = null }) {
               coverSrc="/samples/sample_cover.png"
               isPaired={Boolean(result.diff_map_b64 || file?.name?.includes('5001'))}
             />
+          )}
+
+          {/* Tab 7: Low-Level Binary File Structure & Carving Inspector */}
+          {visualTab === 'structure' && (
+            <FileStructureCarver file={file} previewUrl={previewUrl} />
           )}
         </div>
       )}

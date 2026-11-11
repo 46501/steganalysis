@@ -9,7 +9,6 @@ export default function TopHeader({
   onOpenCommandPalette,
   collapsed,
   setCollapsed,
-  healthStatus,
 }) {
   const getTabTitle = (tab) => {
     switch (tab) {
@@ -35,10 +34,6 @@ export default function TopHeader({
     if (tab === 'model-info') return 'Research';
     return 'Workspace';
   };
-
-  const statusTooltip = healthStatus?.online
-    ? 'Backend: Online • Engine: PyTorch CPU'
-    : 'Backend: Offline';
 
   return (
     <header
@@ -83,7 +78,7 @@ export default function TopHeader({
         </div>
       </div>
 
-      {/* Right Actions: Command Panel -> Theme Switcher -> View Guide -> Telemetry */}
+      {/* Right Actions: Command Panel -> Theme Switcher -> View Guide */}
       <div className="flex items-center gap-2 sm:gap-3">
         {/* Quick Search Shortcut Pill (Command Panel) */}
         <button
@@ -112,19 +107,6 @@ export default function TopHeader({
           <Sparkles className="w-3.5 h-3.5 text-white" />
           <span className="hidden sm:inline">Viva Guide</span>
         </button>
-
-        {/* Engine Telemetry Status Pill (PyTorch CPU) */}
-        <div
-          className="hidden lg:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#141414] border border-[#242424] text-xs font-mono text-[#B3B3B3]"
-          title={statusTooltip}
-        >
-          <span
-            className={`w-2 h-2 rounded-full shrink-0 ${
-              healthStatus?.online ? 'bg-white animate-pulse' : 'bg-[#555555]'
-            }`}
-          />
-          <span>PyTorch CPU</span>
-        </div>
       </div>
     </header>
   );

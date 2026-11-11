@@ -91,7 +91,6 @@ export default function AppLayout({
       >
         {/* Top Context & Action Bar (Fixed & Sticky) */}
         <TopHeader
-          activeTab={activeTab}
           setMobileOpen={setMobileOpen}
           onOpenVivaTour={onOpenVivaTour}
           onOpenCommandPalette={onOpenCommandPalette}

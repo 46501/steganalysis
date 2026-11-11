@@ -3,45 +3,19 @@ import { Menu, Search, Sparkles, PanelLeft } from 'lucide-react';
 import ThemeSwitcher from '../common/ThemeSwitcher';
 
 export default function TopHeader({
-  activeTab,
   setMobileOpen,
   onOpenVivaTour,
   onOpenCommandPalette,
   collapsed,
   setCollapsed,
 }) {
-  const getTabTitle = (tab) => {
-    switch (tab) {
-      case 'dashboard':
-        return 'System Overview & Telemetry';
-      case 'detector':
-        return 'Steganalysis Detection Workspace';
-      case 'lab':
-        return 'Interactive Forensics Laboratory';
-      case 'stego-studio':
-        return 'LSB Embedding & Concealment Studio';
-      case 'history':
-        return 'Digital Evidence Examination Archive';
-      case 'model-info':
-        return 'Research & Architectural Formulations';
-      default:
-        return 'Forensics Console';
-    }
-  };
-
-  const getTabCategory = (tab) => {
-    if (tab === 'history') return 'Evidence';
-    if (tab === 'model-info') return 'Research';
-    return 'Workspace';
-  };
-
   return (
     <header
       className={`fixed top-0 right-0 z-40 h-14 bg-[#090909]/95 backdrop-blur-md border-b border-[#292929] theme-dark-nav flex items-center justify-between px-4 sm:px-6 shrink-0 transition-all duration-300 ease-in-out ${
         collapsed ? 'left-0 md:left-16' : 'left-0 md:left-64'
       }`}
     >
-      {/* Left: Mobile Hamburger / Desktop Expand & Active Breadcrumb */}
+      {/* Left: Mobile Hamburger / Desktop Expand Toggle (when sidebar collapsed) */}
       <div className="flex items-center gap-2.5">
         {/* Mobile Hamburger Toggle */}
         <button
@@ -65,17 +39,6 @@ export default function TopHeader({
             <PanelLeft className="w-4 h-4" />
           </button>
         )}
-
-        {/* Breadcrumb & Title */}
-        <div className="flex items-center gap-2 text-xs font-mono">
-          <span className="text-[#666666] hidden sm:inline">
-            {getTabCategory(activeTab)}
-          </span>
-          <span className="text-[#444444] hidden sm:inline">/</span>
-          <span className="text-white font-semibold truncate max-w-[220px] sm:max-w-md">
-            {getTabTitle(activeTab)}
-          </span>
-        </div>
       </div>
 
       {/* Right Actions: Command Panel -> Theme Switcher -> View Guide */}

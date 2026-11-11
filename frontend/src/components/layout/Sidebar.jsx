@@ -134,9 +134,6 @@ export default function Sidebar({
                   <span className="text-sm font-bold tracking-tight text-white whitespace-nowrap group-hover:text-cyan-300 transition-colors">
                     StegoShield AI
                   </span>
-                  <span className="text-[10px] font-mono text-cyan-300 bg-cyan-950/60 px-1.5 py-0.5 rounded border border-cyan-500/30">
-                    v1.0
-                  </span>
                 </div>
               </div>
 

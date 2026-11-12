@@ -6,9 +6,15 @@ Preserves subtle discrete high-frequency steganographic noise by avoiding destru
 
 import io
 from typing import Optional, Tuple
+from fastapi import HTTPException, status
 import numpy as np
 from PIL import Image
 import torch
+
+# Prevent decompression bomb attacks by capping maximum allocatable pixel buffer
+MAX_ALLOWED_PIXELS = 16_777_216  # 16 Megapixels (e.g. 4096 x 4096)
+MAX_ALLOWED_DIMENSION = 4096
+Image.MAX_IMAGE_PIXELS = MAX_ALLOWED_PIXELS
 
 
 class SRNetPreprocessor:
@@ -25,25 +31,47 @@ class SRNetPreprocessor:
         and outputs a PyTorch float32 tensor of shape (1, 1, H, W).
         Avoids low-pass interpolation (e.g. Lanczos/Bicubic) which destroys discrete ±1 stego noise.
         """
-        image = Image.open(io.BytesIO(image_bytes))
-        metadata = {
-            "original_width": image.width,
-            "original_height": image.height,
-            "format": image.format or "RAW/PGM",
-            "mode": image.mode,
-        }
+        try:
+            image = Image.open(io.BytesIO(image_bytes))
 
-        # Convert to single-channel 8-bit grayscale
-        gray_image = image.convert("L")
+            # Strictly enforce dimension ceiling to protect memory and inference latency
+            if image.width > MAX_ALLOWED_DIMENSION or image.height > MAX_ALLOWED_DIMENSION:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Image dimensions ({image.width}x{image.height}) exceed maximum allowed limit of {MAX_ALLOWED_DIMENSION}x{MAX_ALLOWED_DIMENSION} pixels.",
+                )
 
-        # Center-crop if a specific crop dimension is explicitly requested
-        if crop_size is not None and (gray_image.width > crop_size or gray_image.height > crop_size):
-            left = (gray_image.width - crop_size) // 2
-            top = (gray_image.height - crop_size) // 2
-            gray_image = gray_image.crop((left, top, left + crop_size, top + crop_size))
+            metadata = {
+                "original_width": image.width,
+                "original_height": image.height,
+                "format": image.format or "RAW/PGM",
+                "mode": image.mode,
+            }
 
-        # Convert directly to numpy array preserving exact integer pixel values
-        arr = np.array(gray_image, dtype=np.float32)
-        tensor = torch.from_numpy(arr).unsqueeze(0).unsqueeze(0)  # Shape: (1, 1, H, W)
+            # Convert to single-channel 8-bit grayscale
+            gray_image = image.convert("L")
 
-        return tensor, metadata
+            # Center-crop if a specific crop dimension is explicitly requested
+            if crop_size is not None and (gray_image.width > crop_size or gray_image.height > crop_size):
+                left = (gray_image.width - crop_size) // 2
+                top = (gray_image.height - crop_size) // 2
+                gray_image = gray_image.crop((left, top, left + crop_size, top + crop_size))
+
+            # Convert directly to numpy array preserving exact integer pixel values
+            arr = np.array(gray_image, dtype=np.float32)
+            tensor = torch.from_numpy(arr).unsqueeze(0).unsqueeze(0)  # Shape: (1, 1, H, W)
+
+            return tensor, metadata
+
+        except HTTPException:
+            raise
+        except Image.DecompressionBombError as e:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Decompression bomb detected: Image exceeds safety allocation limit: {str(e)}",
+            )
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Failed to process image buffer: {str(e)}",
+            )

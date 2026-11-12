@@ -7,8 +7,15 @@ model probabilities, test set evaluation, database persistence, SHA-256, and res
 import hashlib
 import json
 import os
+import sys
 import time
 from pathlib import Path
+
+# Anchor repo root and backend directory dynamically
+REPO_ROOT = Path(__file__).resolve().parent.parent.parent
+BACKEND_DIR = REPO_ROOT / "backend"
+if str(BACKEND_DIR) not in sys.path:
+    sys.path.insert(0, str(BACKEND_DIR))
 
 import numpy as np
 from PIL import Image
@@ -22,10 +29,10 @@ from app.ml.inference import engine
 
 def audit_sample_5001_ground_truth():
     """Check 1: Ground-truth verification of sample 5001."""
-    cover_path = Path("D:/Stego/dataset/processed/S-UNIWARD_0.4bpp/test/cover/5001.pgm")
-    stego_path = Path("D:/Stego/dataset/processed/S-UNIWARD_0.4bpp/test/stego/5001.pgm")
-    sample_c_png = Path("D:/Stego/frontend/public/samples/sample_cover.png")
-    sample_s_png = Path("D:/Stego/frontend/public/samples/sample_stego.png")
+    cover_path = REPO_ROOT / "dataset" / "processed" / "S-UNIWARD_0.4bpp" / "test" / "cover" / "5001.pgm"
+    stego_path = REPO_ROOT / "dataset" / "processed" / "S-UNIWARD_0.4bpp" / "test" / "stego" / "5001.pgm"
+    sample_c_png = REPO_ROOT / "frontend" / "public" / "samples" / "sample_cover.png"
+    sample_s_png = REPO_ROOT / "frontend" / "public" / "samples" / "sample_stego.png"
 
     assert cover_path.is_file(), "Cover 5001.pgm not found"
     assert stego_path.is_file(), "Stego 5001.pgm not found"
@@ -65,7 +72,7 @@ def audit_sample_5001_ground_truth():
 
 def audit_checkpoint_and_model():
     """Check 2 & 3: Verify checkpoint loading and weight inspection."""
-    weights_path = Path("D:/Stego/backend/app/ml/weights/stegonet_lite_demo.pt")
+    weights_path = BACKEND_DIR / "app" / "ml" / "weights" / "stegonet_lite_demo.pt"
     assert weights_path.is_file(), f"Checkpoint not found at {weights_path}"
 
     state_dict = torch.load(weights_path, map_location="cpu")
@@ -96,9 +103,11 @@ def audit_checkpoint_and_model():
 
 def audit_model_prediction_on_samples():
     """Check 4 & 5: Measure actual model prediction on sample 5001 cover & stego."""
-    with open("D:/Stego/frontend/public/samples/sample_cover.png", "rb") as f:
+    sample_c = REPO_ROOT / "frontend" / "public" / "samples" / "sample_cover.png"
+    sample_s = REPO_ROOT / "frontend" / "public" / "samples" / "sample_stego.png"
+    with open(sample_c, "rb") as f:
         c_bytes = f.read()
-    with open("D:/Stego/frontend/public/samples/sample_stego.png", "rb") as f:
+    with open(sample_s, "rb") as f:
         s_bytes = f.read()
 
     c_tensor, c_meta = SRNetPreprocessor.process_bytes(c_bytes)
@@ -115,8 +124,8 @@ def audit_model_prediction_on_samples():
 
 def audit_test_set_evaluation(subset_pairs: int = 50):
     """Check 6 & 7: Read-only evaluation on untouched test partition (IDs 5001-5050)."""
-    test_c_dir = Path("D:/Stego/dataset/processed/S-UNIWARD_0.4bpp/test/cover")
-    test_s_dir = Path("D:/Stego/dataset/processed/S-UNIWARD_0.4bpp/test/stego")
+    test_c_dir = REPO_ROOT / "dataset" / "processed" / "S-UNIWARD_0.4bpp" / "test" / "cover"
+    test_s_dir = REPO_ROOT / "dataset" / "processed" / "S-UNIWARD_0.4bpp" / "test" / "stego"
 
     c_files = sorted(list(test_c_dir.glob("*.pgm")))[:subset_pairs]
     s_files = sorted(list(test_s_dir.glob("*.pgm")))[:subset_pairs]
@@ -171,16 +180,18 @@ def audit_test_set_evaluation(subset_pairs: int = 50):
 
 def audit_hash_and_residual_energy():
     """Check 9: Verify SHA-256 and spatial residual energy."""
-    with open("D:/Stego/frontend/public/samples/sample_cover.png", "rb") as f:
+    sample_c = REPO_ROOT / "frontend" / "public" / "samples" / "sample_cover.png"
+    sample_s = REPO_ROOT / "frontend" / "public" / "samples" / "sample_stego.png"
+    with open(sample_c, "rb") as f:
         c_bytes = f.read()
-    with open("D:/Stego/frontend/public/samples/sample_stego.png", "rb") as f:
+    with open(sample_s, "rb") as f:
         s_bytes = f.read()
 
     c_hash = hashlib.sha256(c_bytes).hexdigest()
     s_hash = hashlib.sha256(s_bytes).hexdigest()
 
-    c_arr = np.array(Image.open("D:/Stego/frontend/public/samples/sample_cover.png"), dtype=np.float32)
-    s_arr = np.array(Image.open("D:/Stego/frontend/public/samples/sample_stego.png"), dtype=np.float32)
+    c_arr = np.array(Image.open(sample_c), dtype=np.float32)
+    s_arr = np.array(Image.open(sample_s), dtype=np.float32)
 
     c_t = torch.from_numpy(c_arr).unsqueeze(0).unsqueeze(0)
     s_t = torch.from_numpy(s_arr).unsqueeze(0).unsqueeze(0)

@@ -11,7 +11,7 @@ import json
 import time
 import logging
 from pathlib import Path
-from typing import Dict, Any, Optional, Tuple, List
+from typing import Dict, Any, Optional, Tuple, List, Union
 
 import numpy as np
 import torch

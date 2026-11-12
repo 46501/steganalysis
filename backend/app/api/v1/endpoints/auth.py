@@ -4,7 +4,8 @@ from typing import Optional
 from fastapi import APIRouter, Cookie, Depends, Request, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.auth import get_current_user
+from app.core.auth import get_current_user, check_rate_limit
+from app.core.config import settings
 from app.core.database import get_db
 from app.models.user import User
 from app.schemas.auth import (
@@ -39,6 +40,14 @@ async def register(
     Registers a new user account, creates an active session with secure cookies,
     and returns a signed JWT access token.
     """
+    client_ip = request.client.host if request.client else "unknown"
+    check_rate_limit(
+        key=f"ip:{client_ip}",
+        category="register",
+        max_requests=settings.RATE_LIMIT_REGISTER_PER_HOUR,
+        window_seconds=3600,
+        custom_message="Registration rate limit exceeded. Please wait before creating more accounts.",
+    )
     user, access_token, refresh_token_val, expires_in = await AuthService.register(db, req, request, response)
     return TokenResponse(
         access_token=access_token,
@@ -150,11 +159,20 @@ async def get_me(
 )
 async def forgot_password(
     req: ForgotPasswordRequest,
+    request: Request,
     db: AsyncSession = Depends(get_db),
 ):
     """
     Generates a secure password reset token without revealing account existence.
     """
+    client_ip = request.client.host if request.client else "unknown"
+    check_rate_limit(
+        key=f"ip:{client_ip}",
+        category="forgot_password",
+        max_requests=settings.RATE_LIMIT_FORGOT_PW_PER_HOUR,
+        window_seconds=900,
+        custom_message="Too many password recovery requests. Please wait 15 minutes before attempting again.",
+    )
     dev_token = await AuthService.forgot_password(db, req.email)
     msg = "If an account exists with this email address, password reset instructions have been generated."
     return MessageResponse(message=msg, detail=dev_token if dev_token else None)

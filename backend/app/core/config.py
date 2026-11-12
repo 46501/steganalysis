@@ -33,6 +33,9 @@ try:
         COOKIE_SAMESITE: str = "lax"
         RATE_LIMIT_LOGIN_ATTEMPTS: int = 5
         RATE_LIMIT_WINDOW_SECONDS: int = 300
+        RATE_LIMIT_REGISTER_PER_HOUR: int = 30
+        RATE_LIMIT_FORGOT_PW_PER_HOUR: int = 10
+        RATE_LIMIT_ANALYZE_PER_MINUTE: int = 60
 
         # CORS
         CORS_ORIGINS: List[str] = [
@@ -82,6 +85,9 @@ except ImportError:
         COOKIE_SAMESITE: str = "lax"
         RATE_LIMIT_LOGIN_ATTEMPTS: int = 5
         RATE_LIMIT_WINDOW_SECONDS: int = 300
+        RATE_LIMIT_REGISTER_PER_HOUR: int = 30
+        RATE_LIMIT_FORGOT_PW_PER_HOUR: int = 10
+        RATE_LIMIT_ANALYZE_PER_MINUTE: int = 60
 
         CORS_ORIGINS: List[str] = [
             "http://localhost:5173",

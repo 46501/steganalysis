@@ -2,10 +2,11 @@
 
 import time
 from typing import List, Optional
-from fastapi import APIRouter, Depends, File, UploadFile
+from fastapi import APIRouter, Depends, File, Request, UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.auth import get_current_user_optional
+from app.core.auth import get_current_user_optional, check_rate_limit
+from app.core.config import settings
 from app.core.database import get_db
 from app.models.user import User
 from app.schemas.analysis import BatchAnalysisResponse
@@ -17,11 +18,20 @@ router = APIRouter()
 
 @router.post("", response_model=BatchAnalysisResponse)
 async def analyze_batch(
+    request: Request,
     files: List[UploadFile] = File(...),
     current_user: Optional[User] = Depends(get_current_user_optional),
     db: AsyncSession = Depends(get_db),
 ) -> BatchAnalysisResponse:
     """Processes multiple images in batch mode."""
+    client_id = f"user:{current_user.id}" if current_user else f"ip:{request.client.host if request.client else 'unknown'}"
+    check_rate_limit(
+        key=client_id,
+        category="ml_compute",
+        max_requests=settings.RATE_LIMIT_ANALYZE_PER_MINUTE,
+        window_seconds=60,
+        custom_message="Forensic ML compute rate limit exceeded (60 requests/min). Please slow down.",
+    )
     start_time = time.perf_counter()
     results = []
     stego_count = 0

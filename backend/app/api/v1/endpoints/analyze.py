@@ -2,11 +2,12 @@
 
 import logging
 from typing import Optional
-from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile, status
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, Request, UploadFile, status
 import numpy as np
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.auth import get_current_user_optional
+from app.core.auth import get_current_user_optional, check_rate_limit
+from app.core.config import settings
 from app.core.database import get_db
 from app.models.user import User
 from app.ml.stegonet_lite import compute_spatial_residual_energy
@@ -22,6 +23,7 @@ router = APIRouter()
 
 @router.post("", response_model=AnalysisResultResponse)
 async def analyze_image(
+    request: Request,
     file: UploadFile = File(...),
     model_name: Optional[str] = Form(None),
     current_user: Optional[User] = Depends(get_current_user_optional),
@@ -32,6 +34,14 @@ async def analyze_image(
     Returns class prediction ('Cover' vs 'Stego'), confidence scores,
     and high-pass spatial residual forensic explanation with visual artifacts.
     """
+    client_id = f"user:{current_user.id}" if current_user else f"ip:{request.client.host if request.client else 'unknown'}"
+    check_rate_limit(
+        key=client_id,
+        category="ml_compute",
+        max_requests=settings.RATE_LIMIT_ANALYZE_PER_MINUTE,
+        window_seconds=60,
+        custom_message="Forensic ML compute rate limit exceeded (60 requests/min). Please slow down.",
+    )
     try:
         filename, file_hash, content, tensor, metadata = await ImageService.process_upload(file)
     except HTTPException:
@@ -67,14 +77,24 @@ async def analyze_image(
 
 @router.post("/compare", response_model=PairComparisonResponse)
 async def compare_pair(
+    request: Request,
     cover_file: UploadFile = File(...),
     stego_file: UploadFile = File(...),
+    current_user: Optional[User] = Depends(get_current_user_optional),
 ) -> PairComparisonResponse:
     """
     Compares a matched cover-stego image pair, calculating exact pixel alterations,
     change rate, spatial residual energy delta, Hamming bit distance, and amplified ternary difference maps.
     Only declares alterations verified when directly measured across identical-dimension paired inputs.
     """
+    client_id = f"user:{current_user.id}" if current_user else f"ip:{request.client.host if request.client else 'unknown'}"
+    check_rate_limit(
+        key=client_id,
+        category="ml_compute",
+        max_requests=settings.RATE_LIMIT_ANALYZE_PER_MINUTE,
+        window_seconds=60,
+        custom_message="Forensic ML compute rate limit exceeded (60 requests/min). Please slow down.",
+    )
     c_name, c_hash, _, c_tensor, _ = await ImageService.process_upload(cover_file)
     s_name, s_hash, _, s_tensor, _ = await ImageService.process_upload(stego_file)
 

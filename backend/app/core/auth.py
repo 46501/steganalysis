@@ -26,6 +26,7 @@ oauth2_scheme = OAuth2PasswordBearer(
 
 # In-memory IP/Email rate limiter storage: {key: [(timestamp)]}
 _login_rate_limiter: Dict[str, list] = {}
+_sliding_rate_limiters: Dict[str, Dict[str, list]] = {}
 
 
 def hash_password(password: str) -> str:
@@ -137,6 +138,53 @@ def reset_login_rate_limit(identifier: str) -> None:
     """Resets rate limiting counter upon successful authentication."""
     if identifier in _login_rate_limiter:
         del _login_rate_limiter[identifier]
+
+
+def check_rate_limit(
+    key: str,
+    category: str,
+    max_requests: int,
+    window_seconds: int,
+    custom_message: Optional[str] = None,
+) -> None:
+    """
+    Enforces a sliding-window rate limit on sensitive actions (e.g. registration,
+    password reset, high-cost ML compute).
+    Tracks requests per category and key within the specified sliding window.
+    Raises HTTPException(429) if threshold is exceeded.
+    """
+    now = time.time()
+    if category not in _sliding_rate_limiters:
+        _sliding_rate_limiters[category] = {}
+
+    category_store = _sliding_rate_limiters[category]
+    attempts = category_store.get(key, [])
+    # Evict timestamps outside sliding window
+    attempts = [t for t in attempts if now - t < window_seconds]
+
+    if len(attempts) >= max_requests:
+        retry_after = int(window_seconds - (now - attempts[0]))
+        msg = custom_message or f"Rate limit exceeded. Please wait {max(1, retry_after)} seconds before trying again."
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail=msg,
+            headers={"Retry-After": str(max(1, retry_after))},
+        )
+
+    attempts.append(now)
+    category_store[key] = attempts
+
+
+def reset_rate_limit(key: str, category: str) -> None:
+    """Clears rate limit state for a specific key within a category."""
+    if category in _sliding_rate_limiters and key in _sliding_rate_limiters[category]:
+        del _sliding_rate_limiters[category][key]
+
+
+def reset_all_rate_limiters() -> None:
+    """Clears all in-memory rate limiting state (useful for test resets)."""
+    _login_rate_limiter.clear()
+    _sliding_rate_limiters.clear()
 
 
 async def get_current_user_optional(

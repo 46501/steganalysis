@@ -36,81 +36,12 @@ import {
   ChevronUp,
   Sliders,
   EyeOff,
-  Zap,
-  HelpCircle,
-  Wand2,
 } from 'lucide-react';
 import { steganalysisApi } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import PixelLoupeMagnifier from '../components/analysis/PixelLoupeMagnifier';
 import SUniwardStressSimulator from '../components/analysis/SUniwardStressSimulator';
-
-// --------------------------------------------------------------------------
-// Streamlined 3-Step Guided Flow Metadata (For rapid evaluation)
-// --------------------------------------------------------------------------
-export const QUICK_STEPS = [
-  {
-    id: 'inspector',
-    num: '01',
-    title: 'Upload Carrier',
-    shortTitle: 'Upload',
-    subtitle: 'Cryptographic baseline ingestion & spatial preview',
-    icon: Upload,
-    nextId: 'embedding',
-    nextLabel: 'Conceal or Tamper',
-    nextDesc: 'Choose 1-click presets or embed a secret payload',
-    prevId: null,
-    prevLabel: null,
-    isOptional: false,
-    tag: 'CARRIER INGESTION',
-    briefing: {
-      objective: 'Ingest reference cover image and review initial dimensions and SHA-256 hash.',
-      output: 'Lossless raster canvas ready for steganographic manipulation.',
-      action: 'Upload an image or use the pre-loaded BOSSbase #5001 cover image.',
-    },
-  },
-  {
-    id: 'embedding',
-    num: '02',
-    title: 'Conceal or Tamper',
-    shortTitle: 'Mutate / Embed',
-    subtitle: 'Apply 1-click presets or conceal secret text payload',
-    icon: Lock,
-    nextId: 'quick_verify',
-    nextLabel: 'Detect & Verify Forensics',
-    nextDesc: 'Evaluate neural detector and view difference heatmap side-by-side',
-    prevId: 'inspector',
-    prevLabel: 'Upload Carrier',
-    isOptional: false,
-    tag: 'STEGO PAYLOAD',
-    briefing: {
-      objective: 'Alter carrier bits using instant one-click scenario presets or conceal a custom UTF-8 message into LSBs.',
-      output: 'Derived stego image carrying subtle or structured perturbations.',
-      action: 'Click one of the 3 scenario presets or draft a custom secret payload.',
-    },
-  },
-  {
-    id: 'quick_verify',
-    num: '03',
-    title: 'Detect & Verify',
-    shortTitle: 'Verify',
-    subtitle: 'CNN steganalysis & differential heatmap side-by-side',
-    icon: Activity,
-    nextId: null,
-    nextLabel: 'Finish / Reset',
-    nextDesc: 'Examine dual forensic verdict and reset or save experiment',
-    prevId: 'embedding',
-    prevLabel: 'Conceal or Tamper',
-    isOptional: false,
-    tag: 'DUAL VERIFICATION',
-    briefing: {
-      objective: 'Examine both the AI neural verdict and the physical pixel differences simultaneously on a single screen.',
-      output: 'Complete dual-perspective forensic report: AI detection confidence + amplified difference map.',
-      action: 'Review the verdict HUD and spatial difference map side-by-side.',
-    },
-  },
-];
 
 // --------------------------------------------------------------------------
 // Standardized 7-Stage Forensic Laboratory Workflow Metadata
@@ -263,10 +194,7 @@ export default function ForensicsLab() {
   const { theme } = useTheme();
   const isLight = theme === 'light';
 
-  // Workspace Mode: 'quick' (streamlined 3-step flow) | 'full' (7-stage forensic suite)
-  const [labMode, setLabMode] = useState('quick');
-
-  // Active workspace tab: 'inspector' | 'manipulation' | 'embedding' | 'steganalysis' | 'comparison' | 'history' | 'simulator' | 'quick_verify'
+  // Active workspace tab: 'inspector' | 'manipulation' | 'embedding' | 'steganalysis' | 'comparison' | 'history' | 'simulator'
   const [activeTab, setActiveTab] = useState('inspector');
   const [manipulationSubTab, setManipulationSubTab] = useState('pixel'); // 'pixel' | 'bulk' | 'bitplane'
   const [embeddingSubTab, setEmbeddingSubTab] = useState('embed'); // 'embed' | 'extract'
@@ -484,25 +412,23 @@ export default function ForensicsLab() {
   // --------------------------------------------------------------------------
   // Bulk Bit Manipulation
   // --------------------------------------------------------------------------
-  const handleRunBulkManipulation = async (overrideParams = null) => {
+  const handleRunBulkManipulation = async () => {
     if (!originalImageB64) return;
     try {
       setBulkProcessing(true);
       const res = await steganalysisApi.manipulateLabBulk({
         image_b64: originalImageB64,
-        mode: overrideParams?.mode || bulkMode,
-        plane: parseInt(overrideParams?.plane ?? bulkPlane, 10),
-        percentage: parseFloat(overrideParams?.percentage ?? bulkPercentage),
-        seed: parseInt(overrideParams?.seed ?? bulkSeed, 10),
-        channel: overrideParams?.channel || 'all',
-        action: overrideParams?.action || bulkAction,
+        mode: bulkMode,
+        plane: parseInt(bulkPlane, 10),
+        percentage: parseFloat(bulkPercentage),
+        seed: parseInt(bulkSeed, 10),
+        channel: 'all',
+        action: bulkAction,
       });
 
       setModifiedImageB64(res.modified_image_b64);
       setModifiedHash(res.modified_sha256);
       setLastBulkResult(res);
-      setComparisonData(null);
-      setAnalysisResult(null);
       await fetchPixelDetails(res.modified_image_b64, selectedPixel.x, selectedPixel.y);
       showStatus(
         `Generated modified image: ${res.modified_pixels_count.toLocaleString()} pixels (${res.modification_percent}%) modified.`
@@ -511,57 +437,6 @@ export default function ForensicsLab() {
       showStatus(err.response?.data?.detail || 'Bulk manipulation failed', true);
     } finally {
       setBulkProcessing(false);
-    }
-  };
-
-  // --------------------------------------------------------------------------
-  // Instant Scenario Presets (One-Click Testing)
-  // --------------------------------------------------------------------------
-  const applyPresetSubtleLSB = async () => {
-    if (!originalImageB64) {
-      showStatus('Please load or upload a carrier image first.', true);
-      return;
-    }
-    await handleRunBulkManipulation({
-      mode: 'lsb_only',
-      plane: 0,
-      percentage: 0.1,
-      seed: 42,
-      action: 'toggle',
-    });
-  };
-
-  const applyPresetEdgeTargeted = async () => {
-    if (!originalImageB64) {
-      showStatus('Please load or upload a carrier image first.', true);
-      return;
-    }
-    await handleRunBulkManipulation({
-      mode: 'edge_targeted',
-      plane: 0,
-      percentage: 1.0,
-      seed: 1337,
-      action: 'toggle',
-    });
-  };
-
-  const applyPresetSecretMessage = async () => {
-    if (!originalImageB64) {
-      showStatus('Please load or upload a carrier image first.', true);
-      return;
-    }
-    await handleEmbedMessage('Confidential StegoLab Verification Payload #2026');
-  };
-
-  const applyResetToCover = () => {
-    if (originalImageB64 && originalMeta) {
-      setModifiedImageB64(originalImageB64);
-      setModifiedHash(originalMeta.sha256_hash);
-      setComparisonData(null);
-      setAnalysisResult(null);
-      setEmbedResult(null);
-      setLastBulkResult(null);
-      showStatus('Restored carrier to pristine cover reference.');
     }
   };
 
@@ -591,21 +466,18 @@ export default function ForensicsLab() {
   // --------------------------------------------------------------------------
   // Step 3: Secret Message Embedding & Extraction
   // --------------------------------------------------------------------------
-  const handleEmbedMessage = async (customSecret = null) => {
-    const textToEmbed = (typeof customSecret === 'string' ? customSecret : secretText).trim();
-    if (!originalImageB64 || !textToEmbed) return;
+  const handleEmbedMessage = async () => {
+    if (!originalImageB64 || !secretText.trim()) return;
     try {
       setEmbedProcessing(true);
       const res = await steganalysisApi.embedLabSecret(
         originalImageB64,
-        textToEmbed,
+        secretText.trim(),
         embedPassword.trim() || null
       );
       setEmbedResult(res);
       setModifiedImageB64(res.stego_image_b64);
       setModifiedHash(res.modified_sha256);
-      setComparisonData(null);
-      setAnalysisResult(null);
       showStatus(`Secret message successfully embedded (${res.payload_bytes} bytes payload).`);
     } catch (err) {
       showStatus(err.response?.data?.detail || 'Embedding rejected', true);
@@ -670,7 +542,7 @@ export default function ForensicsLab() {
   }, [originalImageB64, modifiedImageB64]);
 
   useEffect(() => {
-    if ((activeTab === 'comparison' || activeTab === 'quick_verify') && originalImageB64 && modifiedImageB64 && !comparisonData) {
+    if (activeTab === 'comparison' && originalImageB64 && modifiedImageB64 && !comparisonData) {
       handleRunComparison();
     }
   }, [activeTab, originalImageB64, modifiedImageB64, comparisonData, handleRunComparison]);
@@ -791,8 +663,6 @@ export default function ForensicsLab() {
   // --------------------------------------------------------------------------
   // Stage Completion Evaluation & Guided Stepper Helpers
   // --------------------------------------------------------------------------
-  const activeSteps = labMode === 'quick' ? QUICK_STEPS : STAGES;
-
   const isStageComplete = (stageId) => {
     switch (stageId) {
       case 'inspector':
@@ -800,13 +670,11 @@ export default function ForensicsLab() {
       case 'manipulation':
         return Boolean(lastBulkResult || (originalMeta && modifiedHash && modifiedHash !== originalMeta.sha256_hash));
       case 'embedding':
-        return Boolean(embedResult || extractResult || (originalMeta && modifiedHash && modifiedHash !== originalMeta.sha256_hash));
+        return Boolean(embedResult || extractResult);
       case 'steganalysis':
         return Boolean(analysisResult);
       case 'comparison':
         return Boolean(comparisonData);
-      case 'quick_verify':
-        return Boolean(analysisResult || comparisonData);
       case 'history':
         return experiments.length > 0 || saveSuccess;
       case 'simulator':
@@ -816,13 +684,11 @@ export default function ForensicsLab() {
     }
   };
 
-  const completedCount = activeSteps.filter((s) => isStageComplete(s.id)).length;
-  const progressPercent = Math.round((completedCount / activeSteps.length) * 100);
+  const completedCount = STAGES.filter((s) => isStageComplete(s.id)).length;
+  const progressPercent = Math.round((completedCount / STAGES.length) * 100);
 
-  const currentStage =
-    activeSteps.find((s) => s.id === activeTab) ||
-    STAGES.find((s) => s.id === activeTab) ||
-    activeSteps[0];
+  const currentStageIndex = STAGES.findIndex((s) => s.id === activeTab);
+  const currentStage = STAGES[currentStageIndex] || STAGES[0];
   const CurrentStageIcon = currentStage.icon;
 
   const goToNextStage = () => {
@@ -838,107 +704,6 @@ export default function ForensicsLab() {
       setActiveTab(currentStage.prevId);
     }
   };
-
-  const renderScenarioPresetsBar = () => (
-    <div className="p-4 rounded-2xl bg-[#070D1A] border border-[#1B2B48] space-y-3 font-sans shadow-md">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#142036] pb-2.5">
-        <div className="flex items-center gap-2">
-          <Zap className="w-4 h-4 text-cyan-400" />
-          <span className="text-xs font-bold text-white uppercase tracking-wider">
-            Instant Scenario Presets
-          </span>
-          <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-950/70 border border-cyan-500/30 text-cyan-300 font-bold">
-            1-Click Test
-          </span>
-        </div>
-        <span className="text-[11px] text-[#94A3B8]">
-          Instantly alter carrier bits without guessing coordinates or math parameters
-        </span>
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
-        {/* Preset 1: Subtle LSB Noise */}
-        <button
-          type="button"
-          onClick={applyPresetSubtleLSB}
-          disabled={bulkProcessing || embedProcessing || !originalImageB64}
-          className="p-3 rounded-xl bg-[#050914] hover:bg-[#0A1224] border border-[#142036] hover:border-cyan-500/40 text-left transition group disabled:opacity-50 cursor-pointer"
-        >
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-white group-hover:text-cyan-300 flex items-center gap-1.5">
-              <span>🧪</span> Subtle LSB Noise
-            </span>
-            <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-cyan-950 border border-cyan-500/30 text-cyan-300">
-              0.1% LSB
-            </span>
-          </div>
-          <p className="text-[10px] text-[#94A3B8] mt-1.5 leading-relaxed">
-            Flips 1 in 1,000 random least-significant bits. 100% invisible to human vision.
-          </p>
-        </button>
-
-        {/* Preset 2: Realistic Edge Stego */}
-        <button
-          type="button"
-          onClick={applyPresetEdgeTargeted}
-          disabled={bulkProcessing || embedProcessing || !originalImageB64}
-          className="p-3 rounded-xl bg-[#050914] hover:bg-[#0A1224] border border-[#142036] hover:border-indigo-500/40 text-left transition group disabled:opacity-50 cursor-pointer"
-        >
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-white group-hover:text-indigo-300 flex items-center gap-1.5">
-              <span>🛡️</span> Texture Adaptive
-            </span>
-            <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-indigo-950 border border-indigo-500/30 text-indigo-300">
-              1.0% Edge
-            </span>
-          </div>
-          <p className="text-[10px] text-[#94A3B8] mt-1.5 leading-relaxed">
-            Concentrates mutations inside high-variance edges where the human eye has lowest sensitivity.
-          </p>
-        </button>
-
-        {/* Preset 3: Conceal Secret Phrase */}
-        <button
-          type="button"
-          onClick={applyPresetSecretMessage}
-          disabled={bulkProcessing || embedProcessing || !originalImageB64}
-          className="p-3 rounded-xl bg-[#050914] hover:bg-[#0A1224] border border-[#142036] hover:border-emerald-500/40 text-left transition group disabled:opacity-50 cursor-pointer"
-        >
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-white group-hover:text-emerald-300 flex items-center gap-1.5">
-              <span>🔒</span> Conceal Message
-            </span>
-            <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-emerald-950 border border-emerald-500/30 text-emerald-300">
-              42 Bytes
-            </span>
-          </div>
-          <p className="text-[10px] text-[#94A3B8] mt-1.5 leading-relaxed">
-            Injects a verifiable UTF-8 secret payload with an intact StegoLab header.
-          </p>
-        </button>
-
-        {/* Preset 4: Restore Pristine Cover */}
-        <button
-          type="button"
-          onClick={applyResetToCover}
-          disabled={!originalImageB64 || modifiedHash === originalMeta?.sha256_hash}
-          className="p-3 rounded-xl bg-[#050914] hover:bg-[#0A1224] border border-[#142036] hover:border-amber-500/40 text-left transition group disabled:opacity-50 cursor-pointer"
-        >
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-white group-hover:text-amber-300 flex items-center gap-1.5">
-              <span>🔄</span> Pristine Reference
-            </span>
-            <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-slate-900 border border-slate-700 text-slate-300">
-              Reset 0%
-            </span>
-          </div>
-          <p className="text-[10px] text-[#94A3B8] mt-1.5 leading-relaxed">
-            Reverts all carrier bits back to the uncompressed original cover reference.
-          </p>
-        </button>
-      </div>
-    </div>
-  );
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-16">
@@ -964,55 +729,15 @@ export default function ForensicsLab() {
           </p>
         </div>
 
-        {/* Workspace Mode Switcher & Global Experiment Actions */}
-        <div className="flex flex-wrap items-center gap-2.5 shrink-0">
-          {/* Mode Switcher Pill */}
-          <div className="flex items-center gap-1 p-1 rounded-xl bg-[#151515] border border-[#292929] text-xs font-mono">
-            <button
-              type="button"
-              onClick={() => {
-                setLabMode('quick');
-                if (['manipulation', 'steganalysis', 'comparison', 'history', 'simulator'].includes(activeTab)) {
-                  setActiveTab('embedding');
-                }
-              }}
-              className={`px-3 py-1.5 rounded-lg font-bold transition flex items-center gap-1.5 ${
-                labMode === 'quick'
-                  ? 'bg-gradient-to-r from-cyan-500 to-indigo-600 text-black shadow-[0_0_12px_rgba(0,240,255,0.3)]'
-                  : 'text-[#94A3B8] hover:text-white'
-              }`}
-              title="Streamlined 3-step walkthrough for quick steganography evaluation"
-            >
-              <Zap className="w-3.5 h-3.5" />
-              <span>Quick 3-Step Flow</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setLabMode('full');
-                if (activeTab === 'quick_verify') {
-                  setActiveTab('steganalysis');
-                }
-              }}
-              className={`px-3 py-1.5 rounded-lg font-bold transition flex items-center gap-1.5 ${
-                labMode === 'full'
-                  ? 'bg-gradient-to-r from-cyan-500 to-indigo-600 text-black shadow-[0_0_12px_rgba(0,240,255,0.3)]'
-                  : 'text-[#94A3B8] hover:text-white'
-              }`}
-              title="Comprehensive 7-stage digital forensic research laboratory"
-            >
-              <Sliders className="w-3.5 h-3.5" />
-              <span>Full 7-Stage Suite</span>
-            </button>
-          </div>
-
+        {/* Global Experiment Actions */}
+        <div className="flex flex-wrap items-center gap-2 shrink-0">
           <button
             onClick={() => setResetConfirmOpen(true)}
             className="px-3.5 py-2 rounded-xl bg-[#151515] hover:bg-[#222222] text-[#B3B3B3] hover:text-white border border-[#292929] text-xs font-semibold flex items-center gap-1.5 transition"
             title="Restore workspace to unchanged original reference"
           >
             <RotateCcw className="w-3.5 h-3.5" />
-            <span>Reset</span>
+            <span>Reset Workspace</span>
           </button>
 
           <button
@@ -1021,7 +746,7 @@ export default function ForensicsLab() {
             title="Save current experiment configuration and findings to database"
           >
             {saveSuccess ? <Check className="w-3.5 h-3.5 text-black" /> : <Save className="w-3.5 h-3.5" />}
-            <span>{saveSuccess ? 'Saved' : 'Save'}</span>
+            <span>{saveSuccess ? 'Saved to Audit Ledger' : 'Save Experiment'}</span>
           </button>
         </div>
       </div>
@@ -1046,14 +771,14 @@ export default function ForensicsLab() {
       )}
 
       {/* ------------------------------------------------------------------ */}
-      {/* 2. Prominent Guided Cyber Workflow Stepper */}
+      {/* 2. Prominent Guided 7-Stage Cyber Workflow Stepper */}
       {/* ------------------------------------------------------------------ */}
       <div className="p-4 rounded-2xl bg-[#070D1A]/95 border border-[#1B2B48] space-y-3 shadow-md">
         {/* Stepper Header with Stage Progress Bar */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-1 text-xs font-sans">
           <div className="flex items-center gap-2">
             <span className="font-mono text-cyan-400 font-bold uppercase tracking-wider text-[11px] px-2 py-0.5 rounded bg-cyan-950/70 border border-cyan-500/30">
-              {labMode === 'quick' ? 'QUICK STEP' : 'STAGE'} {currentStage.num} OF {labMode === 'quick' ? '03' : '07'}
+              STAGE {currentStage.num} OF 07
             </span>
             <span className="text-white font-bold text-sm">
               {currentStage.title}
@@ -1064,7 +789,7 @@ export default function ForensicsLab() {
           </div>
 
           <div className="flex items-center gap-3 font-mono text-[11px] text-[#94A3B8]">
-            <span>{completedCount}/{activeSteps.length} Steps Verified</span>
+            <span>{completedCount}/7 Stages Verified</span>
             <div className="w-24 sm:w-32 h-1.5 rounded-full bg-[#142036] overflow-hidden border border-[#1E2E4E]">
               <div
                 className="h-full bg-gradient-to-r from-cyan-400 via-indigo-400 to-emerald-400 transition-all duration-300 shadow-[0_0_8px_rgba(0,240,255,0.6)]"
@@ -1075,9 +800,9 @@ export default function ForensicsLab() {
           </div>
         </div>
 
-        {/* Dynamic Horizontal Stepper Grid: 3 columns in Quick Mode, 7 columns in Full Mode */}
-        <div className={`hidden md:grid gap-2 pt-1 ${labMode === 'quick' ? 'grid-cols-3' : 'grid-cols-7'}`}>
-          {activeSteps.map((s, idx) => {
+        {/* Desktop 7-Step Horizontal Stepper Grid */}
+        <div className="hidden md:grid grid-cols-7 gap-2 pt-1">
+          {STAGES.map((s, idx) => {
             const isActive = activeTab === s.id;
             const isCompleted = isStageComplete(s.id);
             const StepIcon = s.icon;
@@ -1162,7 +887,7 @@ export default function ForensicsLab() {
 
           <div className="text-center min-w-0 flex-1 px-2">
             <div className="flex items-center justify-center gap-1.5 text-[10px] font-mono text-cyan-400 font-semibold">
-              <span>{labMode === 'quick' ? 'STEP' : 'STAGE'} {currentStage.num} / {labMode === 'quick' ? '03' : '07'}</span>
+              <span>STAGE {currentStage.num} / 07</span>
               {isStageComplete(currentStage.id) && (
                 <span className="text-emerald-400 font-bold">• VERIFIED</span>
               )}
@@ -1197,7 +922,7 @@ export default function ForensicsLab() {
               <div>
                 <div className="flex items-center gap-2">
                   <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-950 text-cyan-300 border border-cyan-500/30 font-bold">
-                    {labMode === 'quick' ? 'STEP' : 'STAGE'} {currentStage.num}
+                    STAGE {currentStage.num}
                   </span>
                   <h2 className="text-base font-bold text-white tracking-wide">
                     {currentStage.title}
@@ -1482,24 +1207,24 @@ export default function ForensicsLab() {
                 {showAdvancedBaselines && (
                   <div className="pt-2 grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs font-mono animate-fade-in">
                     <div className="p-3 rounded-xl bg-[#050914] border border-[#142036]">
-                      <span className="text-[10px] text-[#64748B] block">Shannon Entropy (H)</span>
+                      <span className="text-[10px] text-[#64748B] block">Shannon Entropy</span>
                       <span className="text-sm font-bold text-cyan-300 block mt-0.5">{originalMeta.entropy} bpp</span>
-                      <span className="text-[9px] text-cyan-400/80">Pixel Randomness (Baseline: 6–8 bpp)</span>
+                      <span className="text-[9px] text-[#64748B]">Natural spatial distribution</span>
                     </div>
                     <div className="p-3 rounded-xl bg-[#050914] border border-[#142036]">
-                      <span className="text-[10px] text-[#64748B] block">Residual Noise (σr²)</span>
+                      <span className="text-[10px] text-[#64748B] block">Residual Energy σr²</span>
                       <span className="text-sm font-bold text-indigo-300 block mt-0.5">{originalMeta.residual_energy}</span>
-                      <span className="text-[9px] text-indigo-400/80">High-pass noise (Stego elevates this)</span>
+                      <span className="text-[9px] text-[#64748B]">High-pass variance baseline</span>
                     </div>
                     <div className="p-3 rounded-xl bg-[#050914] border border-[#142036]">
-                      <span className="text-[10px] text-[#64748B] block">Luminosity & Spread</span>
+                      <span className="text-[10px] text-[#64748B] block">Intensity (μ / σ)</span>
                       <span className="text-sm font-bold text-white block mt-0.5">{originalMeta.mean_intensity} / {originalMeta.std_dev}</span>
-                      <span className="text-[9px] text-[#94A3B8]">Mean brightness & contrast variance</span>
+                      <span className="text-[9px] text-[#64748B]">Dynamic range distribution</span>
                     </div>
                     <div className="p-3 rounded-xl bg-[#050914] border border-[#142036]">
-                      <span className="text-[10px] text-[#64748B] block">Discrete Coordinates</span>
+                      <span className="text-[10px] text-[#64748B] block">Total Pixels</span>
                       <span className="text-sm font-bold text-emerald-300 block mt-0.5">{originalMeta.total_pixels.toLocaleString()}</span>
-                      <span className="text-[9px] text-emerald-400/80">100% lossless integer matrix</span>
+                      <span className="text-[9px] text-[#64748B]">Discrete integer elements</span>
                     </div>
                   </div>
                 )}
@@ -1513,7 +1238,6 @@ export default function ForensicsLab() {
         {/* ---------------------------------------------------------------- */}
         {activeTab === 'manipulation' && (
           <div className="space-y-4">
-            {renderScenarioPresetsBar()}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
               {/* Left (7 cols): Main Interactive Canvas with Click-to-Pick */}
               <div className="lg:col-span-7 space-y-3">
@@ -1857,8 +1581,6 @@ export default function ForensicsLab() {
         {/* ---------------------------------------------------------------- */}
         {activeTab === 'embedding' && (
           <div className="space-y-4">
-            {renderScenarioPresetsBar()}
-
             {/* Mode Switcher */}
             <div className="flex items-center gap-2 p-1.5 rounded-2xl bg-[#070D1A] border border-[#1B2B48] max-w-md mx-auto text-xs font-sans">
               <button
@@ -2091,207 +1813,6 @@ export default function ForensicsLab() {
         )}
 
         {/* ---------------------------------------------------------------- */}
-        {/* QUICK STEP 3: DUAL FORENSIC VERIFICATION WORKSPACE              */}
-        {/* ---------------------------------------------------------------- */}
-        {activeTab === 'quick_verify' && (
-          <div className="space-y-4 font-sans">
-            {/* Top Summary Banner */}
-            <div className="p-4 rounded-2xl bg-[#070D1A] border border-[#1B2B48] flex flex-wrap items-center justify-between gap-3 text-xs font-mono shadow-md">
-              <div className="flex items-center gap-2">
-                <Activity className="w-4 h-4 text-cyan-400" />
-                <span className="text-white font-bold">Dual-Perspective Verification:</span>
-                <span className="text-cyan-300">AI Neural Detection + Physical Pixel Differences</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-[#94A3B8]">Carrier Status:</span>
-                <span className={modifiedHash !== originalMeta?.sha256_hash ? 'text-emerald-400 font-bold' : 'text-cyan-300'}>
-                  {modifiedHash !== originalMeta?.sha256_hash ? 'Modified (Stego Candidate)' : 'Pristine (Cover Reference)'}
-                </span>
-              </div>
-            </div>
-
-            {/* Side-by-Side Dual Verification Grid (6 cols / 6 cols) */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-              {/* Left (6 cols): AI Steganalysis Classifier */}
-              <div className="lg:col-span-6 space-y-4">
-                <div className="p-5 rounded-2xl bg-[#070D1A] border border-[#1B2B48] space-y-4 shadow-md font-sans">
-                  <div className="flex items-center justify-between border-b border-[#142036] pb-3">
-                    <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                      <Cpu className="w-4 h-4 text-cyan-400" />
-                      <span>AI Residual Steganalysis</span>
-                    </h3>
-                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-950/70 border border-cyan-500/30 text-cyan-300">
-                      StegoNet-Lite (304k weights)
-                    </span>
-                  </div>
-
-                  {/* Target Switcher */}
-                  <div className="grid grid-cols-2 gap-2 p-1 rounded-xl bg-[#050914] border border-[#142036] text-xs font-mono">
-                    <button
-                      type="button"
-                      onClick={() => setAnalysisTarget('modified')}
-                      className={`py-2 px-2.5 rounded-lg transition text-center truncate ${
-                        analysisTarget === 'modified'
-                          ? 'bg-cyan-500 text-black font-bold shadow-[0_0_8px_rgba(0,240,255,0.3)]'
-                          : 'text-[#94A3B8] hover:text-white'
-                      }`}
-                    >
-                      Derived Stego Carrier
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setAnalysisTarget('original')}
-                      className={`py-2 px-2.5 rounded-lg transition text-center truncate ${
-                        analysisTarget === 'original'
-                          ? 'bg-cyan-500 text-black font-bold shadow-[0_0_8px_rgba(0,240,255,0.3)]'
-                          : 'text-[#94A3B8] hover:text-white'
-                      }`}
-                    >
-                      Original Reference Cover
-                    </button>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={handleRunSteganalysis}
-                    disabled={analysisLoading}
-                    className="w-full py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-black font-bold text-xs flex items-center justify-center gap-2 transition shadow-[0_0_20px_rgba(0,240,255,0.3)] cursor-pointer"
-                  >
-                    {analysisLoading ? (
-                      <>
-                        <RefreshCw className="w-4 h-4 animate-spin text-black" />
-                        <span>Evaluating Neural Tensors...</span>
-                      </>
-                    ) : (
-                      <>
-                        <Activity className="w-4 h-4 text-black" />
-                        <span>Run Deep Residual Steganalysis</span>
-                      </>
-                    )}
-                  </button>
-
-                  {analysisResult ? (
-                    <div className="space-y-3 font-mono text-xs">
-                      <div className="p-3.5 rounded-xl bg-[#050914] border border-[#142036] flex items-center justify-between">
-                        <div>
-                          <span className="text-[#64748B] block text-[10px] uppercase">Classification Verdict</span>
-                          <span className="text-xs text-[#94A3B8]">
-                            {analysisResult.score_type || 'Uncalibrated Model Score'}
-                          </span>
-                        </div>
-                        <span
-                          className={`text-base font-extrabold px-3 py-1 rounded-xl border ${
-                            analysisResult.verdict === 'Cover'
-                              ? 'bg-emerald-950/80 text-emerald-300 border-emerald-500/50 shadow-[0_0_12px_rgba(16,185,129,0.3)]'
-                              : analysisResult.verdict === 'Stego'
-                              ? 'bg-cyan-950/80 text-cyan-300 border-cyan-500/50 shadow-[0_0_12px_rgba(0,240,255,0.3)]'
-                              : 'bg-amber-950/80 text-amber-300 border-amber-500/50 shadow-[0_0_12px_rgba(245,158,11,0.3)]'
-                          }`}
-                        >
-                          {analysisResult.verdict}
-                        </span>
-                      </div>
-
-                      {/* Dual Probability Bar */}
-                      <div className="space-y-1.5">
-                        <div className="flex justify-between text-[11px]">
-                          <span className="text-[#94A3B8]">Cover Probability: <strong className="text-white">{(analysisResult.cover_probability * 100).toFixed(1)}%</strong></span>
-                          <span className="text-[#94A3B8]">Stego Probability: <strong className="text-cyan-300">{(analysisResult.stego_probability * 100).toFixed(1)}%</strong></span>
-                        </div>
-                        <div className="h-2 rounded-full bg-[#050914] overflow-hidden flex border border-[#142036]">
-                          <div style={{ width: `${analysisResult.cover_probability * 100}%` }} className="bg-emerald-500/80" />
-                          <div style={{ width: `${analysisResult.stego_probability * 100}%` }} className="bg-cyan-400" />
-                        </div>
-                      </div>
-
-                      <div className="p-3 rounded-xl bg-[#050914] border border-[#142036] text-[11px] text-[#CBD5E1] leading-relaxed font-sans">
-                        {analysisResult.forensic_explanation}
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="p-6 text-center text-[#64748B] text-xs space-y-1">
-                      <Cpu className="w-6 h-6 mx-auto text-[#475569]" />
-                      <p>Click the button above to run real deep-residual CNN inference.</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Right (6 cols): Differential Forensics & Amplified Heatmap */}
-              <div className="lg:col-span-6 space-y-4">
-                <div className="p-5 rounded-2xl bg-[#070D1A] border border-[#1B2B48] space-y-4 shadow-md font-sans">
-                  <div className="flex items-center justify-between border-b border-[#142036] pb-3">
-                    <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                      <Split className="w-4 h-4 text-cyan-400" />
-                      <span>Pixel Differential Heatmap</span>
-                    </h3>
-                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-950/70 border border-cyan-500/30 text-cyan-300">
-                      Exact Array Subtraction
-                    </span>
-                  </div>
-
-                  {comparisonLoading ? (
-                    <div className="py-12 text-center text-xs text-[#94A3B8] space-y-2">
-                      <RefreshCw className="w-5 h-5 animate-spin mx-auto text-cyan-400" />
-                      <span>Computing exact array differences...</span>
-                    </div>
-                  ) : comparisonData ? (
-                    <div className="space-y-3 font-mono text-xs">
-                      <div className="grid grid-cols-2 gap-2 text-[11px]">
-                        <div className="p-2.5 rounded-xl bg-[#050914] border border-[#142036]">
-                          <span className="text-[#64748B] block text-[10px]">Changed Pixels</span>
-                          <span className="text-sm font-bold text-cyan-300 block">
-                            {comparisonData.changed_pixels.toLocaleString()} px
-                          </span>
-                          <span className="text-[9px] text-[#64748B]">Altered coordinate count</span>
-                        </div>
-                        <div className="p-2.5 rounded-xl bg-[#050914] border border-[#142036]">
-                          <span className="text-[#64748B] block text-[10px]">Carrier Change Rate</span>
-                          <span className="text-sm font-bold text-indigo-300 block">
-                            {comparisonData.changed_pixel_percent}%
-                          </span>
-                          <span className="text-[9px] text-[#64748B]">Carrier surface density</span>
-                        </div>
-                      </div>
-
-                      {comparisonData.diff_map_b64 ? (
-                        <div className="p-3 rounded-xl bg-[#050914] border border-[#142036] text-center">
-                          <img
-                            src={comparisonData.diff_map_b64}
-                            alt="Amplified Differential Heatmap"
-                            className="max-h-[220px] mx-auto border border-[#1B2B48] rounded-lg shadow-md"
-                          />
-                          <div className="text-[10px] text-[#94A3B8] mt-2 font-mono flex items-center justify-center gap-3">
-                            <span className="flex items-center gap-1">
-                              <span className="w-2 h-2 rounded-full bg-white"></span> +1 Perturbation
-                            </span>
-                            <span className="flex items-center gap-1">
-                              <span className="w-2 h-2 rounded-full bg-neutral-500"></span> -1 Perturbation
-                            </span>
-                            <span className="flex items-center gap-1">
-                              <span className="w-2 h-2 rounded-full bg-black border border-neutral-700"></span> Unaltered
-                            </span>
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="p-6 rounded-xl bg-[#050914] border border-[#142036] text-center text-[#64748B] text-xs">
-                          Zero differences detected. Pristine cover matches candidate exactly.
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="p-6 text-center text-[#64748B] text-xs space-y-1">
-                      <Split className="w-6 h-6 mx-auto text-[#475569]" />
-                      <p>Differential comparison will calculate automatically once bits are altered.</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* ---------------------------------------------------------------- */}
         {/* STAGE 4: RUN STEGANALYSIS WORKSPACE                              */}
         {/* ---------------------------------------------------------------- */}
         {activeTab === 'steganalysis' && (
@@ -2501,28 +2022,28 @@ export default function ForensicsLab() {
                   <span className="text-base font-bold text-cyan-300 block mt-0.5">
                     {comparisonData.changed_pixels.toLocaleString()}
                   </span>
-                  <span className="text-[10px] text-cyan-400/80">Altered coordinate count</span>
+                  <span className="text-[10px] text-[#64748B]">Exact coordinate count</span>
                 </div>
                 <div className="p-3.5 rounded-2xl bg-[#070D1A] border border-[#1B2B48] shadow-sm">
-                  <span className="text-[10px] text-[#64748B] block">Carrier Change Rate</span>
+                  <span className="text-[10px] text-[#64748B] block">Change Rate</span>
                   <span className="text-base font-bold text-indigo-300 block mt-0.5">
                     {comparisonData.changed_pixel_percent}%
                   </span>
-                  <span className="text-[10px] text-indigo-400/80">Carrier surface density</span>
+                  <span className="text-[10px] text-[#64748B]">Carrier surface density</span>
                 </div>
                 <div className="p-3.5 rounded-2xl bg-[#070D1A] border border-[#1B2B48] shadow-sm">
                   <span className="text-[10px] text-[#64748B] block">Hamming Bit Distance</span>
                   <span className="text-base font-bold text-white block mt-0.5">
                     {comparisonData.total_bit_changes.toLocaleString()}
                   </span>
-                  <span className="text-[10px] text-[#CBD5E1]">Exact 0/1 bits flipped</span>
+                  <span className="text-[10px] text-[#64748B]">Discrete flipped bits</span>
                 </div>
                 <div className="p-3.5 rounded-2xl bg-[#070D1A] border border-[#1B2B48] shadow-sm">
-                  <span className="text-[10px] text-[#64748B] block">Unaltered Pixels</span>
+                  <span className="text-[10px] text-[#64748B] block">Bit-Fidelity Status</span>
                   <span className="text-base font-bold text-emerald-300 block mt-0.5">
                     {comparisonData.unchanged_pixels.toLocaleString()}
                   </span>
-                  <span className="text-[10px] text-emerald-400/80">Pristine pixels intact</span>
+                  <span className="text-[10px] text-[#64748B]">Unaltered pixels intact</span>
                 </div>
               </div>
             )}
@@ -2777,11 +2298,11 @@ export default function ForensicsLab() {
 
           {/* Center: Stage Progress & Verification Status Pill */}
           <div className="text-center text-[11px] font-mono text-[#94A3B8] flex items-center justify-center gap-2">
-            <span>{labMode === 'quick' ? 'Step' : 'Stage'} {currentStage.num} of {labMode === 'quick' ? '03' : '07'}</span>
+            <span>Stage {currentStage.num} of 07</span>
             <span>•</span>
             <span className={isStageComplete(activeTab) ? 'text-emerald-400 font-bold' : currentStage.isOptional ? 'text-cyan-300' : 'text-amber-300'}>
               {isStageComplete(activeTab)
-                ? `${labMode === 'quick' ? 'Step' : 'Stage'} Verified ✓`
+                ? 'Stage Verified ✓'
                 : currentStage.isOptional
                 ? 'Optional (Ready to Advance)'
                 : 'Action Pending'}

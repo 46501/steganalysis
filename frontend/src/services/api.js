@@ -15,11 +15,15 @@ const apiClient = axios.create({
   baseURL: API_BASE_URL,
   timeout: 60000,
   withCredentials: true, // Enables HttpOnly refresh cookies across origins
+  headers: {
+    'X-StegoShield-Client': '1',
+  },
 });
 
 // Request interceptor: Attach JWT bearer token to headers if authenticated
 apiClient.interceptors.request.use(
   (config) => {
+    config.headers['X-StegoShield-Client'] = '1';
     if (memoryAccessToken) {
       config.headers.Authorization = `Bearer ${memoryAccessToken}`;
     }

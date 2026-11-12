@@ -1,7 +1,7 @@
 """Authentication and Session Lifecycle API Endpoints."""
 
 from typing import Optional
-from fastapi import APIRouter, Cookie, Depends, Request, Response, status
+from fastapi import APIRouter, Cookie, Depends, HTTPException, Request, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.auth import get_current_user, check_rate_limit
@@ -22,6 +22,30 @@ from app.schemas.auth import (
 from app.services.auth_service import AuthService, REFRESH_COOKIE_NAME
 
 router = APIRouter()
+
+
+def verify_csrf_header(request: Request) -> None:
+    """
+    OWASP custom request header Anti-CSRF verification.
+    Requests authenticated solely via ambient browser cookies MUST provide
+    'X-StegoShield-Client: 1' or 'X-Requested-With: XMLHttpRequest'.
+    Cross-origin form submissions and unauthorized scripts cannot forge custom headers.
+    """
+    client_header = request.headers.get("x-stegoshield-client")
+    requested_with = request.headers.get("x-requested-with")
+    auth_header = request.headers.get("authorization")
+
+    # If explicit Authorization header is present, it's not vulnerable to ambient cookie CSRF
+    if auth_header and auth_header.strip().lower().startswith("bearer "):
+        return
+
+    if client_header == "1" or requested_with == "XMLHttpRequest":
+        return
+
+    raise HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN,
+        detail="Cross-Site Request Forgery protection: Missing required 'X-StegoShield-Client: 1' header on cookie-authenticated request.",
+    )
 
 
 @router.post(
@@ -111,6 +135,10 @@ async def refresh_token(
             pass
 
     token_str = body_token or stego_refresh_token
+    # Anti-CSRF protection: ambient cookie authentication requires custom client header
+    if not body_token and stego_refresh_token:
+        verify_csrf_header(request)
+
     user, access_token, refresh_token_val, expires_in = await AuthService.refresh(db, token_str, request, response)
     return TokenResponse(
         access_token=access_token,
@@ -127,6 +155,7 @@ async def refresh_token(
     summary="Terminate session and revoke tokens",
 )
 async def logout(
+    request: Request,
     response: Response,
     stego_refresh_token: Optional[str] = Cookie(None, alias=REFRESH_COOKIE_NAME),
     db: AsyncSession = Depends(get_db),
@@ -134,6 +163,8 @@ async def logout(
     """
     Revokes the active refresh token session in the database and clears cookies.
     """
+    if stego_refresh_token:
+        verify_csrf_header(request)
     await AuthService.logout(db, stego_refresh_token, response)
     return MessageResponse(message="Successfully signed out.")
 

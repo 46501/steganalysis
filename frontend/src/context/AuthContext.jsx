@@ -94,6 +94,35 @@ export function AuthProvider({ children }) {
     };
   }, []);
 
+  // 15-Minute Workstation Inactivity Lock (ISO/IEC 27037 & NIST SP 800-86 compliance)
+  useEffect(() => {
+    if (!user) return;
+
+    let lastActivityTime = Date.now();
+    const INACTIVITY_TIMEOUT_MS = 15 * 60 * 1000; // 15 minutes
+
+    const recordActivity = () => {
+      lastActivityTime = Date.now();
+    };
+
+    const activityEvents = ['mousemove', 'keydown', 'mousedown', 'touchstart', 'scroll'];
+    activityEvents.forEach((evt) => window.addEventListener(evt, recordActivity, { passive: true }));
+
+    const timerInterval = setInterval(() => {
+      if (Date.now() - lastActivityTime >= INACTIVITY_TIMEOUT_MS) {
+        console.warn('[Security] Workstation inactivity timeout exceeded (15 min). Locking forensic session.');
+        setAuthToken(null);
+        setUser(null);
+        openAuthModal('login');
+      }
+    }, 30000); // Check every 30 seconds
+
+    return () => {
+      activityEvents.forEach((evt) => window.removeEventListener(evt, recordActivity));
+      clearInterval(timerInterval);
+    };
+  }, [user, openAuthModal]);
+
   const login = async (email, password, rememberMe = false) => {
     const res = await authApi.login({
       email,

@@ -15,7 +15,11 @@ import {
   X,
   Activity,
   FlaskConical,
+  User,
+  LogIn,
+  UserPlus,
 } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
 
 export default function CommandPalette({
   isOpen,
@@ -23,11 +27,61 @@ export default function CommandPalette({
   onNavigate,
   onOpenVivaTour,
 }) {
+  const { user, openAuthModal, logout } = useAuth();
   const [query, setQuery] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
   const inputRef = useRef(null);
 
   const actions = [
+    {
+      category: 'Investigator Account',
+      title: user ? `Profile: ${user.full_name}` : 'Investigator Profile & Telemetry',
+      subtitle: 'View live scan statistics, NIST certificates, and manage credentials',
+      icon: User,
+      badge: 'Account',
+      action: () => {
+        onNavigate('profile');
+        onClose();
+      },
+    },
+    ...(!user
+      ? [
+          {
+            category: 'Investigator Account',
+            title: 'Sign In to StegoShield AI',
+            subtitle: 'Authenticate session to access your private investigations',
+            icon: LogIn,
+            badge: 'Auth',
+            action: () => {
+              openAuthModal('login');
+              onClose();
+            },
+          },
+          {
+            category: 'Investigator Account',
+            title: 'Register Verified Investigator Account',
+            subtitle: 'Create a new cryptographic forensic portfolio',
+            icon: UserPlus,
+            badge: 'Auth',
+            action: () => {
+              openAuthModal('register');
+              onClose();
+            },
+          },
+        ]
+      : [
+          {
+            category: 'Investigator Account',
+            title: 'Sign Out Session',
+            subtitle: 'Revoke current JWT access session',
+            icon: LogIn,
+            badge: 'Session',
+            action: () => {
+              logout();
+              onClose();
+            },
+          },
+        ]),
     {
       category: 'Examiner Presentation',
       title: 'Launch Examiner Viva Defense Tour',

@@ -32,6 +32,7 @@ class SteganalysisService:
         metadata: dict,
         model_name: Optional[str] = None,
         db: Optional[AsyncSession] = None,
+        user_id: Optional[int] = None,
     ) -> AnalysisResultResponse:
         start_time = time.perf_counter()
 
@@ -181,6 +182,7 @@ class SteganalysisService:
         if db is not None:
             try:
                 scan_record = ScanRecord(
+                    user_id=user_id,
                     filename=filename,
                     file_hash=file_hash,
                     file_size_bytes=file_size,

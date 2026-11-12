@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { AuthProvider } from './context/AuthContext';
 import AppLayout from './components/layout/AppLayout';
 import Dashboard from './pages/Dashboard';
 import Detector from './pages/Detector';
@@ -6,10 +7,14 @@ import ForensicsLab from './pages/ForensicsLab';
 import StegoStudio from './pages/StegoStudio';
 import History from './pages/History';
 import ModelInfo from './pages/ModelInfo';
+import UserProfile from './pages/UserProfile';
 import VivaTourModal from './components/presentation/VivaTourModal';
 import CommandPalette from './components/common/CommandPalette';
+import AuthModal from './components/auth/AuthModal';
+import ForgotPasswordModal from './components/auth/ForgotPasswordModal';
+import GuestPromptModal from './components/auth/GuestPromptModal';
 
-export default function App() {
+function AppContent() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [injectedDetectorFile, setInjectedDetectorFile] = useState(null);
   const [isVivaTourOpen, setIsVivaTourOpen] = useState(false);
@@ -55,6 +60,7 @@ export default function App() {
       {activeTab === 'stego-studio' && <StegoStudio onSendToDetector={handleSendToDetector} />}
       {activeTab === 'history' && <History />}
       {activeTab === 'model-info' && <ModelInfo />}
+      {activeTab === 'profile' && <UserProfile setActiveTab={setActiveTab} />}
 
       <VivaTourModal
         isOpen={isVivaTourOpen}
@@ -75,7 +81,21 @@ export default function App() {
         }}
         onOpenVivaTour={() => setIsVivaTourOpen(true)}
       />
+
+      {/* Global Cyber Authentication Modals */}
+      <AuthModal />
+      <ForgotPasswordModal />
+      <GuestPromptModal />
     </AppLayout>
   );
 }
+
+export default function App() {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
+  );
+}
+
 

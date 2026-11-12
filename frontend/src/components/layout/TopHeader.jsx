@@ -1,6 +1,24 @@
-import React, { useState, useEffect } from 'react';
-import { Menu, Search, Sparkles, BookOpen, PanelLeft, Activity, Volume2, VolumeX } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import {
+  Menu,
+  Search,
+  BookOpen,
+  PanelLeft,
+  Activity,
+  Volume2,
+  VolumeX,
+  User,
+  ChevronDown,
+  LogOut,
+  ShieldCheck,
+  History,
+  FlaskConical,
+  Sparkles,
+  UserPlus,
+  LogIn,
+} from 'lucide-react';
 import { getSoundEnabled, setSoundEnabled, playCyberClick } from '../../utils/cyberSoundEffects';
+import { useAuth } from '../../context/AuthContext';
 
 export default function TopHeader({
   setMobileOpen,
@@ -8,8 +26,12 @@ export default function TopHeader({
   onOpenCommandPalette,
   collapsed,
   setCollapsed,
+  setActiveTab,
 }) {
+  const { user, isGuest, logout, openAuthModal } = useAuth();
   const [soundOn, setSoundOn] = useState(getSoundEnabled());
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const dropdownRef = useRef(null);
 
   useEffect(() => {
     const handleToggle = () => setSoundOn(getSoundEnabled());
@@ -17,11 +39,32 @@ export default function TopHeader({
     return () => window.removeEventListener('stego-sfx-toggled', handleToggle);
   }, []);
 
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setUserMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   const toggleSound = () => {
     const next = !soundOn;
     setSoundEnabled(next);
     setSoundOn(next);
     if (next) playCyberClick();
+  };
+
+  const getUserInitials = () => {
+    if (!user || !user.full_name) return 'AG';
+    return user.full_name
+      .split(' ')
+      .map((part) => part[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
   };
   return (
     <header
@@ -133,6 +176,147 @@ export default function TopHeader({
           <BookOpen className="w-3.5 h-3.5 text-cyan-400" />
           <span className="hidden sm:inline">User Guide</span>
         </button>
+
+        {/* Vertical divider */}
+        <div className="h-6 w-px bg-[#1B2B48] hidden sm:block" />
+
+        {/* User Account Controls */}
+        {user ? (
+          <div className="relative" ref={dropdownRef}>
+            <button
+              type="button"
+              onClick={() => {
+                setUserMenuOpen((prev) => !prev);
+                playCyberClick();
+              }}
+              className="flex items-center gap-2 px-2.5 py-1.5 rounded-xl bg-[#0B1426] hover:bg-[#101D38] border border-[#1E2E4E] hover:border-cyan-500/50 transition group"
+              title="Forensic Investigator Account"
+            >
+              <div className="relative">
+                <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-cyan-500 to-indigo-600 flex items-center justify-center text-black font-mono font-bold text-[10px] shadow-[0_0_8px_rgba(0,240,255,0.4)]">
+                  {getUserInitials()}
+                </div>
+                <span className="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-400 border border-[#070C18] animate-pulse" />
+              </div>
+
+              <span className="text-xs font-medium text-white max-w-[120px] truncate hidden md:inline">
+                {user.full_name || 'Investigator'}
+              </span>
+
+              <ChevronDown className="w-3.5 h-3.5 text-[#94A3B8] group-hover:text-cyan-300 transition" />
+            </button>
+
+            {/* Dropdown Menu */}
+            {userMenuOpen && (
+              <div className="absolute right-0 mt-2 w-64 rounded-2xl bg-[#070D1A] border border-[#1B2B48] shadow-[0_0_40px_rgba(0,0,0,0.8)] py-2 z-50 animate-fade-in font-sans">
+                {/* Header info */}
+                <div className="px-4 py-3 border-b border-[#142036] bg-[#050914]/80">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-white truncate max-w-[150px]">
+                      {user.full_name}
+                    </span>
+                    <span className="text-[9px] font-mono font-semibold px-2 py-0.5 rounded bg-cyan-950 border border-cyan-500/30 text-cyan-300">
+                      LEVEL 3
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-[#94A3B8] font-mono truncate mt-0.5">
+                    {user.email}
+                  </p>
+                </div>
+
+                {/* Navigation Links */}
+                <div className="py-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (setActiveTab) setActiveTab('profile');
+                      setUserMenuOpen(false);
+                      playCyberClick();
+                    }}
+                    className="w-full px-4 py-2 text-left text-xs text-[#94A3B8] hover:text-white hover:bg-[#0E172A] flex items-center gap-2.5 transition"
+                  >
+                    <User className="w-4 h-4 text-cyan-400" />
+                    <span>My Profile & Telemetry</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (setActiveTab) setActiveTab('history');
+                      setUserMenuOpen(false);
+                      playCyberClick();
+                    }}
+                    className="w-full px-4 py-2 text-left text-xs text-[#94A3B8] hover:text-white hover:bg-[#0E172A] flex items-center gap-2.5 transition"
+                  >
+                    <History className="w-4 h-4 text-cyan-400" />
+                    <span>My Scan History</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (setActiveTab) setActiveTab('lab');
+                      setUserMenuOpen(false);
+                      playCyberClick();
+                    }}
+                    className="w-full px-4 py-2 text-left text-xs text-[#94A3B8] hover:text-white hover:bg-[#0E172A] flex items-center gap-2.5 transition"
+                  >
+                    <FlaskConical className="w-4 h-4 text-indigo-400" />
+                    <span>My Lab Experiments</span>
+                  </button>
+                </div>
+
+                {/* Sign Out */}
+                <div className="pt-1 border-t border-[#142036]">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      logout();
+                      setUserMenuOpen(false);
+                      playCyberClick();
+                    }}
+                    className="w-full px-4 py-2 text-left text-xs text-rose-400 hover:text-rose-300 hover:bg-rose-950/30 flex items-center gap-2.5 transition"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    <span>Sign Out</span>
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="flex items-center gap-2">
+            {/* Guest Pill */}
+            <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#0B1222] border border-[#17253E] text-[11px] font-mono text-[#94A3B8]">
+              <span className="w-1.5 h-1.5 rounded-full bg-cyan-400/80" />
+              <span>Guest Analyst</span>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                openAuthModal('login');
+                playCyberClick();
+              }}
+              className="px-2.5 sm:px-3 py-1.5 rounded-lg bg-[#0E172A] hover:bg-[#162444] text-[#94A3B8] hover:text-white border border-[#1E2E4E] hover:border-cyan-500/40 text-xs font-semibold transition flex items-center gap-1.5"
+            >
+              <LogIn className="w-3.5 h-3.5 text-cyan-400" />
+              <span>Sign In</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                openAuthModal('register');
+                playCyberClick();
+              }}
+              className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-black font-semibold text-xs tracking-wide transition shadow-[0_0_12px_rgba(0,240,255,0.25)]"
+            >
+              <UserPlus className="w-3.5 h-3.5" />
+              <span>Register</span>
+            </button>
+          </div>
+        )}
       </div>
     </header>
   );

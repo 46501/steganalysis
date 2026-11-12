@@ -74,11 +74,33 @@ AsyncSessionLocal = async_sessionmaker(
 )
 
 
+def _sync_schema_migrations(connection) -> None:
+    """Safely adds nullable user_id column to existing tables if missing."""
+    import sqlalchemy as sa
+    inspector = sa.inspect(connection)
+    tables = inspector.get_table_names()
+
+    # Check scan_records
+    if "scan_records" in tables:
+        columns = [c["name"] for c in inspector.get_columns("scan_records")]
+        if "user_id" not in columns:
+            logger.info("Migrating scan_records: adding nullable user_id column...")
+            connection.execute(sa.text("ALTER TABLE scan_records ADD COLUMN user_id INTEGER;"))
+
+    # Check lab_experiments
+    if "lab_experiments" in tables:
+        columns = [c["name"] for c in inspector.get_columns("lab_experiments")]
+        if "user_id" not in columns:
+            logger.info("Migrating lab_experiments: adding nullable user_id column...")
+            connection.execute(sa.text("ALTER TABLE lab_experiments ADD COLUMN user_id INTEGER;"))
+
+
 async def init_db() -> None:
     """Ensures database schema tables exist on application startup."""
     try:
         async with engine.begin() as conn:
             await conn.run_sync(Base.metadata.create_all)
+            await conn.run_sync(_sync_schema_migrations)
         logger.info(f"Database schema initialized successfully ({ACTIVE_DB_TYPE}).")
     except Exception as e:
         logger.error(f"Error initializing database schema: {e}", exc_info=True)

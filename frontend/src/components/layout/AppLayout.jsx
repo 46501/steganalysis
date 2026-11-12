@@ -96,6 +96,7 @@ export default function AppLayout({
           onOpenCommandPalette={onOpenCommandPalette}
           collapsed={collapsed}
           setCollapsed={setCollapsed}
+          setActiveTab={setActiveTab}
         />
 
         {/* Dynamic Workspace Route View (with top padding to account for fixed 56px navbar) */}

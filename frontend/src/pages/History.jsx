@@ -18,9 +18,11 @@ import {
   Archive,
 } from 'lucide-react';
 import { steganalysisApi } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 import ForensicReportModal from '../components/analysis/ForensicReportModal';
 
 export default function History() {
+  const { user, isGuest, openAuthModal } = useAuth();
   const [records, setRecords] = useState([]);
   const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -45,7 +47,7 @@ export default function History() {
 
   useEffect(() => {
     fetchHistory();
-  }, [verdictFilter]);
+  }, [verdictFilter, user]);
 
   const handleDelete = async (id) => {
     if (!window.confirm('Delete this scan record permanently?')) return;
@@ -196,6 +198,36 @@ export default function History() {
           </button>
         </div>
       </div>
+
+      {/* User Workspace Isolation Status Banner */}
+      {isGuest ? (
+        <div className="p-3.5 rounded-xl bg-[#091020] border border-[#17253E] flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 text-xs">
+          <div className="flex items-center gap-2 text-[#94A3B8]">
+            <span className="w-2 h-2 rounded-full bg-cyan-400 shrink-0" />
+            <span>
+              Browsing in <strong className="text-white">Guest Mode</strong>. Scan records are temporary and not linked to an authenticated investigator.
+            </span>
+          </div>
+          <button
+            onClick={() => openAuthModal('login')}
+            className="text-cyan-400 hover:text-cyan-300 font-semibold underline underline-offset-2 shrink-0 self-start sm:self-auto"
+          >
+            Sign In to Isolate Portfolio →
+          </button>
+        </div>
+      ) : (
+        <div className="p-3.5 rounded-xl bg-cyan-950/30 border border-cyan-500/30 flex items-center justify-between text-xs">
+          <div className="flex items-center gap-2 text-cyan-200">
+            <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
+            <span>
+              Forensic evidence archive isolated for <strong className="text-white">{user.full_name}</strong> ({user.email}).
+            </span>
+          </div>
+          <span className="text-[10px] font-mono text-cyan-300 px-2 py-0.5 rounded bg-cyan-950/70 border border-cyan-500/40">
+            CRYPTOGRAPHIC AUDIT TRAIL
+          </span>
+        </div>
+      )}
 
       {/* Filter and Search Bar */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 rounded-2xl bg-[#070D1A]/95 border border-[#1B2B48] shadow-sm">

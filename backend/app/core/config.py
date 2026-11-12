@@ -22,6 +22,18 @@ try:
         MAX_UPLOAD_SIZE_MB: int = 25
         ALLOWED_EXTENSIONS: List[str] = ["png", "bmp", "pgm", "jpg", "jpeg", "webp", "ppm"]
 
+        # Authentication & Session Security
+        JWT_SECRET_KEY: str = os.getenv("JWT_SECRET_KEY", "stegoshield-super-secure-jwt-key-nist-2026-auth")
+        JWT_ALGORITHM: str = "HS256"
+        ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+        REFRESH_TOKEN_EXPIRE_DAYS: int = 7
+        REMEMBER_ME_EXPIRE_DAYS: int = 30
+        PASSWORD_RESET_EXPIRE_MINUTES: int = 60
+        COOKIE_SECURE: bool = False  # Set to True in production HTTPS
+        COOKIE_SAMESITE: str = "lax"
+        RATE_LIMIT_LOGIN_ATTEMPTS: int = 5
+        RATE_LIMIT_WINDOW_SECONDS: int = 300
+
         # CORS
         CORS_ORIGINS: List[str] = [
             "http://localhost:5173",
@@ -59,6 +71,17 @@ except ImportError:
 
         MAX_UPLOAD_SIZE_MB: int = 25
         ALLOWED_EXTENSIONS: List[str] = ["png", "bmp", "pgm", "jpg", "jpeg", "webp", "ppm"]
+
+        JWT_SECRET_KEY: str = os.getenv("JWT_SECRET_KEY", "stegoshield-super-secure-jwt-key-nist-2026-auth")
+        JWT_ALGORITHM: str = "HS256"
+        ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+        REFRESH_TOKEN_EXPIRE_DAYS: int = 7
+        REMEMBER_ME_EXPIRE_DAYS: int = 30
+        PASSWORD_RESET_EXPIRE_MINUTES: int = 60
+        COOKIE_SECURE: bool = False
+        COOKIE_SAMESITE: str = "lax"
+        RATE_LIMIT_LOGIN_ATTEMPTS: int = 5
+        RATE_LIMIT_WINDOW_SECONDS: int = 300
 
         CORS_ORIGINS: List[str] = [
             "http://localhost:5173",

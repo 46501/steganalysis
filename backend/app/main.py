@@ -5,6 +5,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.v1.router import api_router
+from app.api.v1.endpoints import auth, users
 from app.core.config import settings
 from app.core.database import ACTIVE_DB_TYPE, init_db
 from app.ml.inference import engine
@@ -42,6 +43,10 @@ app.add_middleware(
 
 # Register API v1 Router
 app.include_router(api_router, prefix=settings.API_V1_STR)
+
+# Direct aliases for /api/auth and /api/users
+app.include_router(auth.router, prefix="/api/auth", tags=["Authentication"])
+app.include_router(users.router, prefix="/api/users", tags=["User Profile"])
 
 
 @app.get("/", tags=["Root"])

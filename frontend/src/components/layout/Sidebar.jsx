@@ -8,6 +8,7 @@ import {
   GraduationCap,
   PanelLeft,
   X,
+  User,
 } from 'lucide-react';
 import { steganalysisApi } from '../../services/api';
 
@@ -74,6 +75,12 @@ export default function Sidebar({
       group: 'RESEARCH',
       items: [
         { id: 'model-info', label: 'Research', icon: GraduationCap },
+      ],
+    },
+    {
+      group: 'ACCOUNT',
+      items: [
+        { id: 'profile', label: 'Profile & Telemetry', icon: User },
       ],
     },
   ];

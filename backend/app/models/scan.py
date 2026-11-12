@@ -1,15 +1,24 @@
 """Scan Record Database Model."""
 
-from sqlalchemy import Float, Integer, String, Boolean
-from sqlalchemy.orm import Mapped, mapped_column
+from typing import Optional, TYPE_CHECKING
+from sqlalchemy import Float, Integer, String, Boolean, ForeignKey
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base, TimestampMixin
+
+if TYPE_CHECKING:
+    from app.models.user import User
 
 
 class ScanRecord(Base, TimestampMixin):
     """Stores metadata and steganalysis results for an analyzed image."""
 
     __tablename__ = "scan_records"
+
+    user_id: Mapped[Optional[int]] = mapped_column(
+        Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=True, index=True
+    )
+    user: Mapped[Optional["User"]] = relationship("User", back_populates="scans")
 
     filename: Mapped[str] = mapped_column(String(255), nullable=False)
     file_hash: Mapped[str] = mapped_column(String(64), index=True, nullable=False)

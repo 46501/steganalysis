@@ -1,14 +1,23 @@
 """Laboratory Experiment Database Model."""
 
-from sqlalchemy import Float, Integer, String, Text, DateTime
-from sqlalchemy.orm import Mapped, mapped_column
+from typing import Optional, TYPE_CHECKING
+from sqlalchemy import Float, Integer, String, Text, DateTime, ForeignKey
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.models.base import Base, TimestampMixin
+
+if TYPE_CHECKING:
+    from app.models.user import User
 
 
 class ExperimentRecord(Base, TimestampMixin):
     """Stores full state, parameters, images, and forensic findings for a lab experiment."""
 
     __tablename__ = "lab_experiments"
+
+    user_id: Mapped[Optional[int]] = mapped_column(
+        Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=True, index=True
+    )
+    user: Mapped[Optional["User"]] = relationship("User", back_populates="experiments")
 
     experiment_name: Mapped[str] = mapped_column(String(255), nullable=False)
     experiment_type: Mapped[str] = mapped_column(String(64), nullable=False, index=True)  # bit_manipulation, lsb_embedding, etc.

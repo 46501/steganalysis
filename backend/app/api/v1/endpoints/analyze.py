@@ -6,7 +6,9 @@ from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, Upload
 import numpy as np
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.auth import get_current_user_optional
 from app.core.database import get_db
+from app.models.user import User
 from app.ml.stegonet_lite import compute_spatial_residual_energy
 from app.ml.forensic_analyzer import ForensicAnalyzer
 from app.schemas.analysis import AnalysisResultResponse, PairComparisonResponse
@@ -22,6 +24,7 @@ router = APIRouter()
 async def analyze_image(
     file: UploadFile = File(...),
     model_name: Optional[str] = Form(None),
+    current_user: Optional[User] = Depends(get_current_user_optional),
     db: AsyncSession = Depends(get_db),
 ) -> AnalysisResultResponse:
     """
@@ -49,6 +52,7 @@ async def analyze_image(
             metadata=metadata,
             model_name=model_name,
             db=db,
+            user_id=current_user.id if current_user else None,
         )
         return result
     except HTTPException:

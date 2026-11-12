@@ -1,11 +1,13 @@
 """Batch image steganalysis endpoint."""
 
 import time
-from typing import List
+from typing import List, Optional
 from fastapi import APIRouter, Depends, File, UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.auth import get_current_user_optional
 from app.core.database import get_db
+from app.models.user import User
 from app.schemas.analysis import BatchAnalysisResponse
 from app.services.image_service import ImageService
 from app.services.steganalysis_service import SteganalysisService
@@ -16,6 +18,7 @@ router = APIRouter()
 @router.post("", response_model=BatchAnalysisResponse)
 async def analyze_batch(
     files: List[UploadFile] = File(...),
+    current_user: Optional[User] = Depends(get_current_user_optional),
     db: AsyncSession = Depends(get_db),
 ) -> BatchAnalysisResponse:
     """Processes multiple images in batch mode."""
@@ -24,7 +27,8 @@ async def analyze_batch(
     stego_count = 0
     cover_count = 0
     inconclusive_count = 0
-    inconclusive_count = 0
+
+    user_id = current_user.id if current_user else None
 
     for file in files:
         try:
@@ -36,6 +40,7 @@ async def analyze_batch(
                 tensor=tensor,
                 metadata=metadata,
                 db=db,
+                user_id=user_id,
             )
             results.append(res)
             if res.verdict in ("Stego", "Stego Indicated"):

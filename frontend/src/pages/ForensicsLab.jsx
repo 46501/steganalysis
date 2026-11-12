@@ -29,11 +29,13 @@ import {
   ArrowRight,
 } from 'lucide-react';
 import { steganalysisApi } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import PixelLoupeMagnifier from '../components/analysis/PixelLoupeMagnifier';
 import SUniwardStressSimulator from '../components/analysis/SUniwardStressSimulator';
 
 export default function ForensicsLab() {
+  const { user, isGuest, triggerGuestPrompt } = useAuth();
   const { theme } = useTheme();
   const isLight = theme === 'light';
 
@@ -105,6 +107,10 @@ export default function ForensicsLab() {
     loadSampleCover();
     loadExperimentsList();
   }, []);
+
+  useEffect(() => {
+    loadExperimentsList();
+  }, [user]);
 
   const showStatus = (msg, isError = false) => {
     setStatusMessage({ text: msg, isError });
@@ -378,8 +384,18 @@ export default function ForensicsLab() {
   // --------------------------------------------------------------------------
   // Step 7: Save Experiment & History
   // --------------------------------------------------------------------------
-  const handleSaveExperiment = async () => {
+  const handleSaveExperiment = async (bypassGuestCheck = false) => {
     if (!originalMeta || !modifiedHash) return;
+
+    if (isGuest && !bypassGuestCheck) {
+      triggerGuestPrompt(
+        'Save Experiment to Workspace',
+        'You are currently exploring as a Guest. Sign in or register to link this experiment to your permanent investigator portfolio, or proceed as guest.',
+        () => handleSaveExperiment(true)
+      );
+      return;
+    }
+
     try {
       let comp = comparisonData;
       if (!comp) {

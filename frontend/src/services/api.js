@@ -2,10 +2,94 @@ import axios from 'axios';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || '/api/v1';
 
+// In-memory token storage (never stored in localStorage for XSS immunity)
+let memoryAccessToken = null;
+
+export const setAuthToken = (token) => {
+  memoryAccessToken = token;
+};
+
+export const getAuthToken = () => memoryAccessToken;
+
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
   timeout: 60000,
+  withCredentials: true, // Enables HttpOnly refresh cookies across origins
 });
+
+// Request interceptor: Attach JWT bearer token to headers if authenticated
+apiClient.interceptors.request.use(
+  (config) => {
+    if (memoryAccessToken) {
+      config.headers.Authorization = `Bearer ${memoryAccessToken}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
+// Response interceptor: Automatic silent refresh token rotation on 401
+let isRefreshing = false;
+let failedQueue = [];
+
+const processQueue = (error, token = null) => {
+  failedQueue.forEach((prom) => {
+    if (error) {
+      prom.reject(error);
+    } else {
+      prom.resolve(token);
+    }
+  });
+  failedQueue = [];
+};
+
+apiClient.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config;
+
+    // Do not attempt refresh on auth endpoints to avoid infinite loops
+    const isAuthEndpoint = originalRequest.url?.includes('/auth/');
+
+    if (error.response?.status === 401 && !originalRequest._retry && !isAuthEndpoint) {
+      if (isRefreshing) {
+        return new Promise((resolve, reject) => {
+          failedQueue.push({ resolve, reject });
+        })
+          .then((token) => {
+            originalRequest.headers.Authorization = `Bearer ${token}`;
+            return apiClient(originalRequest);
+          })
+          .catch((err) => Promise.reject(err));
+      }
+
+      originalRequest._retry = true;
+      isRefreshing = true;
+
+      try {
+        const refreshResponse = await axios.post(
+          `${API_BASE_URL}/auth/refresh`,
+          {},
+          { withCredentials: true }
+        );
+        const newToken = refreshResponse.data.access_token;
+        setAuthToken(newToken);
+        processQueue(null, newToken);
+        originalRequest.headers.Authorization = `Bearer ${newToken}`;
+        return apiClient(originalRequest);
+      } catch (refreshError) {
+        processQueue(refreshError, null);
+        setAuthToken(null);
+        window.dispatchEvent(new CustomEvent('stego-auth-expired'));
+        return Promise.reject(refreshError);
+      } finally {
+        isRefreshing = false;
+      }
+    }
+
+    return Promise.reject(error);
+  }
+);
 
 export const steganalysisApi = {
   checkHealth: async () => {
@@ -206,6 +290,65 @@ export const steganalysisApi = {
   },
 
   getLabDownloadUrl: (id) => `${API_BASE_URL}/lab/experiments/${id}/download`,
+};
+
+export const authApi = {
+  register: async (payload) => {
+    const response = await apiClient.post('/auth/register', payload);
+    return response.data;
+  },
+
+  login: async (payload) => {
+    const response = await apiClient.post('/auth/login', payload);
+    return response.data;
+  },
+
+  logout: async () => {
+    const response = await apiClient.post('/auth/logout');
+    return response.data;
+  },
+
+  refresh: async (payload = {}) => {
+    const response = await apiClient.post('/auth/refresh', payload);
+    return response.data;
+  },
+
+  getMe: async () => {
+    const response = await apiClient.get('/auth/me');
+    return response.data;
+  },
+
+  forgotPassword: async (email) => {
+    const response = await apiClient.post('/auth/forgot-password', { email });
+    return response.data;
+  },
+
+  resetPassword: async (payload) => {
+    const response = await apiClient.post('/auth/reset-password', payload);
+    return response.data;
+  },
+
+  changePassword: async (payload) => {
+    const response = await apiClient.post('/auth/change-password', payload);
+    return response.data;
+  },
+};
+
+export const userApi = {
+  getProfile: async () => {
+    const response = await apiClient.get('/users/profile');
+    return response.data;
+  },
+
+  updateProfile: async (payload) => {
+    const response = await apiClient.patch('/users/profile', payload);
+    return response.data;
+  },
+
+  deleteAccount: async (payload) => {
+    const response = await apiClient.delete('/users/account', { data: payload });
+    return response.data;
+  },
 };
 
 export default apiClient;

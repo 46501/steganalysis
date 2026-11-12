@@ -27,6 +27,11 @@ import {
   CheckCircle2,
   ChevronRight,
   ArrowRight,
+  ArrowLeft,
+  Target,
+  Compass,
+  FileCheck2,
+  X,
 } from 'lucide-react';
 import { steganalysisApi } from '../services/api';
 import { useAuth } from '../context/AuthContext';
@@ -34,15 +39,162 @@ import { useTheme } from '../context/ThemeContext';
 import PixelLoupeMagnifier from '../components/analysis/PixelLoupeMagnifier';
 import SUniwardStressSimulator from '../components/analysis/SUniwardStressSimulator';
 
+// --------------------------------------------------------------------------
+// Standardized 7-Stage Forensic Laboratory Workflow Metadata
+// --------------------------------------------------------------------------
+export const STAGES = [
+  {
+    id: 'inspector',
+    num: '01',
+    title: 'Upload & Inspect',
+    shortTitle: 'Inspect',
+    subtitle: 'Cryptographic baseline ingestion & spatial integrity analysis',
+    icon: Upload,
+    nextId: 'manipulation',
+    nextLabel: 'Modify Bits',
+    nextDesc: 'Toggle individual pixel bits, run bulk mutations, or slice bit planes',
+    prevId: null,
+    prevLabel: null,
+    isOptional: false,
+    tag: 'INTEGRITY BASELINE',
+    briefing: {
+      objective: 'Ingest raw digital carrier and verify cryptographic baseline integrity (SHA-256 digest, Shannon entropy, residual variance).',
+      output: 'Immutable 24-bit/8-bit uncompressed raster array with statistical baselines and lossless coordinates.',
+      action: 'Upload an investigation carrier or load the calibrated BOSSbase sample cover reference.',
+    },
+  },
+  {
+    id: 'manipulation',
+    num: '02',
+    title: 'Modify Bits',
+    shortTitle: 'Modify Bits',
+    subtitle: 'Bit-level manipulation studio & spatial bit-plane slicing',
+    icon: Binary,
+    nextId: 'embedding',
+    nextLabel: 'Conceal Message',
+    nextDesc: 'Conceal encrypted or plaintext UTF-8 payloads into carrier LSBs',
+    prevId: 'inspector',
+    prevLabel: 'Upload & Inspect',
+    isOptional: true,
+    tag: 'BIT MUTATION',
+    briefing: {
+      objective: 'Selectively modify discrete bits across color channels to observe high-frequency noise perturbation responses.',
+      output: 'Derived candidate stego image with recorded Hamming changes and modified SHA-256 hash.',
+      action: 'Flip bits on the register, run bulk deterministic mutations, or advance directly with original cover.',
+    },
+  },
+  {
+    id: 'embedding',
+    num: '03',
+    title: 'Conceal Message',
+    shortTitle: 'Conceal',
+    subtitle: 'Steganographic message injection & bitstream recovery',
+    icon: Lock,
+    nextId: 'steganalysis',
+    nextLabel: 'Run Steganalysis',
+    nextDesc: 'Evaluate candidate image with deep residual neural networks',
+    prevId: 'manipulation',
+    prevLabel: 'Modify Bits',
+    isOptional: true,
+    tag: 'PAYLOAD INGESTION',
+    briefing: {
+      objective: 'Conceal confidential UTF-8 text into carrier LSBs with optional encryption keys, or extract an existing message.',
+      output: 'Stego image embedding verifiable bitstream payload with capacity tracking.',
+      action: 'Embed a test secret payload, verify extraction, or skip directly to Steganalysis.',
+    },
+  },
+  {
+    id: 'steganalysis',
+    num: '04',
+    title: 'Run Steganalysis',
+    shortTitle: 'Steganalysis',
+    subtitle: 'Deep residual convolutional neural network detection',
+    icon: Cpu,
+    nextId: 'comparison',
+    nextLabel: 'Compare Forensics',
+    nextDesc: 'Calculate pixel-level Hamming divergence and amplified difference maps',
+    prevId: 'embedding',
+    prevLabel: 'Conceal Message',
+    isOptional: false,
+    tag: 'ML INFERENCE',
+    briefing: {
+      objective: 'Subject the candidate carrier to deep residual CNN classification (StegoNet-Lite / SRNet) to detect high-pass residual anomalies.',
+      output: 'Calibrated detection probability scores (Cover vs. Stego), confidence index, and scientific interpretation.',
+      action: 'Choose evaluation target (Derived Modified or Original Cover) and launch CNN evaluation.',
+    },
+  },
+  {
+    id: 'comparison',
+    num: '05',
+    title: 'Compare Forensics',
+    shortTitle: 'Compare',
+    subtitle: 'Pixel-by-pixel differential forensics & amplified heatmaps',
+    icon: Split,
+    nextId: 'history',
+    nextLabel: 'Audit History',
+    nextDesc: 'Commit experimental parameters to the permanent SQLite forensic ledger',
+    prevId: 'steganalysis',
+    prevLabel: 'Run Steganalysis',
+    isOptional: false,
+    tag: 'DIFFERENTIAL AUDIT',
+    briefing: {
+      objective: 'Execute exhaustive array-level differential comparison between original cover and modified candidate.',
+      output: 'Exact changed pixel count, change rate percentage, Hamming distance, amplified difference map, and 8x synchronized micro-loupe.',
+      action: 'Examine spatial perturbation heatmaps and statistical entropy shifts.',
+    },
+  },
+  {
+    id: 'history',
+    num: '06',
+    title: 'Audit History',
+    shortTitle: 'Audit Ledger',
+    subtitle: 'Cryptographic laboratory session ledger & audit trail',
+    icon: History,
+    nextId: 'simulator',
+    nextLabel: 'S-UNIWARD Simulator',
+    nextDesc: 'Stress-test content-adaptive embedding against wavelet distortion costs',
+    prevId: 'comparison',
+    prevLabel: 'Compare Forensics',
+    isOptional: false,
+    tag: 'ISO/IEC 27037 LEDGER',
+    briefing: {
+      objective: 'Preserve experimental parameters, hashes, and comparative findings in the immutable SQLite forensic audit ledger.',
+      output: 'Archived experiment ledger entries with downloadable modified PNGs and audit sign-off.',
+      action: 'Save the current forensic session or reload previous experimental runs.',
+    },
+  },
+  {
+    id: 'simulator',
+    num: '07',
+    title: 'S-UNIWARD Simulator',
+    shortTitle: 'Simulator',
+    subtitle: 'Content-adaptive distortion cost & detectability curves',
+    icon: Sparkles,
+    nextId: null,
+    nextLabel: 'Finish Experiment / Return to Overview',
+    nextDesc: 'Complete forensic examination cycle and return to Image Inspector',
+    prevId: 'history',
+    prevLabel: 'Audit History',
+    isOptional: false,
+    tag: 'ADAPTIVE STRESS-TEST',
+    briefing: {
+      objective: 'Simulate state-of-the-art content-adaptive steganography (S-UNIWARD) distortion costs across directional wavelet subbands.',
+      output: 'Spatial modification probability heatmaps, wet paper code embedding simulation, and detectability curves.',
+      action: 'Adjust payload bpp and wet paper parameters to benchmark adaptive evasion boundaries.',
+    },
+  },
+];
+
 export default function ForensicsLab() {
   const { user, isGuest, triggerGuestPrompt } = useAuth();
   const { theme } = useTheme();
   const isLight = theme === 'light';
 
-  // Active workspace tab: 'inspector' | 'manipulation' | 'embedding' | 'steganalysis' | 'comparison' | 'history'
+  // Active workspace tab: 'inspector' | 'manipulation' | 'embedding' | 'steganalysis' | 'comparison' | 'history' | 'simulator'
   const [activeTab, setActiveTab] = useState('inspector');
   const [manipulationSubTab, setManipulationSubTab] = useState('pixel'); // 'pixel' | 'bulk' | 'bitplane'
   const [embeddingSubTab, setEmbeddingSubTab] = useState('embed'); // 'embed' | 'extract'
+  const [resetConfirmOpen, setResetConfirmOpen] = useState(false);
 
   // Image state (Original is immutable reference)
   const [originalMeta, setOriginalMeta] = useState(null);
@@ -494,6 +646,51 @@ export default function ForensicsLab() {
     setTimeout(() => setCopiedHash(false), 2000);
   };
 
+  // --------------------------------------------------------------------------
+  // Stage Completion Evaluation & Guided Stepper Helpers
+  // --------------------------------------------------------------------------
+  const isStageComplete = (stageId) => {
+    switch (stageId) {
+      case 'inspector':
+        return Boolean(originalMeta);
+      case 'manipulation':
+        return Boolean(lastBulkResult || (originalMeta && modifiedHash && modifiedHash !== originalMeta.sha256_hash));
+      case 'embedding':
+        return Boolean(embedResult || extractResult);
+      case 'steganalysis':
+        return Boolean(analysisResult);
+      case 'comparison':
+        return Boolean(comparisonData);
+      case 'history':
+        return experiments.length > 0 || saveSuccess;
+      case 'simulator':
+        return true;
+      default:
+        return false;
+    }
+  };
+
+  const completedCount = STAGES.filter((s) => isStageComplete(s.id)).length;
+  const progressPercent = Math.round((completedCount / STAGES.length) * 100);
+
+  const currentStageIndex = STAGES.findIndex((s) => s.id === activeTab);
+  const currentStage = STAGES[currentStageIndex] || STAGES[0];
+  const CurrentStageIcon = currentStage.icon;
+
+  const goToNextStage = () => {
+    if (currentStage.nextId) {
+      setActiveTab(currentStage.nextId);
+    } else {
+      setActiveTab('inspector');
+    }
+  };
+
+  const goToPreviousStage = () => {
+    if (currentStage.prevId) {
+      setActiveTab(currentStage.prevId);
+    }
+  };
+
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-16">
       {/* ------------------------------------------------------------------ */}
@@ -521,7 +718,7 @@ export default function ForensicsLab() {
         {/* Global Experiment Actions */}
         <div className="flex flex-wrap items-center gap-2 shrink-0">
           <button
-            onClick={handleResetToOriginal}
+            onClick={() => setResetConfirmOpen(true)}
             className="px-3.5 py-2 rounded-xl bg-[#151515] hover:bg-[#222222] text-[#B3B3B3] hover:text-white border border-[#292929] text-xs font-semibold flex items-center gap-1.5 transition"
             title="Restore workspace to unchanged original reference"
           >
@@ -560,37 +757,140 @@ export default function ForensicsLab() {
       )}
 
       {/* ------------------------------------------------------------------ */}
-      {/* 2. Scientific Workflow Stepper Indicator */}
+      {/* 2. Prominent Guided 7-Stage Cyber Workflow Stepper */}
       {/* ------------------------------------------------------------------ */}
-      <div className="p-3 rounded-2xl bg-[#050914] border border-[#1B2B48] overflow-x-auto scrollbar-none shadow-sm">
-        <div className="flex items-center min-w-[850px] justify-between text-xs font-mono">
-          {[
-            { id: 'inspector', step: '01', label: 'Upload & Inspect' },
-            { id: 'manipulation', step: '02', label: 'Modify Bits' },
-            { id: 'embedding', step: '03', label: 'Conceal Message' },
-            { id: 'steganalysis', step: '04', label: 'Run Steganalysis' },
-            { id: 'comparison', step: '05', label: 'Compare Forensics' },
-            { id: 'history', step: '06', label: 'Audit History' },
-            { id: 'simulator', step: '07', label: 'S-UNIWARD Simulator' },
-          ].map((item, idx) => {
-            const isActive = activeTab === item.id;
+      <div className="p-4 rounded-2xl bg-[#070D1A]/95 border border-[#1B2B48] space-y-3 shadow-md">
+        {/* Stepper Header with Stage Progress Bar */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-1 text-xs font-sans">
+          <div className="flex items-center gap-2">
+            <span className="font-mono text-cyan-400 font-bold uppercase tracking-wider text-[11px] px-2 py-0.5 rounded bg-cyan-950/70 border border-cyan-500/30">
+              STAGE {currentStage.num} OF 07
+            </span>
+            <span className="text-white font-bold text-sm">
+              {currentStage.title}
+            </span>
+            <span className="hidden lg:inline text-xs text-[#94A3B8]">
+              — {currentStage.subtitle}
+            </span>
+          </div>
+
+          <div className="flex items-center gap-3 font-mono text-[11px] text-[#94A3B8]">
+            <span>{completedCount}/7 Stages Verified</span>
+            <div className="w-24 sm:w-32 h-1.5 rounded-full bg-[#142036] overflow-hidden border border-[#1E2E4E]">
+              <div
+                className="h-full bg-gradient-to-r from-cyan-400 via-indigo-400 to-emerald-400 transition-all duration-300 shadow-[0_0_8px_rgba(0,240,255,0.6)]"
+                style={{ width: `${progressPercent}%` }}
+              />
+            </div>
+            <span className="text-cyan-300 font-bold">{progressPercent}%</span>
+          </div>
+        </div>
+
+        {/* Desktop 7-Step Horizontal Stepper Grid */}
+        <div className="hidden md:grid grid-cols-7 gap-2 pt-1">
+          {STAGES.map((s, idx) => {
+            const isActive = activeTab === s.id;
+            const isCompleted = isStageComplete(s.id);
+            const StepIcon = s.icon;
+
             return (
-              <React.Fragment key={item.id}>
-                <button
-                  onClick={() => setActiveTab(item.id)}
-                  className={`flex items-center gap-2 px-3 py-1.5 rounded-xl transition-all ${
-                    isActive
-                      ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 font-bold shadow-[0_0_8px_rgba(6,182,212,0.2)]'
-                      : 'text-[#64748B] hover:text-white'
-                  }`}
-                >
-                  <span className="text-[10px] text-cyan-400 font-semibold">{item.step}.</span>
-                  <span>{item.label}</span>
-                </button>
-                {idx < 6 && <ChevronRight className="w-3.5 h-3.5 text-cyan-500/30 shrink-0" />}
-              </React.Fragment>
+              <button
+                key={s.id}
+                type="button"
+                onClick={() => setActiveTab(s.id)}
+                className={`relative p-2.5 rounded-xl border text-left transition-all duration-200 flex flex-col justify-between min-h-[76px] cursor-pointer group ${
+                  isActive
+                    ? 'bg-gradient-to-br from-cyan-950/80 to-[#0A1628] border-cyan-400 text-white shadow-[0_0_15px_rgba(0,240,255,0.25)] ring-1 ring-cyan-400/50'
+                    : isCompleted
+                    ? 'bg-[#06151E]/90 border-emerald-500/40 text-emerald-200 hover:border-emerald-400/60'
+                    : s.isOptional
+                    ? 'bg-[#070D1A]/80 border-[#1B2B48] text-[#94A3B8] hover:border-cyan-500/30 hover:text-white'
+                    : 'bg-[#050914]/80 border-[#142036] text-[#64748B] hover:text-[#94A3B8] hover:border-[#1E2E4E]'
+                }`}
+                title={`Stage ${s.num}: ${s.title}`}
+              >
+                {/* Top Row: Number badge & Status Icon */}
+                <div className="flex items-center justify-between w-full">
+                  <span
+                    className={`text-[10px] font-mono font-bold px-1.5 py-0.2 rounded ${
+                      isActive
+                        ? 'bg-cyan-500 text-black font-extrabold'
+                        : isCompleted
+                        ? 'bg-emerald-950 text-emerald-300 border border-emerald-500/30'
+                        : 'bg-[#101D38] text-cyan-400'
+                    }`}
+                  >
+                    {s.num}
+                  </span>
+
+                  <div>
+                    {isCompleted ? (
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 drop-shadow-[0_0_4px_rgba(16,185,129,0.5)]" />
+                    ) : isActive ? (
+                      <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse drop-shadow-[0_0_6px_rgba(0,240,255,0.8)]" />
+                    ) : (
+                      <StepIcon className="w-3 h-3 text-[#64748B] group-hover:text-cyan-400 transition" />
+                    )}
+                  </div>
+                </div>
+
+                {/* Bottom Row: Title & Mini Status Text */}
+                <div className="mt-1.5">
+                  <div className="text-[11px] font-bold tracking-tight truncate leading-tight">
+                    {s.title}
+                  </div>
+                  <div className="text-[9px] font-mono mt-0.5 truncate opacity-75">
+                    {isCompleted
+                      ? 'Verified ✓'
+                      : isActive
+                      ? 'Active Now'
+                      : s.isOptional
+                      ? 'Optional'
+                      : 'Pending'}
+                  </div>
+                </div>
+
+                {/* Active Indicator Glow Underline */}
+                {isActive && (
+                  <div className="absolute -bottom-px left-2 right-2 h-0.5 bg-cyan-400 rounded-full shadow-[0_0_8px_rgba(0,240,255,1)]" />
+                )}
+              </button>
             );
           })}
+        </div>
+
+        {/* Mobile View: Compact Stage Switcher */}
+        <div className="md:hidden flex items-center justify-between gap-2 p-2 rounded-xl bg-[#050914] border border-[#142036]">
+          <button
+            type="button"
+            onClick={goToPreviousStage}
+            disabled={!currentStage.prevId}
+            className="p-2 rounded-lg bg-[#0E172A] border border-[#1E2E4E] text-[#94A3B8] disabled:opacity-30 disabled:cursor-not-allowed"
+            title="Previous Stage"
+          >
+            <ArrowLeft className="w-4 h-4" />
+          </button>
+
+          <div className="text-center min-w-0 flex-1 px-2">
+            <div className="flex items-center justify-center gap-1.5 text-[10px] font-mono text-cyan-400 font-semibold">
+              <span>STAGE {currentStage.num} / 07</span>
+              {isStageComplete(currentStage.id) && (
+                <span className="text-emerald-400 font-bold">• VERIFIED</span>
+              )}
+            </div>
+            <div className="text-xs font-bold text-white truncate mt-0.5">
+              {currentStage.title}
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={goToNextStage}
+            className="p-2 rounded-lg bg-[#0E172A] border border-cyan-500/40 text-cyan-300"
+            title="Next Stage"
+          >
+            <ArrowRight className="w-4 h-4" />
+          </button>
         </div>
       </div>
 
@@ -762,19 +1062,96 @@ export default function ForensicsLab() {
         {/* RIGHT PANEL: Tabbed Scientific Workstation Controls */}
         {/* ================================================================ */}
         <div className="lg:col-span-6 space-y-4">
-          <div className="p-5 rounded-2xl bg-[#111111] border border-[#292929] space-y-5">
+          <div className="p-5 rounded-2xl bg-[#090E1A]/95 border border-[#1B2B48] space-y-5 shadow-lg">
+            {/* -------------------------------------------------------------- */}
+            {/* Stage Guidance Briefing Card (Dynamic Per Active Stage)        */}
+            {/* -------------------------------------------------------------- */}
+            <div className="p-4 rounded-xl bg-[#070D1A] border border-[#1B2B48] space-y-3 font-sans">
+              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#142036] pb-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-9 h-9 rounded-xl bg-cyan-950/70 border border-cyan-500/40 flex items-center justify-center text-cyan-400 shadow-[0_0_12px_rgba(0,240,255,0.2)]">
+                    <CurrentStageIcon className="w-4 h-4 text-cyan-400" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-cyan-950 text-cyan-300 border border-cyan-500/30 font-bold">
+                        STAGE {currentStage.num}
+                      </span>
+                      <h2 className="text-sm font-bold text-white tracking-wide">
+                        {currentStage.title}
+                      </h2>
+                    </div>
+                    <p className="text-[11px] text-[#94A3B8] mt-0.5">
+                      {currentStage.subtitle}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Stage Status Badge */}
+                <div>
+                  {isStageComplete(activeTab) ? (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-950/60 border border-emerald-500/40 text-[10px] font-mono text-emerald-300 font-semibold shadow-[0_0_10px_rgba(16,185,129,0.2)]">
+                      <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+                      STAGE VERIFIED
+                    </span>
+                  ) : currentStage.isOptional ? (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#142036] border border-[#1E2E4E] text-[10px] font-mono text-cyan-300">
+                      <Info className="w-3 h-3 text-cyan-400" />
+                      OPTIONAL STEP
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-950/40 border border-amber-500/30 text-[10px] font-mono text-amber-300">
+                      <Activity className="w-3 h-3 text-amber-400 animate-pulse" />
+                      IN PROGRESS
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* Structured 3-Part Briefing Details */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5 text-xs">
+                <div className="p-2.5 rounded-lg bg-[#050914] border border-[#142036] space-y-1">
+                  <span className="text-[10px] font-mono text-cyan-400 uppercase tracking-wider flex items-center gap-1 font-semibold">
+                    <Target className="w-3 h-3 text-cyan-400" />
+                    Objective
+                  </span>
+                  <p className="text-[11px] text-[#CBD5E1] leading-relaxed">
+                    {currentStage.briefing.objective}
+                  </p>
+                </div>
+                <div className="p-2.5 rounded-lg bg-[#050914] border border-[#142036] space-y-1">
+                  <span className="text-[10px] font-mono text-indigo-400 uppercase tracking-wider flex items-center gap-1 font-semibold">
+                    <Layers className="w-3 h-3 text-indigo-400" />
+                    Expected Output
+                  </span>
+                  <p className="text-[11px] text-[#CBD5E1] leading-relaxed">
+                    {currentStage.briefing.output}
+                  </p>
+                </div>
+                <div className="p-2.5 rounded-lg bg-[#050914] border border-[#142036] space-y-1">
+                  <span className="text-[10px] font-mono text-emerald-400 uppercase tracking-wider flex items-center gap-1 font-semibold">
+                    <Compass className="w-3 h-3 text-emerald-400" />
+                    Action Guidance
+                  </span>
+                  <p className="text-[11px] text-[#CBD5E1] leading-relaxed">
+                    {currentStage.briefing.action}
+                  </p>
+                </div>
+              </div>
+            </div>
+
             {/* -------------------------------------------------------------- */}
             {/* TAB 1: IMAGE INSPECTOR */}
             {/* -------------------------------------------------------------- */}
             {activeTab === 'inspector' && (
               <div className="space-y-4">
-                <div className="flex items-center justify-between border-b border-[#292929] pb-3">
+                <div className="flex items-center justify-between border-b border-[#1B2B48] pb-3">
                   <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                    <Info className="w-4 h-4 text-white" />
+                    <Info className="w-4 h-4 text-cyan-400" />
                     <span>Scientific Image Inspection & Integrity</span>
                   </h3>
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#181818] border border-[#292929] text-[#B3B3B3]">
-                    Step 1 of 5
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-950/60 border border-cyan-500/30 text-cyan-300">
+                    STAGE 01 OF 07
                   </span>
                 </div>
 
@@ -817,9 +1194,9 @@ export default function ForensicsLab() {
                     <div className="pt-2">
                       <button
                         onClick={() => setActiveTab('manipulation')}
-                        className="w-full py-2.5 rounded-xl bg-white hover:bg-[#E5E5E5] text-black text-xs font-semibold flex items-center justify-center gap-2 transition theme-btn-primary"
+                        className="w-full py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-black text-xs font-bold flex items-center justify-center gap-2 transition shadow-[0_0_15px_rgba(0,240,255,0.25)]"
                       >
-                        <span>Proceed to Bit Manipulation Studio</span>
+                        <span>Advance to Stage 02: Modify Bits</span>
                         <ArrowRight className="w-3.5 h-3.5" />
                       </button>
                     </div>
@@ -1485,9 +1862,103 @@ export default function ForensicsLab() {
             {activeTab === 'simulator' && (
               <SUniwardStressSimulator originalImageSrc={originalImageB64} />
             )}
+
+            {/* -------------------------------------------------------------- */}
+            {/* Standardized Bottom Guided Navigation Controls (All 7 Stages) */}
+            {/* -------------------------------------------------------------- */}
+            <div className="pt-5 border-t border-[#1B2B48] flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 font-sans">
+              {/* Left: Previous Stage Button */}
+              <button
+                type="button"
+                onClick={goToPreviousStage}
+                disabled={!currentStage.prevId}
+                className={`px-4 py-2.5 rounded-xl border text-xs font-semibold flex items-center justify-center gap-2 transition ${
+                  currentStage.prevId
+                    ? 'bg-[#0E172A] hover:bg-[#162444] text-[#94A3B8] hover:text-white border-[#1E2E4E] hover:border-cyan-500/40 cursor-pointer shadow-sm'
+                    : 'bg-[#050914] text-[#475569] border-[#142036] cursor-not-allowed opacity-40'
+                }`}
+                title={currentStage.prevLabel ? `Go back to ${currentStage.prevLabel}` : 'First stage'}
+              >
+                <ArrowLeft className="w-4 h-4" />
+                <span>
+                  {currentStage.prevLabel ? `Previous: ${currentStage.prevLabel}` : 'First Stage'}
+                </span>
+              </button>
+
+              {/* Center: Stage Progress & Verification Status Pill */}
+              <div className="text-center text-[11px] font-mono text-[#94A3B8] flex items-center justify-center gap-2">
+                <span>Stage {currentStage.num} of 07</span>
+                <span>•</span>
+                <span className={isStageComplete(activeTab) ? 'text-emerald-400 font-bold' : currentStage.isOptional ? 'text-cyan-300' : 'text-amber-300'}>
+                  {isStageComplete(activeTab)
+                    ? 'Stage Verified ✓'
+                    : currentStage.isOptional
+                    ? 'Optional (Ready to Advance)'
+                    : 'Action Pending'}
+                </span>
+              </div>
+
+              {/* Right: Continue to Next Stage Button */}
+              <button
+                type="button"
+                onClick={goToNextStage}
+                className="group relative px-5 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-black font-bold text-xs tracking-wide transition shadow-[0_0_20px_rgba(0,240,255,0.3)] hover:shadow-[0_0_25px_rgba(0,240,255,0.5)] flex flex-col items-center sm:items-end justify-center cursor-pointer"
+                title={currentStage.nextLabel ? `Proceed to ${currentStage.nextLabel}` : 'Finish forensic examination'}
+              >
+                <div className="flex items-center gap-1.5">
+                  <span>{currentStage.nextId ? `Continue to ${currentStage.nextLabel}` : 'Finish & Return to Overview'}</span>
+                  <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+                </div>
+                <span className="text-[10px] text-slate-900 font-medium font-sans opacity-85">
+                  {currentStage.nextDesc}
+                </span>
+              </button>
+            </div>
           </div>
         </div>
       </div>
+
+      {/* ------------------------------------------------------------------ */}
+      {/* Reset Workspace Confirmation Dialog Modal                          */}
+      {/* ------------------------------------------------------------------ */}
+      {resetConfirmOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in font-sans">
+          <div className="relative w-full max-w-md rounded-2xl bg-[#070D1A] border border-[#1B2B48] shadow-[0_0_50px_rgba(0,0,0,0.9)] p-6 space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-rose-950/60 border border-rose-500/40 flex items-center justify-center text-rose-400 shadow-[0_0_12px_rgba(244,63,94,0.3)]">
+                <AlertTriangle className="w-5 h-5 text-rose-400" />
+              </div>
+              <div>
+                <h4 className="text-sm font-bold text-white">Reset Forensic Workspace?</h4>
+                <p className="text-xs text-[#94A3B8]">Restore immutable original cover reference</p>
+              </div>
+            </div>
+            <p className="text-xs text-[#CBD5E1] leading-relaxed">
+              This action will revert all modified pixels, cleared payloads, and generated stego results back to the original unmodified cover reference. Any unsaved experiment analysis will be discarded.
+            </p>
+            <div className="flex items-center justify-end gap-2.5 pt-2">
+              <button
+                type="button"
+                onClick={() => setResetConfirmOpen(false)}
+                className="px-4 py-2 rounded-xl bg-[#0E172A] hover:bg-[#162444] text-[#94A3B8] hover:text-white border border-[#1E2E4E] text-xs font-semibold transition"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  handleResetToOriginal();
+                  setResetConfirmOpen(false);
+                }}
+                className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-semibold transition flex items-center gap-1.5 shadow-[0_0_15px_rgba(244,63,94,0.3)]"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span>Confirm Reset</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

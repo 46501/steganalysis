@@ -6,6 +6,7 @@ Compliant with NIST SP 800-86 and ISO/IEC 27037:2012 Digital Evidence Handling.
 import base64
 import datetime
 import hashlib
+import html
 import io
 import json
 import zipfile
@@ -109,15 +110,24 @@ class DigitalEvidenceArchiveService:
 
     @classmethod
     def _build_certificate_html(cls, case_data: Dict[str, Any]) -> str:
-        case_id = case_data.get("case_number") or f"STEGO-CASE-{case_data.get('id', 1):06d}"
+        case_id = html.escape(str(case_data.get("case_number") or f"STEGO-CASE-{case_data.get('id', 1):06d}"))
         now_str = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
-        verdict = case_data.get("verdict", "Cover")
-        is_stego = verdict == "Stego"
+        raw_verdict = case_data.get("verdict", "Cover")
+        verdict = html.escape(str(raw_verdict))
+        is_stego = raw_verdict == "Stego"
         conf_pct = (case_data.get("confidence", 0.5) * 100.0)
         c_prob = (case_data.get("cover_probability", 0.5) * 100.0)
         s_prob = (case_data.get("stego_probability", 0.5) * 100.0)
         residual = case_data.get("residual_energy")
         res_str = f"{residual:.2f} σr²" if residual is not None else "N/A"
+
+        # Sanitize all dynamic user-provided strings against Stored XSS
+        safe_filename = html.escape(str(case_data.get('filename', 'Unknown')), quote=True)
+        safe_hash = html.escape(str(case_data.get('file_hash', 'N/A')), quote=True)
+        safe_format = html.escape(str(case_data.get('image_format', 'PNG')), quote=True)
+        safe_model = html.escape(str(case_data.get('model_name', 'StegoNet-Lite')), quote=True)
+        safe_device = html.escape(str(case_data.get('device', 'cpu')), quote=True)
+        safe_explanation = html.escape(str(case_data.get('forensic_explanation', 'No supplemental notes recorded.')), quote=True)
 
         return f"""<!DOCTYPE html>
 <html lang="en">
@@ -159,10 +169,10 @@ class DigitalEvidenceArchiveService:
 
   <div class="section-title">1. Primary Evidence Carrier Profile</div>
   <table>
-    <tr><th style="width: 25%;">Target Filename</th><td><strong>{case_data.get('filename', 'Unknown')}</strong></td></tr>
-    <tr><th>SHA-256 Digest</th><td class="hash">{case_data.get('file_hash', 'N/A')}</td></tr>
+    <tr><th style="width: 25%;">Target Filename</th><td><strong>{safe_filename}</strong></td></tr>
+    <tr><th>SHA-256 Digest</th><td class="hash">{safe_hash}</td></tr>
     <tr><th>File Size</th><td>{case_data.get('file_size_bytes', 0):,} bytes</td></tr>
-    <tr><th>Image Format</th><td>{case_data.get('image_format', 'PNG')}</td></tr>
+    <tr><th>Image Format</th><td>{safe_format}</td></tr>
   </table>
 
   <div class="section-title">2. Forensic Classifier Verdict & Neural Activation</div>
@@ -180,15 +190,15 @@ class DigitalEvidenceArchiveService:
   </div>
 
   <table>
-    <tr><th>Classifier Model</th><td>{case_data.get('model_name', 'StegoNet-Lite')} (CPU Forensic Engine)</td></tr>
+    <tr><th>Classifier Model</th><td>{safe_model} (CPU Forensic Engine)</td></tr>
     <tr><th>Posterior Probabilities</th><td>Cover: {c_prob:.2f}% | Stego: {s_prob:.2f}%</td></tr>
     <tr><th>Spatial Residual Energy (σr²)</th><td><strong style="color: #38BDF8;">{res_str}</strong> (3×3 High-Pass Laplacian Noise Variance)</td></tr>
-    <tr><th>Execution Latency</th><td>{case_data.get('execution_time_ms', 0):.2f} ms on {case_data.get('device', 'cpu')}</td></tr>
+    <tr><th>Execution Latency</th><td>{case_data.get('execution_time_ms', 0):.2f} ms on {safe_device}</td></tr>
   </table>
 
   <div class="section-title">3. Scientific Explanation & Forensic Attestation</div>
   <div class="box">
-    {case_data.get('forensic_explanation', 'No supplemental notes recorded.')}
+    {safe_explanation}
   </div>
 
   <div class="seal">

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import AppLayout from './components/layout/AppLayout';
 import Dashboard from './pages/Dashboard';
@@ -8,6 +9,8 @@ import StegoStudio from './pages/StegoStudio';
 import History from './pages/History';
 import ModelInfo from './pages/ModelInfo';
 import UserProfile from './pages/UserProfile';
+import LoginPage from './pages/LoginPage';
+import ProtectedRoute from './components/auth/ProtectedRoute';
 import VivaTourModal from './components/presentation/VivaTourModal';
 import CommandPalette from './components/common/CommandPalette';
 import AuthModal from './components/auth/AuthModal';
@@ -15,10 +18,21 @@ import ForgotPasswordModal from './components/auth/ForgotPasswordModal';
 import GuestPromptModal from './components/auth/GuestPromptModal';
 
 function AppContent() {
-  const [activeTab, setActiveTab] = useState('dashboard');
+  const location = useLocation();
+  const navigate = useNavigate();
+
   const [injectedDetectorFile, setInjectedDetectorFile] = useState(null);
   const [isVivaTourOpen, setIsVivaTourOpen] = useState(false);
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
+
+  // Derive active tab from current URL pathname
+  const currentPath = location.pathname.replace(/^\//, '') || 'dashboard';
+  const activeTab = currentPath === 'forensics-lab' ? 'lab' : currentPath;
+
+  const setActiveTab = (tab) => {
+    const target = tab === 'dashboard' ? '/' : `/${tab}`;
+    navigate(target);
+  };
 
   // Global keyboard shortcuts (Ctrl+K / Cmd+K for Command Palette)
   useEffect(() => {
@@ -34,34 +48,69 @@ function AppContent() {
 
   const handleSendToDetector = (file) => {
     setInjectedDetectorFile(file);
-    setActiveTab('detector');
+    navigate('/detector');
   };
 
   return (
-    <AppLayout
-      activeTab={activeTab}
-      setActiveTab={setActiveTab}
-      onOpenVivaTour={() => setIsVivaTourOpen(true)}
-      onOpenCommandPalette={() => setIsCommandPaletteOpen(true)}
-    >
-      {activeTab === 'dashboard' && (
-        <Dashboard
-          setActiveTab={setActiveTab}
-          onOpenVivaTour={() => setIsVivaTourOpen(true)}
-        />
-      )}
-      {activeTab === 'detector' && (
-        <Detector
-          initialFile={injectedDetectorFile}
-          onNavigateTab={setActiveTab}
-        />
-      )}
-      {(activeTab === 'lab' || activeTab === 'forensics-lab') && <ForensicsLab />}
-      {activeTab === 'stego-studio' && <StegoStudio onSendToDetector={handleSendToDetector} />}
-      {activeTab === 'history' && <History />}
-      {activeTab === 'model-info' && <ModelInfo />}
-      {activeTab === 'profile' && <UserProfile setActiveTab={setActiveTab} />}
+    <>
+      <Routes>
+        {/* Dedicated Login & Authentication Page */}
+        <Route path="/login" element={<LoginPage />} />
 
+        {/* Workstation Application Shell */}
+        <Route
+          path="/*"
+          element={
+            <AppLayout
+              activeTab={activeTab}
+              setActiveTab={setActiveTab}
+              onOpenVivaTour={() => setIsVivaTourOpen(true)}
+              onOpenCommandPalette={() => setIsCommandPaletteOpen(true)}
+            >
+              <Routes>
+                <Route
+                  path="/"
+                  element={
+                    <Dashboard
+                      setActiveTab={setActiveTab}
+                      onOpenVivaTour={() => setIsVivaTourOpen(true)}
+                    />
+                  }
+                />
+                <Route path="/dashboard" element={<Navigate to="/" replace />} />
+                <Route
+                  path="/detector"
+                  element={
+                    <Detector
+                      initialFile={injectedDetectorFile}
+                      onNavigateTab={setActiveTab}
+                    />
+                  }
+                />
+                <Route path="/lab" element={<ForensicsLab />} />
+                <Route path="/forensics-lab" element={<Navigate to="/lab" replace />} />
+                <Route
+                  path="/stego-studio"
+                  element={<StegoStudio onSendToDetector={handleSendToDetector} />}
+                />
+                <Route path="/history" element={<History />} />
+                <Route path="/model-info" element={<ModelInfo />} />
+                <Route
+                  path="/profile"
+                  element={
+                    <ProtectedRoute>
+                      <UserProfile setActiveTab={setActiveTab} />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route path="*" element={<Navigate to="/" replace />} />
+              </Routes>
+            </AppLayout>
+          }
+        />
+      </Routes>
+
+      {/* Global Interactive Modals */}
       <VivaTourModal
         isOpen={isVivaTourOpen}
         onClose={() => setIsVivaTourOpen(false)}
@@ -86,7 +135,7 @@ function AppContent() {
       <AuthModal />
       <ForgotPasswordModal />
       <GuestPromptModal />
-    </AppLayout>
+    </>
   );
 }
 
@@ -97,5 +146,3 @@ export default function App() {
     </AuthProvider>
   );
 }
-
-

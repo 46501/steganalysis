@@ -20,6 +20,7 @@ import {
   UserPlus,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 export default function CommandPalette({
   isOpen,
@@ -27,6 +28,7 @@ export default function CommandPalette({
   onNavigate,
   onOpenVivaTour,
 }) {
+  const navigate = useNavigate();
   const { user, openAuthModal, logout } = useAuth();
   const [query, setQuery] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -76,9 +78,13 @@ export default function CommandPalette({
             subtitle: 'Revoke current JWT access session',
             icon: LogIn,
             badge: 'Session',
-            action: () => {
-              logout();
+            action: async () => {
               onClose();
+              await logout();
+              navigate('/login', {
+                replace: true,
+                state: { message: 'Successfully signed out of session.' },
+              });
             },
           },
         ]),

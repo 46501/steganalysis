@@ -22,8 +22,10 @@ import {
 import { userApi, authApi } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { playCyberClick } from '../utils/cyberSoundEffects';
+import { useNavigate } from 'react-router-dom';
 
 export default function UserProfile({ setActiveTab }) {
+  const navigate = useNavigate();
   const { user, logout, updateProfileState, openAuthModal } = useAuth();
 
   const [profile, setProfile] = useState(null);
@@ -172,11 +174,23 @@ export default function UserProfile({ setActiveTab }) {
         confirm_phrase: 'DELETE',
       });
       await logout();
-      if (setActiveTab) setActiveTab('dashboard');
+      navigate('/login', {
+        replace: true,
+        state: { message: 'Your account and personal forensic data have been permanently deleted.' },
+      });
     } catch (err) {
       setError(err.response?.data?.detail || 'Account deletion failed. Verify your password.');
       setIsDeleting(false);
     }
+  };
+
+  const handleLogout = async () => {
+    playCyberClick();
+    await logout();
+    navigate('/login', {
+      replace: true,
+      state: { message: 'Successfully signed out of session.' },
+    });
   };
 
   return (
@@ -224,7 +238,7 @@ export default function UserProfile({ setActiveTab }) {
           </div>
 
           <button
-            onClick={logout}
+            onClick={handleLogout}
             className="self-stretch sm:self-auto px-4 py-2 rounded-xl bg-[#0E172A] hover:bg-[#162444] text-[#94A3B8] hover:text-white border border-[#1E2E4E] hover:border-rose-500/40 text-xs font-semibold transition flex items-center justify-center gap-2"
           >
             <LogOut className="w-4 h-4 text-rose-400" />

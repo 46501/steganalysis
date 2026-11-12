@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { getSoundEnabled, setSoundEnabled, playCyberClick } from '../../utils/cyberSoundEffects';
 import { useAuth } from '../../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 export default function TopHeader({
   setMobileOpen,
@@ -28,6 +29,7 @@ export default function TopHeader({
   setCollapsed,
   setActiveTab,
 }) {
+  const navigate = useNavigate();
   const { user, isGuest, logout, openAuthModal } = useAuth();
   const [soundOn, setSoundOn] = useState(getSoundEnabled());
   const [userMenuOpen, setUserMenuOpen] = useState(false);
@@ -229,7 +231,7 @@ export default function TopHeader({
                   <button
                     type="button"
                     onClick={() => {
-                      if (setActiveTab) setActiveTab('profile');
+                      navigate('/profile');
                       setUserMenuOpen(false);
                       playCyberClick();
                     }}
@@ -242,7 +244,7 @@ export default function TopHeader({
                   <button
                     type="button"
                     onClick={() => {
-                      if (setActiveTab) setActiveTab('history');
+                      navigate('/history');
                       setUserMenuOpen(false);
                       playCyberClick();
                     }}
@@ -255,7 +257,7 @@ export default function TopHeader({
                   <button
                     type="button"
                     onClick={() => {
-                      if (setActiveTab) setActiveTab('lab');
+                      navigate('/lab');
                       setUserMenuOpen(false);
                       playCyberClick();
                     }}
@@ -270,10 +272,14 @@ export default function TopHeader({
                 <div className="pt-1 border-t border-[#142036]">
                   <button
                     type="button"
-                    onClick={() => {
-                      logout();
+                    onClick={async () => {
                       setUserMenuOpen(false);
                       playCyberClick();
+                      await logout();
+                      navigate('/login', {
+                        replace: true,
+                        state: { message: 'Successfully signed out of session.' },
+                      });
                     }}
                     className="w-full px-4 py-2 text-left text-xs text-rose-400 hover:text-rose-300 hover:bg-rose-950/30 flex items-center gap-2.5 transition"
                   >
@@ -295,7 +301,7 @@ export default function TopHeader({
             <button
               type="button"
               onClick={() => {
-                openAuthModal('login');
+                navigate('/login');
                 playCyberClick();
               }}
               className="px-2.5 sm:px-3 py-1.5 rounded-lg bg-[#0E172A] hover:bg-[#162444] text-[#94A3B8] hover:text-white border border-[#1E2E4E] hover:border-cyan-500/40 text-xs font-semibold transition flex items-center gap-1.5"

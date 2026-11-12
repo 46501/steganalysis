@@ -113,7 +113,12 @@ export function AuthProvider({ children }) {
         console.warn('[Security] Workstation inactivity timeout exceeded (15 min). Locking forensic session.');
         setAuthToken(null);
         setUser(null);
-        openAuthModal('login');
+        try {
+          sessionStorage.clear();
+        } catch (e) {
+          // ignore
+        }
+        window.location.replace('/login');
       }
     }, 30000); // Check every 30 seconds
 
@@ -153,10 +158,16 @@ export function AuthProvider({ children }) {
     try {
       await authApi.logout();
     } catch (err) {
-      // Ignore network errors on logout
+      console.warn('Backend logout response warning:', err);
     } finally {
+      // Clear all authentication-related in-memory and persistent state
       setAuthToken(null);
       setUser(null);
+      try {
+        sessionStorage.clear();
+      } catch (e) {
+        // ignore
+      }
     }
   };
 

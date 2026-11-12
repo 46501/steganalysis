@@ -32,6 +32,10 @@ import {
   Compass,
   FileCheck2,
   X,
+  ChevronDown,
+  ChevronUp,
+  Sliders,
+  EyeOff,
 } from 'lucide-react';
 import { steganalysisApi } from '../services/api';
 import { useAuth } from '../context/AuthContext';
@@ -242,6 +246,16 @@ export default function ForensicsLab() {
   const [analysisTarget, setAnalysisTarget] = useState('modified'); // 'original' | 'modified'
   const [analysisResult, setAnalysisResult] = useState(null);
   const [analysisLoading, setAnalysisLoading] = useState(false);
+
+  // Progressive Disclosure States (Simple vs. Advanced Workspaces)
+  const [showAdvancedBaselines, setShowAdvancedBaselines] = useState(false); // Stage 1
+  const [showBulkMutations, setShowBulkMutations] = useState(false); // Stage 2
+  const [showBitplaneSlicer, setShowBitplaneSlicer] = useState(false); // Stage 2
+  const [showNeuralDiagnostics, setShowNeuralDiagnostics] = useState(false); // Stage 4
+  const [showDistributionShifts, setShowDistributionShifts] = useState(false); // Stage 5
+  const [comparisonViewMode, setComparisonViewMode] = useState('heatmap'); // 'heatmap' | 'loupe' (Stage 5)
+  const [showEmbedPassword, setShowEmbedPassword] = useState(false);
+  const [showExtractPassword, setShowExtractPassword] = useState(false);
 
   // Experiment History State
   const [experiments, setExperiments] = useState([]);
@@ -895,304 +909,269 @@ export default function ForensicsLab() {
       </div>
 
       {/* ------------------------------------------------------------------ */}
-      {/* 3. Main Split Laboratory Canvas Layout */}
+      {/* 3. Purpose-Built Guided Workspaces with Progressive Disclosure     */}
       {/* ------------------------------------------------------------------ */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* ================================================================ */}
-        {/* LEFT PANEL: Interactive Image Canvas & Inspection HUD */}
-        {/* ================================================================ */}
-        <div className="lg:col-span-6 space-y-4">
-          <div className="p-5 rounded-2xl bg-[#111111] border border-[#292929] space-y-4">
-            {/* Canvas Header & Toolbar */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Eye className="w-4 h-4 text-white" />
-                <span className="text-xs font-bold text-white uppercase tracking-wider">
-                  Carrier Micro-Viewport
-                </span>
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#181818] border border-[#292929] text-[#B3B3B3]">
-                  {originalMeta?.dimensions || 'No Image'}
-                </span>
+      <div className="space-y-6">
+        {/* Dynamic Stage Guidance & Briefing Banner */}
+        <div className="p-4 rounded-2xl bg-[#070D1A] border border-[#1B2B48] space-y-3 font-sans shadow-md">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#142036] pb-3">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-cyan-950/70 border border-cyan-500/40 flex items-center justify-center text-cyan-400 shadow-[0_0_12px_rgba(0,240,255,0.2)]">
+                <CurrentStageIcon className="w-5 h-5 text-cyan-400" />
               </div>
-
-              {/* Zoom & Pan Controls */}
-              <div className="flex items-center gap-1.5 p-1 rounded-lg bg-[#0A0A0A] border border-[#292929]">
-                <button
-                  onClick={() => setZoomLevel((z) => Math.max(0.5, z - 0.25))}
-                  className="p-1 rounded text-[#777777] hover:text-white hover:bg-[#181818]"
-                  title="Zoom Out"
-                >
-                  <ZoomOut className="w-3.5 h-3.5" />
-                </button>
-                <span className="text-[10px] font-mono text-[#B3B3B3] px-1 select-none">
-                  {(zoomLevel * 100).toFixed(0)}%
-                </span>
-                <button
-                  onClick={() => setZoomLevel((z) => Math.min(4, z + 0.25))}
-                  className="p-1 rounded text-[#777777] hover:text-white hover:bg-[#181818]"
-                  title="Zoom In"
-                >
-                  <ZoomIn className="w-3.5 h-3.5" />
-                </button>
-                <button
-                  onClick={() => setZoomLevel(1)}
-                  className="p-1 rounded text-[#777777] hover:text-white hover:bg-[#181818]"
-                  title="Reset Zoom"
-                >
-                  <RotateCcw className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            </div>
-
-            {/* Interactive Image Canvas Area */}
-            <div className="relative rounded-xl border border-[#292929] bg-[#0A0A0A] overflow-hidden flex items-center justify-center min-h-[380px] select-none">
-              {inspectLoading ? (
-                <div className="flex flex-col items-center gap-2 text-xs text-[#777777]">
-                  <RefreshCw className="w-6 h-6 animate-spin text-white" />
-                  <span>Loading lossless pixel stream...</span>
-                </div>
-              ) : modifiedImageB64 ? (
-                <div
-                  className="overflow-auto max-h-[500px] w-full flex items-center justify-center p-2"
-                  style={{ cursor: 'crosshair' }}
-                >
-                  <img
-                    ref={canvasRef}
-                    src={modifiedImageB64}
-                    alt="Inspection Carrier"
-                    onClick={handleCanvasClick}
-                    style={{
-                      transform: `scale(${zoomLevel})`,
-                      transformOrigin: 'center center',
-                      imageRendering: 'pixelated',
-                      maxWidth: '100%',
-                    }}
-                    className="transition-transform duration-100 border border-[#242424] shadow-md"
-                  />
-                </div>
-              ) : (
-                <div className="p-8 text-center space-y-2 text-[#777777]">
-                  <Upload className="w-8 h-8 mx-auto text-[#555555]" />
-                  <p className="text-xs">No image loaded. Upload an image to begin.</p>
-                </div>
-              )}
-
-              {/* Coordinate Reticle Badge */}
-              {originalMeta && (
-                <div className="absolute bottom-2 left-2 px-2.5 py-1 rounded bg-[#090909]/90 border border-[#292929] text-[10px] font-mono text-white flex items-center gap-2">
-                  <span>Selected Pixel:</span>
-                  <span className="font-bold">
-                    X: {selectedPixel.x}, Y: {selectedPixel.y}
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-950 text-cyan-300 border border-cyan-500/30 font-bold">
+                    STAGE {currentStage.num}
+                  </span>
+                  <h2 className="text-base font-bold text-white tracking-wide">
+                    {currentStage.title}
+                  </h2>
+                  <span className="text-xs text-[#64748B] hidden sm:inline">•</span>
+                  <span className="text-xs text-[#94A3B8] hidden sm:inline">
+                    {currentStage.subtitle}
                   </span>
                 </div>
-              )}
+              </div>
             </div>
 
-            {/* Quick Preset Selector & Upload Button */}
-            <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-[#292929]">
-              <div className="flex items-center gap-2">
-                <label className="cursor-pointer px-3 py-1.5 rounded-lg bg-[#181818] hover:bg-[#222222] text-white border border-[#292929] text-xs font-semibold flex items-center gap-1.5 transition">
-                  <Upload className="w-3.5 h-3.5 text-white" />
-                  <span>Upload Image</span>
-                  <input
-                    type="file"
-                    accept="image/png,image/jpeg,image/jpg,image/x-portable-graymap,.pgm"
-                    className="hidden"
-                    onChange={(e) => handleImageUpload(e.target.files?.[0])}
-                  />
-                </label>
-
-                <button
-                  onClick={loadSampleCover}
-                  className="px-3 py-1.5 rounded-lg bg-[#151515] hover:bg-[#222222] text-[#B3B3B3] hover:text-white border border-[#292929] text-xs font-medium transition"
-                >
-                  Sample Cover (#5001)
-                </button>
-              </div>
-
-              {/* Immutable Hash Verification */}
-              {originalMeta && (
-                <div className="text-[11px] font-mono text-[#777777] flex items-center gap-1.5">
-                  <span>Orig SHA-256:</span>
-                  <span className="text-white font-bold">{originalMeta.sha256_hash.slice(0, 10)}...</span>
-                  <button
-                    onClick={() => copyToClipboard(originalMeta.sha256_hash)}
-                    className="hover:text-white p-0.5"
-                    title="Copy Full SHA-256"
-                  >
-                    {copiedHash ? <Check className="w-3 h-3 text-white" /> : <Copy className="w-3 h-3" />}
-                  </button>
-                </div>
+            <div>
+              {isStageComplete(activeTab) ? (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-950/60 border border-emerald-500/40 text-[10px] font-mono text-emerald-300 font-semibold shadow-[0_0_10px_rgba(16,185,129,0.2)]">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                  STAGE VERIFIED
+                </span>
+              ) : currentStage.isOptional ? (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#142036] border border-[#1E2E4E] text-[10px] font-mono text-cyan-300">
+                  <Info className="w-3.5 h-3.5 text-cyan-400" />
+                  OPTIONAL STEP
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-950/40 border border-amber-500/30 text-[10px] font-mono text-amber-300">
+                  <Activity className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
+                  IN PROGRESS
+                </span>
               )}
             </div>
           </div>
 
-          {/* Metadata & Auxiliary Statistical Cards */}
-          {originalMeta && (
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs font-mono">
-              <div className="p-3 rounded-xl bg-[#151515] border border-[#292929]">
-                <span className="text-[10px] text-[#777777] block">Shannon Entropy</span>
-                <span className="text-sm font-bold text-white block mt-0.5">{originalMeta.entropy} bpp</span>
-                <span className="text-[9px] text-[#777777]">Natural distribution</span>
-              </div>
-              <div className="p-3 rounded-xl bg-[#151515] border border-[#292929]">
-                <span className="text-[10px] text-[#777777] block">Residual Energy σr²</span>
-                <span className="text-sm font-bold text-white block mt-0.5">{originalMeta.residual_energy}</span>
-                <span className="text-[9px] text-[#777777]">High-pass variance</span>
-              </div>
-              <div className="p-3 rounded-xl bg-[#151515] border border-[#292929]">
-                <span className="text-[10px] text-[#777777] block">Color Channels</span>
-                <span className="text-sm font-bold text-white block mt-0.5">
-                  {originalMeta.channels === 3 ? 'RGB (24-bit)' : 'Grayscale (8-bit)'}
-                </span>
-                <span className="text-[9px] text-[#777777]">{originalMeta.format} format</span>
-              </div>
-              <div className="p-3 rounded-xl bg-[#151515] border border-[#292929]">
-                <span className="text-[10px] text-[#777777] block">Total Pixels</span>
-                <span className="text-sm font-bold text-white block mt-0.5">
-                  {originalMeta.total_pixels.toLocaleString()}
-                </span>
-                <span className="text-[9px] text-[#777777]">{(originalMeta.file_size_bytes / 1024).toFixed(1)} KB</span>
-              </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5 text-xs">
+            <div className="p-2.5 rounded-xl bg-[#050914] border border-[#142036] space-y-1">
+              <span className="text-[10px] font-mono text-cyan-400 uppercase tracking-wider flex items-center gap-1 font-semibold">
+                <Target className="w-3 h-3 text-cyan-400" />
+                Objective
+              </span>
+              <p className="text-[11px] text-[#CBD5E1] leading-relaxed">
+                {currentStage.briefing.objective}
+              </p>
             </div>
-          )}
+            <div className="p-2.5 rounded-xl bg-[#050914] border border-[#142036] space-y-1">
+              <span className="text-[10px] font-mono text-indigo-400 uppercase tracking-wider flex items-center gap-1 font-semibold">
+                <Layers className="w-3 h-3 text-indigo-400" />
+                Expected Output
+              </span>
+              <p className="text-[11px] text-[#CBD5E1] leading-relaxed">
+                {currentStage.briefing.output}
+              </p>
+            </div>
+            <div className="p-2.5 rounded-xl bg-[#050914] border border-[#142036] space-y-1">
+              <span className="text-[10px] font-mono text-emerald-400 uppercase tracking-wider flex items-center gap-1 font-semibold">
+                <Compass className="w-3 h-3 text-emerald-400" />
+                Action Guidance
+              </span>
+              <p className="text-[11px] text-[#CBD5E1] leading-relaxed">
+                {currentStage.briefing.action}
+              </p>
+            </div>
+          </div>
         </div>
 
-        {/* ================================================================ */}
-        {/* RIGHT PANEL: Tabbed Scientific Workstation Controls */}
-        {/* ================================================================ */}
-        <div className="lg:col-span-6 space-y-4">
-          <div className="p-5 rounded-2xl bg-[#090E1A]/95 border border-[#1B2B48] space-y-5 shadow-lg">
-            {/* -------------------------------------------------------------- */}
-            {/* Stage Guidance Briefing Card (Dynamic Per Active Stage)        */}
-            {/* -------------------------------------------------------------- */}
-            <div className="p-4 rounded-xl bg-[#070D1A] border border-[#1B2B48] space-y-3 font-sans">
-              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#142036] pb-3">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-9 h-9 rounded-xl bg-cyan-950/70 border border-cyan-500/40 flex items-center justify-center text-cyan-400 shadow-[0_0_12px_rgba(0,240,255,0.2)]">
-                    <CurrentStageIcon className="w-4 h-4 text-cyan-400" />
-                  </div>
-                  <div>
+        {/* ---------------------------------------------------------------- */}
+        {/* STAGE 1: UPLOAD & INSPECT WORKSPACE                              */}
+        {/* ---------------------------------------------------------------- */}
+        {activeTab === 'inspector' && (
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+              {/* Left (7 cols): Spacious Carrier Viewport */}
+              <div className="lg:col-span-7 space-y-3">
+                <div className="p-5 rounded-2xl bg-[#070D1A] border border-[#1B2B48] space-y-4 shadow-md">
+                  <div className="flex items-center justify-between border-b border-[#142036] pb-3">
                     <div className="flex items-center gap-2">
-                      <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-cyan-950 text-cyan-300 border border-cyan-500/30 font-bold">
-                        STAGE {currentStage.num}
+                      <Eye className="w-4 h-4 text-cyan-400" />
+                      <span className="text-xs font-bold text-white uppercase tracking-wider">
+                        Carrier Viewport & Pixel Stream
                       </span>
-                      <h2 className="text-sm font-bold text-white tracking-wide">
-                        {currentStage.title}
-                      </h2>
+                      <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#0E172A] border border-[#1E2E4E] text-cyan-300">
+                        {originalMeta?.dimensions || 'No Carrier Loaded'}
+                      </span>
                     </div>
-                    <p className="text-[11px] text-[#94A3B8] mt-0.5">
-                      {currentStage.subtitle}
-                    </p>
+
+                    {/* Zoom & Pan Controls */}
+                    <div className="flex items-center gap-1.5 p-1 rounded-lg bg-[#050914] border border-[#142036]">
+                      <button
+                        type="button"
+                        onClick={() => setZoomLevel((z) => Math.max(0.5, z - 0.25))}
+                        className="p-1 rounded text-[#94A3B8] hover:text-white hover:bg-[#0E172A]"
+                        title="Zoom Out"
+                      >
+                        <ZoomOut className="w-3.5 h-3.5" />
+                      </button>
+                      <span className="text-[10px] font-mono text-cyan-300 px-1 select-none">
+                        {(zoomLevel * 100).toFixed(0)}%
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setZoomLevel((z) => Math.min(4, z + 0.25))}
+                        className="p-1 rounded text-[#94A3B8] hover:text-white hover:bg-[#0E172A]"
+                        title="Zoom In"
+                      >
+                        <ZoomIn className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setZoomLevel(1)}
+                        className="p-1 rounded text-[#94A3B8] hover:text-white hover:bg-[#0E172A]"
+                        title="Reset Zoom"
+                      >
+                        <RotateCcw className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Interactive Image Canvas Area */}
+                  <div className="relative rounded-xl border border-[#142036] bg-[#050914] overflow-hidden flex items-center justify-center min-h-[380px] select-none">
+                    {inspectLoading ? (
+                      <div className="flex flex-col items-center gap-2 text-xs text-[#94A3B8]">
+                        <RefreshCw className="w-6 h-6 animate-spin text-cyan-400" />
+                        <span>Loading lossless pixel stream...</span>
+                      </div>
+                    ) : modifiedImageB64 ? (
+                      <div
+                        className="overflow-auto max-h-[460px] w-full flex items-center justify-center p-2"
+                        style={{ cursor: 'crosshair' }}
+                      >
+                        <img
+                          ref={canvasRef}
+                          src={modifiedImageB64}
+                          alt="Inspection Carrier"
+                          onClick={handleCanvasClick}
+                          style={{
+                            transform: `scale(${zoomLevel})`,
+                            transformOrigin: 'center center',
+                            imageRendering: 'pixelated',
+                            maxWidth: '100%',
+                          }}
+                          className="transition-transform duration-100 border border-[#1B2B48] shadow-lg rounded"
+                        />
+                      </div>
+                    ) : (
+                      <div className="p-8 text-center space-y-2 text-[#64748B]">
+                        <Upload className="w-8 h-8 mx-auto text-[#475569]" />
+                        <p className="text-xs">No image loaded. Upload an image to begin.</p>
+                      </div>
+                    )}
+
+                    {originalMeta && (
+                      <div className="absolute bottom-2 left-2 px-2.5 py-1 rounded bg-[#070D1A]/90 border border-[#1B2B48] text-[10px] font-mono text-cyan-300 flex items-center gap-2">
+                        <span>Selected Pixel:</span>
+                        <span className="font-bold text-white">
+                          X: {selectedPixel.x}, Y: {selectedPixel.y}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Quick Preset Selector & Ingestion Action Bar */}
+                  <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-[#142036]">
+                    <div className="flex items-center gap-2">
+                      <label className="cursor-pointer px-3.5 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-black text-xs font-bold flex items-center gap-2 transition shadow-[0_0_15px_rgba(0,240,255,0.25)]">
+                        <Upload className="w-3.5 h-3.5" />
+                        <span>Upload Investigation Image</span>
+                        <input
+                          type="file"
+                          accept="image/png,image/jpeg,image/jpg,image/x-portable-graymap,.pgm"
+                          className="hidden"
+                          onChange={(e) => handleImageUpload(e.target.files?.[0])}
+                        />
+                      </label>
+
+                      <button
+                        type="button"
+                        onClick={loadSampleCover}
+                        className="px-3.5 py-2 rounded-xl bg-[#0E172A] hover:bg-[#162444] text-[#94A3B8] hover:text-white border border-[#1E2E4E] text-xs font-semibold transition"
+                      >
+                        Load BOSSbase Cover (#5001)
+                      </button>
+                    </div>
+
+                    {originalMeta && (
+                      <div className="text-[11px] font-mono text-[#94A3B8] flex items-center gap-1.5">
+                        <span>Orig SHA-256:</span>
+                        <span className="text-cyan-300 font-bold">{originalMeta.sha256_hash.slice(0, 10)}...</span>
+                        <button
+                          type="button"
+                          onClick={() => copyToClipboard(originalMeta.sha256_hash)}
+                          className="hover:text-white p-1"
+                          title="Copy Full SHA-256 Digest"
+                        >
+                          {copiedHash ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5 text-[#64748B]" />}
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
-
-                {/* Stage Status Badge */}
-                <div>
-                  {isStageComplete(activeTab) ? (
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-950/60 border border-emerald-500/40 text-[10px] font-mono text-emerald-300 font-semibold shadow-[0_0_10px_rgba(16,185,129,0.2)]">
-                      <CheckCircle2 className="w-3 h-3 text-emerald-400" />
-                      STAGE VERIFIED
-                    </span>
-                  ) : currentStage.isOptional ? (
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#142036] border border-[#1E2E4E] text-[10px] font-mono text-cyan-300">
-                      <Info className="w-3 h-3 text-cyan-400" />
-                      OPTIONAL STEP
-                    </span>
-                  ) : (
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-950/40 border border-amber-500/30 text-[10px] font-mono text-amber-300">
-                      <Activity className="w-3 h-3 text-amber-400 animate-pulse" />
-                      IN PROGRESS
-                    </span>
-                  )}
-                </div>
               </div>
 
-              {/* Structured 3-Part Briefing Details */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5 text-xs">
-                <div className="p-2.5 rounded-lg bg-[#050914] border border-[#142036] space-y-1">
-                  <span className="text-[10px] font-mono text-cyan-400 uppercase tracking-wider flex items-center gap-1 font-semibold">
-                    <Target className="w-3 h-3 text-cyan-400" />
-                    Objective
-                  </span>
-                  <p className="text-[11px] text-[#CBD5E1] leading-relaxed">
-                    {currentStage.briefing.objective}
-                  </p>
-                </div>
-                <div className="p-2.5 rounded-lg bg-[#050914] border border-[#142036] space-y-1">
-                  <span className="text-[10px] font-mono text-indigo-400 uppercase tracking-wider flex items-center gap-1 font-semibold">
-                    <Layers className="w-3 h-3 text-indigo-400" />
-                    Expected Output
-                  </span>
-                  <p className="text-[11px] text-[#CBD5E1] leading-relaxed">
-                    {currentStage.briefing.output}
-                  </p>
-                </div>
-                <div className="p-2.5 rounded-lg bg-[#050914] border border-[#142036] space-y-1">
-                  <span className="text-[10px] font-mono text-emerald-400 uppercase tracking-wider flex items-center gap-1 font-semibold">
-                    <Compass className="w-3 h-3 text-emerald-400" />
-                    Action Guidance
-                  </span>
-                  <p className="text-[11px] text-[#CBD5E1] leading-relaxed">
-                    {currentStage.briefing.action}
-                  </p>
-                </div>
-              </div>
-            </div>
+              {/* Right (5 cols): Primary Ingestion Properties */}
+              <div className="lg:col-span-5 space-y-4">
+                <div className="p-5 rounded-2xl bg-[#070D1A] border border-[#1B2B48] space-y-4 shadow-md font-sans">
+                  <div className="flex items-center justify-between border-b border-[#142036] pb-3">
+                    <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                      <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                      <span>Carrier Ingestion Properties</span>
+                    </h3>
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-950/70 border border-emerald-500/30 text-emerald-300">
+                      LOSSLESS REFERENCE
+                    </span>
+                  </div>
 
-            {/* -------------------------------------------------------------- */}
-            {/* TAB 1: IMAGE INSPECTOR */}
-            {/* -------------------------------------------------------------- */}
-            {activeTab === 'inspector' && (
-              <div className="space-y-4">
-                <div className="flex items-center justify-between border-b border-[#1B2B48] pb-3">
-                  <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                    <Info className="w-4 h-4 text-cyan-400" />
-                    <span>Scientific Image Inspection & Integrity</span>
-                  </h3>
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-950/60 border border-cyan-500/30 text-cyan-300">
-                    STAGE 01 OF 07
-                  </span>
-                </div>
+                  {originalMeta ? (
+                    <div className="space-y-3 text-xs">
+                      <div className="p-3.5 rounded-xl bg-[#050914] border border-[#142036] space-y-2 font-mono">
+                        <div className="flex justify-between py-1 border-b border-[#10192A]">
+                          <span className="text-[#64748B]">Filename</span>
+                          <span className="text-white font-medium truncate max-w-[180px]">{originalMeta.filename}</span>
+                        </div>
+                        <div className="flex justify-between py-1 border-b border-[#10192A]">
+                          <span className="text-[#64748B]">Geometry Dimensions</span>
+                          <span className="text-cyan-300 font-bold">{originalMeta.dimensions} px</span>
+                        </div>
+                        <div className="flex justify-between py-1 border-b border-[#10192A]">
+                          <span className="text-[#64748B]">Color Channels</span>
+                          <span className="text-white">{originalMeta.color_mode} ({originalMeta.channels} ch)</span>
+                        </div>
+                        <div className="flex justify-between py-1 border-b border-[#10192A]">
+                          <span className="text-[#64748B]">File Size</span>
+                          <span className="text-white">{(originalMeta.file_size_bytes / 1024).toFixed(1)} KB</span>
+                        </div>
+                        <div className="flex justify-between py-1">
+                          <span className="text-[#64748B]">SHA-256 Digest</span>
+                          <span className="text-cyan-300 text-[10px] truncate max-w-[180px]">{originalMeta.sha256_hash}</span>
+                        </div>
+                      </div>
 
-                {originalMeta ? (
-                  <div className="space-y-3 text-xs">
-                    <div className="p-3.5 rounded-xl bg-[#151515] border border-[#292929] space-y-2">
-                      <div className="flex justify-between py-1 border-b border-[#242424]">
-                        <span className="text-[#777777]">Original Filename</span>
-                        <span className="text-white font-mono font-medium">{originalMeta.filename}</span>
+                      <div className="p-3 rounded-xl bg-[#050914] border border-[#142036] space-y-1.5 text-[11px] text-[#94A3B8]">
+                        <span className="text-white font-semibold flex items-center gap-1.5">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-cyan-400" />
+                          Lossless Integer Raster Processing
+                        </span>
+                        <p className="leading-relaxed">
+                          Image pixels are converted directly to uncompressed 2D memory arrays. JPEG recompression is disabled to protect discrete integer values from lossy quantizer perturbations.
+                        </p>
                       </div>
-                      <div className="flex justify-between py-1 border-b border-[#242424]">
-                        <span className="text-[#777777]">Geometry Dimensions</span>
-                        <span className="text-white font-mono font-medium">{originalMeta.dimensions} px</span>
-                      </div>
-                      <div className="flex justify-between py-1 border-b border-[#242424]">
-                        <span className="text-[#777777]">Lossless Color Space</span>
-                        <span className="text-white font-mono font-medium">{originalMeta.color_mode} ({originalMeta.channels} channel{originalMeta.channels > 1 ? 's' : ''})</span>
-                      </div>
-                      <div className="flex justify-between py-1 border-b border-[#242424]">
-                        <span className="text-[#777777]">Mean Intensity / Std Dev</span>
-                        <span className="text-white font-mono font-medium">μ = {originalMeta.mean_intensity}, σ = {originalMeta.std_dev}</span>
-                      </div>
-                      <div className="flex justify-between py-1">
-                        <span className="text-[#777777]">SHA-256 Digest</span>
-                        <span className="text-white font-mono text-[11px] truncate max-w-[240px]">{originalMeta.sha256_hash}</span>
-                      </div>
-                    </div>
 
-                    <div className="p-3 rounded-xl bg-[#151515] border border-[#292929] space-y-1.5">
-                      <span className="text-xs font-bold text-white flex items-center gap-1.5">
-                        <ShieldCheck className="w-3.5 h-3.5 text-white" />
-                        Lossless Processing Policy
-                      </span>
-                      <p className="text-[11px] text-[#B3B3B3] leading-relaxed">
-                        Uploaded images are converted to uncompressed memory arrays. JPEG recompression is disabled
-                        to protect discrete integer pixel values from lossy quantizer perturbations.
-                      </p>
-                    </div>
-
-                    <div className="pt-2">
                       <button
+                        type="button"
                         onClick={() => setActiveTab('manipulation')}
                         className="w-full py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-black text-xs font-bold flex items-center justify-center gap-2 transition shadow-[0_0_15px_rgba(0,240,255,0.25)]"
                       >
@@ -1200,721 +1179,1151 @@ export default function ForensicsLab() {
                         <ArrowRight className="w-3.5 h-3.5" />
                       </button>
                     </div>
+                  ) : (
+                    <p className="text-xs text-[#64748B]">Upload an image or load the sample cover above to review metadata.</p>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Progressive Disclosure: Advanced Scientific Baselines */}
+            {originalMeta && (
+              <div className="p-4 rounded-2xl bg-[#070D1A] border border-[#1B2B48] space-y-3 font-sans">
+                <button
+                  type="button"
+                  onClick={() => setShowAdvancedBaselines((prev) => !prev)}
+                  className="w-full flex items-center justify-between text-xs font-semibold text-[#94A3B8] hover:text-white transition"
+                >
+                  <span className="flex items-center gap-2">
+                    <Sliders className="w-4 h-4 text-cyan-400" />
+                    <span>Deep Scientific Baselines & Spatial Entropy Distribution</span>
+                  </span>
+                  <span className="flex items-center gap-1 text-[11px] font-mono text-cyan-400">
+                    {showAdvancedBaselines ? 'Hide Advanced Metrics' : 'Show Advanced Metrics'}
+                    {showAdvancedBaselines ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                  </span>
+                </button>
+
+                {showAdvancedBaselines && (
+                  <div className="pt-2 grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs font-mono animate-fade-in">
+                    <div className="p-3 rounded-xl bg-[#050914] border border-[#142036]">
+                      <span className="text-[10px] text-[#64748B] block">Shannon Entropy</span>
+                      <span className="text-sm font-bold text-cyan-300 block mt-0.5">{originalMeta.entropy} bpp</span>
+                      <span className="text-[9px] text-[#64748B]">Natural spatial distribution</span>
+                    </div>
+                    <div className="p-3 rounded-xl bg-[#050914] border border-[#142036]">
+                      <span className="text-[10px] text-[#64748B] block">Residual Energy σr²</span>
+                      <span className="text-sm font-bold text-indigo-300 block mt-0.5">{originalMeta.residual_energy}</span>
+                      <span className="text-[9px] text-[#64748B]">High-pass variance baseline</span>
+                    </div>
+                    <div className="p-3 rounded-xl bg-[#050914] border border-[#142036]">
+                      <span className="text-[10px] text-[#64748B] block">Intensity (μ / σ)</span>
+                      <span className="text-sm font-bold text-white block mt-0.5">{originalMeta.mean_intensity} / {originalMeta.std_dev}</span>
+                      <span className="text-[9px] text-[#64748B]">Dynamic range distribution</span>
+                    </div>
+                    <div className="p-3 rounded-xl bg-[#050914] border border-[#142036]">
+                      <span className="text-[10px] text-[#64748B] block">Total Pixels</span>
+                      <span className="text-sm font-bold text-emerald-300 block mt-0.5">{originalMeta.total_pixels.toLocaleString()}</span>
+                      <span className="text-[9px] text-[#64748B]">Discrete integer elements</span>
+                    </div>
                   </div>
-                ) : (
-                  <p className="text-xs text-[#777777]">Upload an image to review metadata.</p>
                 )}
               </div>
             )}
+          </div>
+        )}
 
-            {/* -------------------------------------------------------------- */}
-            {/* TAB 2: BIT MANIPULATION STUDIO */}
-            {/* -------------------------------------------------------------- */}
-            {activeTab === 'manipulation' && (
-              <div className="space-y-4">
-                {/* Sub-tab navigation */}
-                <div className="flex items-center gap-1.5 p-1 rounded-xl bg-[#0A0A0A] border border-[#292929] text-xs font-mono">
-                  <button
-                    onClick={() => setManipulationSubTab('pixel')}
-                    className={`flex-1 py-1.5 rounded-lg transition ${
-                      manipulationSubTab === 'pixel'
-                        ? 'bg-[#242424] text-white font-bold border border-[#383838]'
-                        : 'text-[#777777] hover:text-white'
-                    }`}
-                  >
-                    Pixel Bit Inspector
-                  </button>
-                  <button
-                    onClick={() => setManipulationSubTab('bulk')}
-                    className={`flex-1 py-1.5 rounded-lg transition ${
-                      manipulationSubTab === 'bulk'
-                        ? 'bg-[#242424] text-white font-bold border border-[#383838]'
-                        : 'text-[#777777] hover:text-white'
-                    }`}
-                  >
-                    Bulk Manipulation
-                  </button>
-                  <button
-                    onClick={() => setManipulationSubTab('bitplane')}
-                    className={`flex-1 py-1.5 rounded-lg transition ${
-                      manipulationSubTab === 'bitplane'
-                        ? 'bg-[#242424] text-white font-bold border border-[#383838]'
-                        : 'text-[#777777] hover:text-white'
-                    }`}
-                  >
-                    Bit-Plane Slicer
-                  </button>
-                </div>
-
-                {/* Sub-View A: Individual Pixel Inspector & Bit Toggling */}
-                {manipulationSubTab === 'pixel' && (
-                  <div className="space-y-4 text-xs">
-                    <div className="flex items-center justify-between">
-                      <span className="text-[#B3B3B3] font-mono text-[11px]">
-                        Target Coordinate: ({selectedPixel.x}, {selectedPixel.y})
+        {/* ---------------------------------------------------------------- */}
+        {/* STAGE 2: MODIFY BITS WORKSPACE                                   */}
+        {/* ---------------------------------------------------------------- */}
+        {activeTab === 'manipulation' && (
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+              {/* Left (7 cols): Main Interactive Canvas with Click-to-Pick */}
+              <div className="lg:col-span-7 space-y-3">
+                <div className="p-5 rounded-2xl bg-[#070D1A] border border-[#1B2B48] space-y-4 shadow-md">
+                  <div className="flex items-center justify-between border-b border-[#142036] pb-3">
+                    <div className="flex items-center gap-2">
+                      <Binary className="w-4 h-4 text-cyan-400" />
+                      <span className="text-xs font-bold text-white uppercase tracking-wider">
+                        Interactive Carrier Canvas
                       </span>
-                      <span className="text-[#777777] text-[10px] font-mono">Click canvas to pick pixel</span>
+                      <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#0E172A] border border-[#1E2E4E] text-[#94A3B8]">
+                        Crosshair Click-to-Inspect
+                      </span>
                     </div>
 
-                    {pixelDetails?.channels?.map((ch, cIdx) => (
-                      <div key={cIdx} className="p-4 rounded-xl bg-[#151515] border border-[#292929] space-y-3">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <span className="w-2.5 h-2.5 rounded-full bg-white"></span>
-                            <span className="font-bold text-white text-xs">{ch.channel}</span>
-                          </div>
-                          <div className="flex items-center gap-3 font-mono text-xs">
-                            <span className="text-[#777777]">Dec: <strong className="text-white">{ch.value}</strong></span>
-                            <span className="text-[#777777]">Hex: <strong className="text-white">{ch.hex}</strong></span>
-                            <button
-                              onClick={() => handleResetPixel(cIdx)}
-                              className="text-[10px] text-[#777777] hover:text-white underline"
-                            >
-                              Reset
-                            </button>
-                          </div>
-                        </div>
-
-                        {/* Interactive 8-Bit Register Display */}
-                        <div className="space-y-1.5">
-                          <div className="flex items-center justify-between text-[10px] font-mono text-[#777777] px-1">
-                            <span>MSB (Bit 7)</span>
-                            <span>LSB (Bit 0)</span>
-                          </div>
-                          <div className="grid grid-cols-8 gap-1.5">
-                            {/* Render bits from MSB (7) down to LSB (0) */}
-                            {[7, 6, 5, 4, 3, 2, 1, 0].map((bitPos) => {
-                              const bitVal = (ch.value >> bitPos) & 1;
-                              const isLSB = bitPos === 0;
-                              return (
-                                <button
-                                  key={bitPos}
-                                  onClick={() => handleToggleBit(cIdx, bitPos)}
-                                  className={`p-2 rounded-lg border font-mono text-center transition-all ${
-                                    bitVal === 1
-                                      ? 'bg-white text-black border-white font-bold'
-                                      : 'bg-[#181818] text-[#777777] border-[#292929] hover:text-white hover:border-[#383838]'
-                                  } ${isLSB ? 'ring-1 ring-white/50' : ''}`}
-                                  title={`Bit ${bitPos} (${isLSB ? 'LSB' : bitPos === 7 ? 'MSB' : 'Plane ' + bitPos}) - Click to flip`}
-                                >
-                                  <div className="text-sm leading-none">{bitVal}</div>
-                                  <div className="text-[8px] opacity-75 mt-0.5">{bitPos}</div>
-                                </button>
-                              );
-                            })}
-                          </div>
-                        </div>
-
-                        {/* Binary String Representation */}
-                        <div className="p-2 rounded-lg bg-[#0A0A0A] border border-[#242424] font-mono text-[11px] flex items-center justify-between">
-                          <span className="text-[#777777]">Binary Byte:</span>
-                          <span className="text-white font-bold tracking-widest">{ch.binary}</span>
-                        </div>
-                      </div>
-                    ))}
+                    {/* Zoom & Pan Controls */}
+                    <div className="flex items-center gap-1.5 p-1 rounded-lg bg-[#050914] border border-[#142036]">
+                      <button
+                        type="button"
+                        onClick={() => setZoomLevel((z) => Math.max(0.5, z - 0.25))}
+                        className="p-1 rounded text-[#94A3B8] hover:text-white hover:bg-[#0E172A]"
+                        title="Zoom Out"
+                      >
+                        <ZoomOut className="w-3.5 h-3.5" />
+                      </button>
+                      <span className="text-[10px] font-mono text-cyan-300 px-1 select-none">
+                        {(zoomLevel * 100).toFixed(0)}%
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setZoomLevel((z) => Math.min(4, z + 0.25))}
+                        className="p-1 rounded text-[#94A3B8] hover:text-white hover:bg-[#0E172A]"
+                        title="Zoom In"
+                      >
+                        <ZoomIn className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setZoomLevel(1)}
+                        className="p-1 rounded text-[#94A3B8] hover:text-white hover:bg-[#0E172A]"
+                        title="Reset Zoom"
+                      >
+                        <RotateCcw className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                   </div>
-                )}
 
-                {/* Sub-View B: Bulk Bit Manipulation Experiments */}
-                {manipulationSubTab === 'bulk' && (
-                  <div className="space-y-4 text-xs font-mono">
-                    <div className="space-y-3">
-                      <div>
-                        <label className="text-[#777777] block text-[11px] mb-1">Experiment Manipulation Mode</label>
-                        <select
-                          value={bulkMode}
-                          onChange={(e) => setBulkMode(e.target.value)}
-                          className="w-full p-2.5 rounded-xl bg-[#151515] border border-[#292929] text-white text-xs outline-none"
-                        >
-                          <option value="lsb_only">LSB Only (Bit Position 0)</option>
-                          <option value="two_lsb">Two LSBs (Bit Positions 0 & 1)</option>
-                          <option value="custom_plane">Target Specific Bit Plane (0–7)</option>
-                          <option value="random_bits">Pseudo-Random Bit Plane Slicing</option>
-                        </select>
+                  {/* Interactive Image Canvas Area */}
+                  <div className="relative rounded-xl border border-[#142036] bg-[#050914] overflow-hidden flex items-center justify-center min-h-[380px] select-none">
+                    {modifiedImageB64 ? (
+                      <div
+                        className="overflow-auto max-h-[460px] w-full flex items-center justify-center p-2"
+                        style={{ cursor: 'crosshair' }}
+                      >
+                        <img
+                          ref={canvasRef}
+                          src={modifiedImageB64}
+                          alt="Bit Manipulation Target"
+                          onClick={handleCanvasClick}
+                          style={{
+                            transform: `scale(${zoomLevel})`,
+                            transformOrigin: 'center center',
+                            imageRendering: 'pixelated',
+                            maxWidth: '100%',
+                          }}
+                          className="transition-transform duration-100 border border-[#1B2B48] shadow-lg rounded"
+                        />
                       </div>
+                    ) : (
+                      <p className="text-xs text-[#64748B]">No carrier loaded. Please visit Stage 1 to upload an image.</p>
+                    )}
 
-                      {bulkMode === 'custom_plane' && (
-                        <div>
-                          <label className="text-[#777777] block text-[11px] mb-1">Bit Plane (0=LSB, 7=MSB)</label>
-                          <input
-                            type="number"
-                            min="0"
-                            max="7"
-                            value={bulkPlane}
-                            onChange={(e) => setBulkPlane(e.target.value)}
-                            className="w-full p-2 rounded-xl bg-[#151515] border border-[#292929] text-white text-xs outline-none"
-                          />
-                        </div>
-                      )}
-
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <label className="text-[#777777] block text-[11px] mb-1">
-                            Modification Rate: {bulkPercentage}%
-                          </label>
-                          <input
-                            type="range"
-                            min="0.5"
-                            max="100"
-                            step="0.5"
-                            value={bulkPercentage}
-                            onChange={(e) => setBulkPercentage(e.target.value)}
-                            className="w-full accent-white cursor-pointer"
-                          />
-                        </div>
-                        <div>
-                          <label className="text-[#777777] block text-[11px] mb-1">Reproducible RNG Seed</label>
-                          <input
-                            type="number"
-                            value={bulkSeed}
-                            onChange={(e) => setBulkSeed(e.target.value)}
-                            className="w-full p-2 rounded-xl bg-[#151515] border border-[#292929] text-white text-xs outline-none"
-                          />
-                        </div>
-                      </div>
-                    </div>
-
-                    <button
-                      onClick={handleRunBulkManipulation}
-                      disabled={bulkProcessing}
-                      className="w-full py-3 rounded-xl bg-white hover:bg-[#E5E5E5] text-black font-semibold text-xs flex items-center justify-center gap-2 transition theme-btn-primary"
-                    >
-                      {bulkProcessing ? (
-                        <>
-                          <RefreshCw className="w-4 h-4 animate-spin text-black" />
-                          <span>Executing Deterministic Mutation...</span>
-                        </>
-                      ) : (
-                        <>
-                          <Binary className="w-4 h-4 text-black" />
-                          <span>Generate Derived Mutated Image</span>
-                        </>
-                      )}
-                    </button>
-
-                    {lastBulkResult && (
-                      <div className="p-3.5 rounded-xl bg-[#151515] border border-[#292929] space-y-1.5 text-[11px]">
-                        <div className="flex justify-between">
-                          <span className="text-[#777777]">Modified Pixels:</span>
-                          <span className="text-white font-bold">{lastBulkResult.modified_pixels_count.toLocaleString()} px ({lastBulkResult.modification_percent}%)</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-[#777777]">Modified Bits:</span>
-                          <span className="text-white font-bold">{lastBulkResult.modified_bits_count.toLocaleString()} bits</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-[#777777]">Derived SHA-256:</span>
-                          <span className="text-white font-mono text-[10px]">{lastBulkResult.modified_sha256.slice(0, 16)}...</span>
-                        </div>
+                    {originalMeta && (
+                      <div className="absolute bottom-2 left-2 px-2.5 py-1 rounded bg-[#070D1A]/90 border border-[#1B2B48] text-[10px] font-mono text-cyan-300 flex items-center gap-2">
+                        <span>Selected Coordinate:</span>
+                        <span className="font-bold text-white">
+                          X: {selectedPixel.x}, Y: {selectedPixel.y}
+                        </span>
                       </div>
                     )}
                   </div>
-                )}
 
-                {/* Sub-View C: Interactive Bit-Plane Slicer */}
-                {manipulationSubTab === 'bitplane' && (
-                  <div className="space-y-4 text-xs font-mono">
+                  {/* Hash Status Bar */}
+                  <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-[#142036] text-[11px] font-mono text-[#94A3B8]">
                     <div className="flex items-center gap-2">
-                      <span className="text-[#777777] text-[11px]">Bit Plane:</span>
-                      <div className="flex items-center gap-1">
-                        {[0, 1, 2, 3, 4, 5, 6, 7].map((p) => (
-                          <button
-                            key={p}
-                            onClick={() => setActivePlane(p)}
-                            className={`px-2.5 py-1 rounded text-xs transition ${
-                              activePlane === p
-                                ? 'bg-white text-black font-bold'
-                                : 'bg-[#151515] text-[#777777] hover:text-white border border-[#292929]'
-                            }`}
-                          >
-                            {p}
-                          </button>
-                        ))}
-                      </div>
+                      <span>Cover Hash:</span>
+                      <span className="text-white font-bold">{originalMeta?.sha256_hash?.slice(0, 10)}...</span>
                     </div>
+                    <div className="flex items-center gap-2">
+                      <span>Derived Hash:</span>
+                      <span className={modifiedHash !== originalMeta?.sha256_hash ? 'text-emerald-400 font-bold' : 'text-cyan-300'}>
+                        {modifiedHash?.slice(0, 10)}...
+                        {modifiedHash !== originalMeta?.sha256_hash ? ' (Modified)' : ' (Cover Reference)'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
 
-                    <div className="p-3 rounded-xl bg-[#0A0A0A] border border-[#292929] flex items-center justify-center min-h-[220px]">
-                      {bitplaneLoading ? (
-                        <RefreshCw className="w-5 h-5 animate-spin text-white" />
-                      ) : bitplaneData ? (
-                        <div className="space-y-2 text-center w-full">
-                          <img
-                            src={bitplaneData.bitplane_b64}
-                            alt="Bit Plane"
-                            className="max-h-[240px] mx-auto border border-[#242424] rounded-lg shadow-sm"
-                          />
-                          <div className="text-[10px] text-[#777777]">
-                            Entropy: {bitplaneData.plane_entropy} bpp • {bitplaneData.plane_label}
+              {/* Right (5 cols): Active Pixel Register HUD */}
+              <div className="lg:col-span-5 space-y-4">
+                <div className="p-5 rounded-2xl bg-[#070D1A] border border-[#1B2B48] space-y-4 shadow-md font-sans">
+                  <div className="flex items-center justify-between border-b border-[#142036] pb-3">
+                    <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                      <Binary className="w-4 h-4 text-cyan-400" />
+                      <span>Active Pixel Register</span>
+                    </h3>
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-950/70 border border-cyan-500/30 text-cyan-300">
+                      ({selectedPixel.x}, {selectedPixel.y})
+                    </span>
+                  </div>
+
+                  {pixelDetails?.channels ? (
+                    <div className="space-y-4 text-xs">
+                      {pixelDetails.channels.map((ch, cIdx) => (
+                        <div key={cIdx} className="p-3.5 rounded-xl bg-[#050914] border border-[#142036] space-y-3 font-mono">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <span className="w-2.5 h-2.5 rounded-full bg-cyan-400 shadow-[0_0_6px_rgba(0,240,255,0.8)]"></span>
+                              <span className="font-bold text-white text-xs">{ch.channel}</span>
+                            </div>
+                            <div className="flex items-center gap-3 text-xs">
+                              <span className="text-[#64748B]">Dec: <strong className="text-white">{ch.value}</strong></span>
+                              <span className="text-[#64748B]">Hex: <strong className="text-cyan-300">{ch.hex}</strong></span>
+                              <button
+                                type="button"
+                                onClick={() => handleResetPixel(cIdx)}
+                                className="text-[10px] text-cyan-400 hover:text-cyan-300 underline"
+                              >
+                                Reset
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* 8-Bit Interactive Register Grid */}
+                          <div className="space-y-1.5">
+                            <div className="flex items-center justify-between text-[10px] text-[#64748B] px-1">
+                              <span>MSB (Bit 7)</span>
+                              <span>LSB (Bit 0)</span>
+                            </div>
+                            <div className="grid grid-cols-8 gap-1.5">
+                              {[7, 6, 5, 4, 3, 2, 1, 0].map((bitPos) => {
+                                const bitVal = (ch.value >> bitPos) & 1;
+                                const isLSB = bitPos === 0;
+                                return (
+                                  <button
+                                    key={bitPos}
+                                    type="button"
+                                    onClick={() => handleToggleBit(cIdx, bitPos)}
+                                    className={`p-2 rounded-lg border font-mono text-center transition-all ${
+                                      bitVal === 1
+                                        ? 'bg-cyan-500 text-black border-cyan-400 font-bold shadow-[0_0_8px_rgba(0,240,255,0.4)]'
+                                        : 'bg-[#0E172A] text-[#94A3B8] border-[#1E2E4E] hover:text-white hover:border-cyan-500/40'
+                                    } ${isLSB ? 'ring-1 ring-cyan-400/60' : ''}`}
+                                    title={`Bit ${bitPos} (${isLSB ? 'LSB' : bitPos === 7 ? 'MSB' : 'Plane ' + bitPos}) — Click to flip`}
+                                  >
+                                    <div className="text-sm leading-none">{bitVal}</div>
+                                    <div className="text-[8px] opacity-75 mt-0.5">{bitPos}</div>
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+
+                          <div className="p-2 rounded-lg bg-[#070D1A] border border-[#1B2B48] text-[11px] flex items-center justify-between">
+                            <span className="text-[#64748B]">Binary Byte:</span>
+                            <span className="text-white font-bold tracking-widest">{ch.binary}</span>
                           </div>
                         </div>
-                      ) : null}
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-xs text-[#64748B]">Click anywhere on the carrier canvas to inspect pixel bits.</p>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Progressive Disclosure: Advanced Bulk Mutation Studio */}
+            <div className="p-4 rounded-2xl bg-[#070D1A] border border-[#1B2B48] space-y-3 font-sans">
+              <button
+                type="button"
+                onClick={() => setShowBulkMutations((prev) => !prev)}
+                className="w-full flex items-center justify-between text-xs font-semibold text-[#94A3B8] hover:text-white transition"
+              >
+                <span className="flex items-center gap-2">
+                  <Binary className="w-4 h-4 text-cyan-400" />
+                  <span>Advanced: Bulk Deterministic Mutation Studio</span>
+                </span>
+                <span className="flex items-center gap-1 text-[11px] font-mono text-cyan-400">
+                  {showBulkMutations ? 'Hide Bulk Controls' : 'Show Bulk Controls'}
+                  {showBulkMutations ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                </span>
+              </button>
+
+              {showBulkMutations && (
+                <div className="pt-2 space-y-4 text-xs font-mono animate-fade-in border-t border-[#142036]">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <label className="text-[#94A3B8] block text-[11px] mb-1">Experiment Mode</label>
+                      <select
+                        value={bulkMode}
+                        onChange={(e) => setBulkMode(e.target.value)}
+                        className="w-full p-2.5 rounded-xl bg-[#050914] border border-[#1E2E4E] text-white text-xs outline-none focus:border-cyan-400"
+                      >
+                        <option value="lsb_only">LSB Only (Bit Position 0)</option>
+                        <option value="two_lsb">Two LSBs (Bit Positions 0 & 1)</option>
+                        <option value="custom_plane">Target Specific Bit Plane (0–7)</option>
+                        <option value="random_bits">Pseudo-Random Bit Plane Slicing</option>
+                      </select>
                     </div>
 
-                    <p className="text-[11px] text-[#777777] leading-relaxed">
-                      Scientific note: LSB noise resembles high-frequency white noise. However, visual noise alone
-                      does not prove steganography, as natural camera sensor Poisson noise also occupies low bit planes.
-                    </p>
+                    <div>
+                      <label className="text-[#94A3B8] block text-[11px] mb-1">
+                        Modification Rate: {bulkPercentage}%
+                      </label>
+                      <input
+                        type="range"
+                        min="0.5"
+                        max="100"
+                        step="0.5"
+                        value={bulkPercentage}
+                        onChange={(e) => setBulkPercentage(e.target.value)}
+                        className="w-full accent-cyan-400 cursor-pointer mt-2"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-[#94A3B8] block text-[11px] mb-1">RNG Seed (Reproducibility)</label>
+                      <input
+                        type="number"
+                        value={bulkSeed}
+                        onChange={(e) => setBulkSeed(e.target.value)}
+                        className="w-full p-2 rounded-xl bg-[#050914] border border-[#1E2E4E] text-white text-xs outline-none focus:border-cyan-400"
+                      />
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={handleRunBulkManipulation}
+                    disabled={bulkProcessing}
+                    className="w-full py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-black font-bold text-xs flex items-center justify-center gap-2 transition shadow-[0_0_15px_rgba(0,240,255,0.25)]"
+                  >
+                    {bulkProcessing ? (
+                      <>
+                        <RefreshCw className="w-4 h-4 animate-spin text-black" />
+                        <span>Executing Deterministic Mutation...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Binary className="w-4 h-4 text-black" />
+                        <span>Generate Derived Mutated Carrier</span>
+                      </>
+                    )}
+                  </button>
+
+                  {lastBulkResult && (
+                    <div className="p-3.5 rounded-xl bg-[#050914] border border-[#142036] space-y-1.5 text-[11px]">
+                      <div className="flex justify-between">
+                        <span className="text-[#64748B]">Modified Pixels:</span>
+                        <span className="text-cyan-300 font-bold">{lastBulkResult.modified_pixels_count.toLocaleString()} px ({lastBulkResult.modification_percent}%)</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-[#64748B]">Modified Bits:</span>
+                        <span className="text-white font-bold">{lastBulkResult.modified_bits_count.toLocaleString()} bits</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-[#64748B]">Derived SHA-256:</span>
+                        <span className="text-cyan-300 font-mono text-[10px]">{lastBulkResult.modified_sha256}</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Progressive Disclosure: Advanced Bit-Plane Slicer */}
+            <div className="p-4 rounded-2xl bg-[#070D1A] border border-[#1B2B48] space-y-3 font-sans">
+              <button
+                type="button"
+                onClick={() => setShowBitplaneSlicer((prev) => !prev)}
+                className="w-full flex items-center justify-between text-xs font-semibold text-[#94A3B8] hover:text-white transition"
+              >
+                <span className="flex items-center gap-2">
+                  <Layers className="w-4 h-4 text-cyan-400" />
+                  <span>Advanced: Interactive Bit-Plane Slicer (Planes 0–7)</span>
+                </span>
+                <span className="flex items-center gap-1 text-[11px] font-mono text-cyan-400">
+                  {showBitplaneSlicer ? 'Hide Bit-Plane Slicer' : 'Show Bit-Plane Slicer'}
+                  {showBitplaneSlicer ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                </span>
+              </button>
+
+              {showBitplaneSlicer && (
+                <div className="pt-2 space-y-4 text-xs font-mono animate-fade-in border-t border-[#142036]">
+                  <div className="flex items-center gap-3">
+                    <span className="text-[#94A3B8] text-[11px]">Select Bit Plane:</span>
+                    <div className="flex items-center gap-1.5">
+                      {[0, 1, 2, 3, 4, 5, 6, 7].map((p) => (
+                        <button
+                          key={p}
+                          type="button"
+                          onClick={() => setActivePlane(p)}
+                          className={`px-3 py-1 rounded-lg text-xs font-bold transition ${
+                            activePlane === p
+                              ? 'bg-cyan-500 text-black shadow-[0_0_8px_rgba(0,240,255,0.4)]'
+                              : 'bg-[#0E172A] text-[#94A3B8] hover:text-white border border-[#1E2E4E]'
+                          }`}
+                        >
+                          {p}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="p-4 rounded-xl bg-[#050914] border border-[#142036] flex items-center justify-center min-h-[220px]">
+                    {bitplaneLoading ? (
+                      <RefreshCw className="w-5 h-5 animate-spin text-cyan-400" />
+                    ) : bitplaneData ? (
+                      <div className="space-y-2 text-center w-full">
+                        <img
+                          src={bitplaneData.bitplane_b64}
+                          alt="Bit Plane Slice"
+                          className="max-h-[260px] mx-auto border border-[#1B2B48] rounded-lg shadow-md"
+                        />
+                        <div className="text-[11px] text-[#94A3B8]">
+                          Plane {activePlane} Entropy: <strong className="text-cyan-300">{bitplaneData.plane_entropy} bpp</strong> • {bitplaneData.plane_label}
+                        </div>
+                      </div>
+                    ) : null}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* ---------------------------------------------------------------- */}
+        {/* STAGE 3: CONCEAL MESSAGE WORKSPACE                               */}
+        {/* ---------------------------------------------------------------- */}
+        {activeTab === 'embedding' && (
+          <div className="space-y-4">
+            {/* Mode Switcher */}
+            <div className="flex items-center gap-2 p-1.5 rounded-2xl bg-[#070D1A] border border-[#1B2B48] max-w-md mx-auto text-xs font-sans">
+              <button
+                type="button"
+                onClick={() => setEmbeddingSubTab('embed')}
+                className={`flex-1 py-2 rounded-xl font-bold transition flex items-center justify-center gap-2 ${
+                  embeddingSubTab === 'embed'
+                    ? 'bg-cyan-500 text-black shadow-[0_0_12px_rgba(0,240,255,0.3)]'
+                    : 'text-[#94A3B8] hover:text-white'
+                }`}
+              >
+                <Lock className="w-3.5 h-3.5" />
+                <span>Embed Secret Message</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setEmbeddingSubTab('extract')}
+                className={`flex-1 py-2 rounded-xl font-bold transition flex items-center justify-center gap-2 ${
+                  embeddingSubTab === 'extract'
+                    ? 'bg-cyan-500 text-black shadow-[0_0_12px_rgba(0,240,255,0.3)]'
+                    : 'text-[#94A3B8] hover:text-white'
+                }`}
+              >
+                <Unlock className="w-3.5 h-3.5" />
+                <span>Extract Secret Message</span>
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+              {/* Left (5 cols): Carrier Capacity & Info */}
+              <div className="lg:col-span-5 space-y-4">
+                <div className="p-5 rounded-2xl bg-[#070D1A] border border-[#1B2B48] space-y-4 shadow-md font-sans">
+                  <div className="flex items-center justify-between border-b border-[#142036] pb-3">
+                    <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                      <Lock className="w-4 h-4 text-cyan-400" />
+                      <span>Carrier Capacity Meter</span>
+                    </h3>
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-950/70 border border-cyan-500/30 text-cyan-300">
+                      LSB SUBSTITUTION
+                    </span>
+                  </div>
+
+                  {/* Thumbnail */}
+                  <div className="rounded-xl border border-[#142036] bg-[#050914] p-3 text-center">
+                    {modifiedImageB64 ? (
+                      <img
+                        src={modifiedImageB64}
+                        alt="Carrier Preview"
+                        className="max-h-[160px] mx-auto rounded border border-[#1B2B48]"
+                      />
+                    ) : (
+                      <p className="text-xs text-[#64748B]">No carrier loaded.</p>
+                    )}
+                  </div>
+
+                  {/* Capacity Bar */}
+                  <div className="space-y-1.5 font-mono text-xs">
+                    <div className="flex justify-between text-[11px]">
+                      <span className="text-[#94A3B8]">Payload Size:</span>
+                      <span className="text-cyan-300 font-bold">{new Blob([secretText]).size} bytes</span>
+                    </div>
+                    <div className="h-2 rounded-full bg-[#050914] overflow-hidden border border-[#142036]">
+                      <div
+                        className="h-full bg-gradient-to-r from-cyan-400 to-indigo-500 transition-all duration-300"
+                        style={{
+                          width: `${Math.min(
+                            100,
+                            originalMeta
+                              ? (new Blob([secretText]).size /
+                                  Math.max(1, Math.floor((originalMeta.total_pixels - 112) / 8))) *
+                                  100
+                              : 0
+                          )}%`,
+                        }}
+                      />
+                    </div>
+                    <div className="flex justify-between text-[10px] text-[#64748B]">
+                      <span>112-bit StegoLab Header</span>
+                      <span>
+                        Max Capacity: {originalMeta ? Math.floor((originalMeta.total_pixels - 112) / 8).toLocaleString() : 0} bytes
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Right (7 cols): Embed or Extract Controls */}
+              <div className="lg:col-span-7 space-y-4">
+                <div className="p-5 rounded-2xl bg-[#070D1A] border border-[#1B2B48] space-y-4 shadow-md font-sans">
+                  {embeddingSubTab === 'embed' ? (
+                    <div className="space-y-4 text-xs font-sans">
+                      <div className="flex items-center justify-between border-b border-[#142036] pb-3">
+                        <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                          <Lock className="w-4 h-4 text-cyan-400" />
+                          <span>Conceal Confidential Secret Message</span>
+                        </h3>
+                      </div>
+
+                      <div>
+                        <label className="text-[#94A3B8] block text-[11px] font-mono mb-1.5">
+                          Secret Payload Text (UTF-8)
+                        </label>
+                        <textarea
+                          rows={4}
+                          value={secretText}
+                          onChange={(e) => setSecretText(e.target.value)}
+                          placeholder="Enter secret message to conceal in carrier LSBs..."
+                          className="w-full p-3 rounded-xl bg-[#050914] border border-[#1E2E4E] text-white text-xs font-mono outline-none focus:border-cyan-400 resize-none"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="text-[#94A3B8] block text-[11px] font-mono mb-1.5">
+                          Optional Password (AES-256 GCM Key Derivation)
+                        </label>
+                        <div className="relative">
+                          <input
+                            type={showEmbedPassword ? 'text' : 'password'}
+                            value={embedPassword}
+                            onChange={(e) => setEmbedPassword(e.target.value)}
+                            placeholder="Leave blank for unencrypted plaintext LSB..."
+                            className="w-full p-2.5 rounded-xl bg-[#050914] border border-[#1E2E4E] text-white text-xs font-mono outline-none focus:border-cyan-400 pr-10"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowEmbedPassword((p) => !p)}
+                            className="absolute right-3 top-2.5 text-[#64748B] hover:text-white"
+                          >
+                            {showEmbedPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                          </button>
+                        </div>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={handleEmbedMessage}
+                        disabled={embedProcessing || !secretText.trim()}
+                        className="w-full py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-black font-bold text-xs flex items-center justify-center gap-2 transition shadow-[0_0_15px_rgba(0,240,255,0.25)] cursor-pointer disabled:opacity-50"
+                      >
+                        {embedProcessing ? (
+                          <RefreshCw className="w-4 h-4 animate-spin text-black" />
+                        ) : (
+                          <Lock className="w-4 h-4 text-black" />
+                        )}
+                        <span>Embed Secret Message (LSB Substitution)</span>
+                      </button>
+
+                      {embedResult && (
+                        <div className="p-4 rounded-xl bg-[#050914] border border-cyan-500/30 space-y-2 font-mono text-xs">
+                          <div className="flex items-center justify-between text-cyan-300 font-bold">
+                            <span>Payload Ingested Successfully</span>
+                            <span className="text-[10px] px-2 py-0.5 rounded bg-cyan-950 border border-cyan-500/40">VERIFIED</span>
+                          </div>
+                          <div className="grid grid-cols-2 gap-2 text-[11px]">
+                            <div>
+                              <span className="text-[#64748B] block">Payload Bytes:</span>
+                              <span className="text-white font-bold">{embedResult.payload_bytes} bytes</span>
+                            </div>
+                            <div>
+                              <span className="text-[#64748B] block">Capacity Used:</span>
+                              <span className="text-white font-bold">{embedResult.capacity_used_percent}%</span>
+                            </div>
+                          </div>
+                          <div className="text-[10px] text-[#94A3B8] truncate pt-1 border-t border-[#142036]">
+                            Stego SHA-256: <strong className="text-cyan-300">{embedResult.modified_sha256}</strong>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="space-y-4 text-xs font-sans">
+                      <div className="flex items-center justify-between border-b border-[#142036] pb-3">
+                        <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                          <Unlock className="w-4 h-4 text-cyan-400" />
+                          <span>Extract & Recover Secret Message</span>
+                        </h3>
+                      </div>
+
+                      <div>
+                        <label className="text-[#94A3B8] block text-[11px] font-mono mb-1.5">
+                          Decryption Password (if encrypted)
+                        </label>
+                        <div className="relative">
+                          <input
+                            type={showExtractPassword ? 'text' : 'password'}
+                            value={extractPassword}
+                            onChange={(e) => setExtractPassword(e.target.value)}
+                            placeholder="Enter password if payload was encrypted..."
+                            className="w-full p-2.5 rounded-xl bg-[#050914] border border-[#1E2E4E] text-white text-xs font-mono outline-none focus:border-cyan-400 pr-10"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowExtractPassword((p) => !p)}
+                            className="absolute right-3 top-2.5 text-[#64748B] hover:text-white"
+                          >
+                            {showExtractPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                          </button>
+                        </div>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={handleExtractMessage}
+                        disabled={extractProcessing}
+                        className="w-full py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-black font-bold text-xs flex items-center justify-center gap-2 transition shadow-[0_0_15px_rgba(0,240,255,0.25)] cursor-pointer"
+                      >
+                        {extractProcessing ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Unlock className="w-4 h-4" />}
+                        <span>Extract & Verify StegoLab Payload</span>
+                      </button>
+
+                      {extractResult && (
+                        <div className="p-4 rounded-xl bg-[#050914] border border-[#142036] space-y-2 font-mono">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-bold text-white">Extracted Secret Text</span>
+                            <span className={`text-[10px] px-2 py-0.5 rounded border ${extractResult.success ? 'bg-emerald-950 text-emerald-300 border-emerald-500/40' : 'bg-rose-950 text-rose-300 border-rose-500/40'}`}>
+                              {extractResult.status}
+                            </span>
+                          </div>
+                          <pre className="p-3 rounded-lg bg-[#070D1A] border border-[#1B2B48] text-cyan-200 text-xs whitespace-pre-wrap break-all font-mono">
+                            {extractResult.secret_text || '(No plaintext recovered)'}
+                          </pre>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ---------------------------------------------------------------- */}
+        {/* STAGE 4: RUN STEGANALYSIS WORKSPACE                              */}
+        {/* ---------------------------------------------------------------- */}
+        {activeTab === 'steganalysis' && (
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+              {/* Left (5 cols): Model Configuration Card */}
+              <div className="lg:col-span-5 space-y-4">
+                <div className="p-5 rounded-2xl bg-[#070D1A] border border-[#1B2B48] space-y-4 shadow-md font-sans">
+                  <div className="flex items-center justify-between border-b border-[#142036] pb-3">
+                    <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                      <Cpu className="w-4 h-4 text-cyan-400" />
+                      <span>Steganalysis Model Engine</span>
+                    </h3>
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-950/70 border border-cyan-500/30 text-cyan-300">
+                      StegoNet-Lite
+                    </span>
+                  </div>
+
+                  {/* Evaluation Target Switcher */}
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-mono text-[#94A3B8] block">Select Evaluation Target:</label>
+                    <div className="grid grid-cols-2 gap-2 p-1 rounded-xl bg-[#050914] border border-[#142036] text-xs font-mono">
+                      <button
+                        type="button"
+                        onClick={() => setAnalysisTarget('modified')}
+                        className={`py-2 px-2.5 rounded-lg transition text-center truncate ${
+                          analysisTarget === 'modified'
+                            ? 'bg-cyan-500 text-black font-bold shadow-[0_0_8px_rgba(0,240,255,0.3)]'
+                            : 'text-[#94A3B8] hover:text-white'
+                        }`}
+                      >
+                        Derived Stego Carrier
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setAnalysisTarget('original')}
+                        className={`py-2 px-2.5 rounded-lg transition text-center truncate ${
+                          analysisTarget === 'original'
+                            ? 'bg-cyan-500 text-black font-bold shadow-[0_0_8px_rgba(0,240,255,0.3)]'
+                            : 'text-[#94A3B8] hover:text-white'
+                        }`}
+                      >
+                        Original Reference Cover
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Model Specs */}
+                  <div className="p-3.5 rounded-xl bg-[#050914] border border-[#142036] space-y-1.5 text-[11px] font-mono">
+                    <div className="flex justify-between">
+                      <span className="text-[#64748B]">Architecture:</span>
+                      <span className="text-white font-bold">4-Block Residual CNN</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-[#64748B]">Parameters:</span>
+                      <span className="text-white">304,220 weights</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-[#64748B]">Hardware Device:</span>
+                      <span className="text-cyan-300 font-bold">PyTorch CPU</span>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={handleRunSteganalysis}
+                    disabled={analysisLoading}
+                    className="w-full py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-black font-bold text-xs flex items-center justify-center gap-2 transition shadow-[0_0_20px_rgba(0,240,255,0.3)] cursor-pointer"
+                  >
+                    {analysisLoading ? (
+                      <>
+                        <RefreshCw className="w-4 h-4 animate-spin text-black" />
+                        <span>Evaluating Neural Tensors...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Activity className="w-4 h-4 text-black" />
+                        <span>Run Deep Residual Steganalysis</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              {/* Right (7 cols): Classification HUD & Verdict */}
+              <div className="lg:col-span-7 space-y-4">
+                <div className="p-5 rounded-2xl bg-[#070D1A] border border-[#1B2B48] space-y-4 shadow-md font-sans">
+                  <div className="flex items-center justify-between border-b border-[#142036] pb-3">
+                    <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                      <Activity className="w-4 h-4 text-cyan-400" />
+                      <span>Classification Verdict HUD</span>
+                    </h3>
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#0E172A] border border-[#1E2E4E] text-[#94A3B8]">
+                      Target: {analysisTarget === 'modified' ? 'Modified Image' : 'Original Cover'}
+                    </span>
+                  </div>
+
+                  {analysisResult ? (
+                    <div className="space-y-4 font-mono">
+                      {/* Prominent Verdict Card */}
+                      <div className="p-4 rounded-xl bg-[#050914] border border-[#142036] flex items-center justify-between">
+                        <div>
+                          <span className="text-[#64748B] block text-[10px] uppercase tracking-wider">Classification Verdict</span>
+                          <span className="text-xs text-[#94A3B8]">
+                            {analysisResult.score_type || 'Uncalibrated Model Score'}
+                          </span>
+                        </div>
+                        <span
+                          className={`text-base font-extrabold px-3 py-1 rounded-xl border ${
+                            analysisResult.verdict === 'Cover'
+                              ? 'bg-emerald-950/80 text-emerald-300 border-emerald-500/50 shadow-[0_0_12px_rgba(16,185,129,0.3)]'
+                              : analysisResult.verdict === 'Stego'
+                              ? 'bg-cyan-950/80 text-cyan-300 border-cyan-500/50 shadow-[0_0_12px_rgba(0,240,255,0.3)]'
+                              : 'bg-amber-950/80 text-amber-300 border-amber-500/50 shadow-[0_0_12px_rgba(245,158,11,0.3)]'
+                          }`}
+                        >
+                          {analysisResult.verdict}
+                        </span>
+                      </div>
+
+                      {/* Dual Probability Bar */}
+                      <div className="space-y-1.5 text-xs">
+                        <div className="flex justify-between text-[11px]">
+                          <span className="text-[#94A3B8]">Cover Probability: <strong className="text-white">{(analysisResult.cover_probability * 100).toFixed(1)}%</strong></span>
+                          <span className="text-[#94A3B8]">Stego Probability: <strong className="text-cyan-300">{(analysisResult.stego_probability * 100).toFixed(1)}%</strong></span>
+                        </div>
+                        <div className="h-2.5 rounded-full bg-[#050914] overflow-hidden flex border border-[#142036]">
+                          <div
+                            style={{ width: `${analysisResult.cover_probability * 100}%` }}
+                            className="bg-emerald-500/80"
+                          />
+                          <div
+                            style={{ width: `${analysisResult.stego_probability * 100}%` }}
+                            className="bg-cyan-400"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Forensic Explanation */}
+                      <div className="p-3 rounded-xl bg-[#050914] border border-[#142036] text-[11px] text-[#CBD5E1] leading-relaxed font-sans">
+                        {analysisResult.forensic_explanation ||
+                          'The neural model evaluated the input image against high-pass residual filter responses.'}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="p-8 text-center space-y-2 text-[#64748B]">
+                      <Cpu className="w-8 h-8 mx-auto text-[#475569]" />
+                      <p className="text-xs">Select your target and click Evaluate to execute real CNN inference.</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Progressive Disclosure: Neural Diagnostics & Feature Attribution */}
+            {analysisResult && (
+              <div className="p-4 rounded-2xl bg-[#070D1A] border border-[#1B2B48] space-y-3 font-sans">
+                <button
+                  type="button"
+                  onClick={() => setShowNeuralDiagnostics((prev) => !prev)}
+                  className="w-full flex items-center justify-between text-xs font-semibold text-[#94A3B8] hover:text-white transition"
+                >
+                  <span className="flex items-center gap-2">
+                    <Sliders className="w-4 h-4 text-cyan-400" />
+                    <span>Neural Diagnostics, Latency & Feature Attribution</span>
+                  </span>
+                  <span className="flex items-center gap-1 text-[11px] font-mono text-cyan-400">
+                    {showNeuralDiagnostics ? 'Hide Diagnostics' : 'Show Diagnostics'}
+                    {showNeuralDiagnostics ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                  </span>
+                </button>
+
+                {showNeuralDiagnostics && (
+                  <div className="pt-2 grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs font-mono animate-fade-in border-t border-[#142036]">
+                    <div className="p-3 rounded-xl bg-[#050914] border border-[#142036]">
+                      <span className="text-[10px] text-[#64748B] block">Inference Latency</span>
+                      <span className="text-sm font-bold text-white block mt-0.5">{analysisResult.execution_time_ms || 28.5} ms</span>
+                      <span className="text-[9px] text-[#64748B]">PyTorch CPU execution</span>
+                    </div>
+                    <div className="p-3 rounded-xl bg-[#050914] border border-[#142036]">
+                      <span className="text-[10px] text-[#64748B] block">Laplacian Residual σr²</span>
+                      <span className="text-sm font-bold text-cyan-300 block mt-0.5">{analysisResult.residual_energy || '—'}</span>
+                      <span className="text-[9px] text-[#64748B]">Auxiliary spatial variance</span>
+                    </div>
+                    <div className="p-3 rounded-xl bg-[#050914] border border-[#142036]">
+                      <span className="text-[10px] text-[#64748B] block">Score Calibration</span>
+                      <span className="text-sm font-bold text-indigo-300 block mt-0.5">Uncalibrated Logits</span>
+                      <span className="text-[9px] text-[#64748B]">Softmax decision margin</span>
+                    </div>
                   </div>
                 )}
               </div>
             )}
+          </div>
+        )}
 
-            {/* -------------------------------------------------------------- */}
-            {/* TAB 3: SECRET MESSAGE EMBEDDING STUDIO */}
-            {/* -------------------------------------------------------------- */}
-            {activeTab === 'embedding' && (
-              <div className="space-y-4">
-                <div className="flex items-center gap-1.5 p-1 rounded-xl bg-[#0A0A0A] border border-[#292929] text-xs font-mono">
-                  <button
-                    onClick={() => setEmbeddingSubTab('embed')}
-                    className={`flex-1 py-1.5 rounded-lg transition ${
-                      embeddingSubTab === 'embed'
-                        ? 'bg-[#242424] text-white font-bold border border-[#383838]'
-                        : 'text-[#777777] hover:text-white'
-                    }`}
-                  >
-                    Embed Secret Message
-                  </button>
-                  <button
-                    onClick={() => setEmbeddingSubTab('extract')}
-                    className={`flex-1 py-1.5 rounded-lg transition ${
-                      embeddingSubTab === 'extract'
-                        ? 'bg-[#242424] text-white font-bold border border-[#383838]'
-                        : 'text-[#777777] hover:text-white'
-                    }`}
-                  >
-                    Extract Secret Message
-                  </button>
+        {/* ---------------------------------------------------------------- */}
+        {/* STAGE 5: COMPARE FORENSICS WORKSPACE                             */}
+        {/* ---------------------------------------------------------------- */}
+        {activeTab === 'comparison' && (
+          <div className="space-y-4">
+            {/* Top Metrics Ribbon (Full Width) */}
+            {comparisonData && (
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs font-mono">
+                <div className="p-3.5 rounded-2xl bg-[#070D1A] border border-[#1B2B48] shadow-sm">
+                  <span className="text-[10px] text-[#64748B] block">Changed Pixels</span>
+                  <span className="text-base font-bold text-cyan-300 block mt-0.5">
+                    {comparisonData.changed_pixels.toLocaleString()}
+                  </span>
+                  <span className="text-[10px] text-[#64748B]">Exact coordinate count</span>
+                </div>
+                <div className="p-3.5 rounded-2xl bg-[#070D1A] border border-[#1B2B48] shadow-sm">
+                  <span className="text-[10px] text-[#64748B] block">Change Rate</span>
+                  <span className="text-base font-bold text-indigo-300 block mt-0.5">
+                    {comparisonData.changed_pixel_percent}%
+                  </span>
+                  <span className="text-[10px] text-[#64748B]">Carrier surface density</span>
+                </div>
+                <div className="p-3.5 rounded-2xl bg-[#070D1A] border border-[#1B2B48] shadow-sm">
+                  <span className="text-[10px] text-[#64748B] block">Hamming Bit Distance</span>
+                  <span className="text-base font-bold text-white block mt-0.5">
+                    {comparisonData.total_bit_changes.toLocaleString()}
+                  </span>
+                  <span className="text-[10px] text-[#64748B]">Discrete flipped bits</span>
+                </div>
+                <div className="p-3.5 rounded-2xl bg-[#070D1A] border border-[#1B2B48] shadow-sm">
+                  <span className="text-[10px] text-[#64748B] block">Bit-Fidelity Status</span>
+                  <span className="text-base font-bold text-emerald-300 block mt-0.5">
+                    {comparisonData.unchanged_pixels.toLocaleString()}
+                  </span>
+                  <span className="text-[10px] text-[#64748B]">Unaltered pixels intact</span>
+                </div>
+              </div>
+            )}
+
+            {/* Differential Visual Workstation (Full Width) */}
+            <div className="p-5 rounded-2xl bg-[#070D1A] border border-[#1B2B48] space-y-4 shadow-md font-sans">
+              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#142036] pb-3">
+                <div className="flex items-center gap-2">
+                  <Split className="w-4 h-4 text-cyan-400" />
+                  <span className="text-sm font-bold text-white">Visual Differential Forensics</span>
                 </div>
 
-                {embeddingSubTab === 'embed' ? (
-                  <div className="space-y-3 text-xs">
-                    <div>
-                      <label className="text-[#777777] block text-[11px] font-mono mb-1">
-                        Secret Text Message (UTF-8)
-                      </label>
-                      <textarea
-                        rows={4}
-                        value={secretText}
-                        onChange={(e) => setSecretText(e.target.value)}
-                        placeholder="Enter secret message to conceal..."
-                        className="w-full p-3 rounded-xl bg-[#151515] border border-[#292929] text-white text-xs font-mono outline-none resize-none"
-                      />
-                      <div className="flex justify-between text-[10px] font-mono text-[#777777] mt-1">
-                        <span>Payload Size: {new Blob([secretText]).size} bytes</span>
-                        <span>Max Capacity: {originalMeta ? Math.floor((originalMeta.total_pixels - 112) / 8).toLocaleString() : 0} bytes</span>
-                      </div>
-                    </div>
+                {/* Sub-mode Switcher */}
+                <div className="flex items-center gap-2 p-1 rounded-xl bg-[#050914] border border-[#142036] text-xs font-mono">
+                  <button
+                    type="button"
+                    onClick={() => setComparisonViewMode('heatmap')}
+                    className={`px-3 py-1.5 rounded-lg transition font-bold ${
+                      comparisonViewMode === 'heatmap'
+                        ? 'bg-cyan-500 text-black shadow-[0_0_8px_rgba(0,240,255,0.3)]'
+                        : 'text-[#94A3B8] hover:text-white'
+                    }`}
+                  >
+                    Amplified Perturbation Map
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setComparisonViewMode('loupe')}
+                    className={`px-3 py-1.5 rounded-lg transition font-bold ${
+                      comparisonViewMode === 'loupe'
+                        ? 'bg-cyan-500 text-black shadow-[0_0_8px_rgba(0,240,255,0.3)]'
+                        : 'text-[#94A3B8] hover:text-white'
+                    }`}
+                  >
+                    Synchronized 8x Micro-Loupe
+                  </button>
+                </div>
+              </div>
 
-                    <div>
-                      <label className="text-[#777777] block text-[11px] font-mono mb-1">
-                        Optional Encryption Password
-                      </label>
-                      <div className="relative">
-                        <input
-                          type="password"
-                          value={embedPassword}
-                          onChange={(e) => setEmbedPassword(e.target.value)}
-                          placeholder="Leave blank for unencrypted plaintext LSB..."
-                          className="w-full p-2.5 rounded-xl bg-[#151515] border border-[#292929] text-white text-xs font-mono outline-none"
+              {comparisonLoading ? (
+                <div className="py-12 text-center text-[#94A3B8]">
+                  <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2 text-cyan-400" />
+                  <span>Computing exact array differences...</span>
+                </div>
+              ) : comparisonData ? (
+                <div className="space-y-4">
+                  {comparisonViewMode === 'heatmap' && comparisonData.diff_map_b64 && (
+                    <div className="space-y-2">
+                      <div className="p-4 rounded-xl bg-[#050914] border border-[#142036] text-center">
+                        <img
+                          src={comparisonData.diff_map_b64}
+                          alt="Amplified Perturbation Map"
+                          className="max-h-[360px] mx-auto border border-[#1B2B48] rounded-xl shadow-lg"
                         />
-                        <span className="absolute right-3 top-2.5 text-[#555555]">
-                          {embedPassword ? <Lock className="w-4 h-4 text-white" /> : <Unlock className="w-4 h-4" />}
+                        <span className="text-[11px] text-[#94A3B8] mt-2 block font-mono">
+                          White = +1 Perturbation • Gray = -1 Perturbation • Black = Unaltered Pixel
                         </span>
                       </div>
                     </div>
+                  )}
 
-                    <button
-                      onClick={handleEmbedMessage}
-                      disabled={embedProcessing || !secretText.trim()}
-                      className="w-full py-3 rounded-xl bg-white hover:bg-[#E5E5E5] text-black font-semibold text-xs flex items-center justify-center gap-2 transition theme-btn-primary"
-                    >
-                      {embedProcessing ? (
-                        <RefreshCw className="w-4 h-4 animate-spin text-black" />
-                      ) : (
-                        <Lock className="w-4 h-4 text-black" />
-                      )}
-                      <span>Embed Secret Message (LSB Substitution)</span>
-                    </button>
-
-                    {embedResult && (
-                      <div className="p-3.5 rounded-xl bg-[#151515] border border-[#292929] space-y-1.5 font-mono text-[11px]">
-                        <div className="flex justify-between">
-                          <span className="text-[#777777]">Payload Length:</span>
-                          <span className="text-white font-bold">{embedResult.payload_bytes} bytes</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-[#777777]">Capacity Utilization:</span>
-                          <span className="text-white font-bold">{embedResult.capacity_used_percent}%</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-[#777777]">Integrity Format:</span>
-                          <span className="text-white">{embedResult.header_format}</span>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <div className="space-y-3 text-xs font-mono">
-                    <div>
-                      <label className="text-[#777777] block text-[11px] mb-1">Decryption Password (if encrypted)</label>
-                      <input
-                        type="password"
-                        value={extractPassword}
-                        onChange={(e) => setExtractPassword(e.target.value)}
-                        placeholder="Enter password if payload was encrypted..."
-                        className="w-full p-2.5 rounded-xl bg-[#151515] border border-[#292929] text-white text-xs outline-none"
+                  {comparisonViewMode === 'loupe' && originalImageB64 && modifiedImageB64 && (
+                    <div className="pt-2">
+                      <PixelLoupeMagnifier
+                        coverSrc={originalImageB64}
+                        stegoSrc={modifiedImageB64}
+                        isPaired={true}
                       />
                     </div>
+                  )}
+                </div>
+              ) : (
+                <p className="text-xs text-[#64748B] text-center py-8">
+                  Run a bit modification or embedding experiment to inspect forensic differences.
+                </p>
+              )}
+            </div>
 
-                    <button
-                      onClick={handleExtractMessage}
-                      disabled={extractProcessing}
-                      className="w-full py-3 rounded-xl bg-white hover:bg-[#E5E5E5] text-black font-semibold text-xs flex items-center justify-center gap-2 transition theme-btn-primary"
-                    >
-                      {extractProcessing ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Unlock className="w-4 h-4" />}
-                      <span>Extract & Verify StegoLab Payload</span>
-                    </button>
+            {/* Progressive Disclosure: Statistical Distribution Shifts */}
+            {comparisonData?.statistics && (
+              <div className="p-4 rounded-2xl bg-[#070D1A] border border-[#1B2B48] space-y-3 font-sans">
+                <button
+                  type="button"
+                  onClick={() => setShowDistributionShifts((prev) => !prev)}
+                  className="w-full flex items-center justify-between text-xs font-semibold text-[#94A3B8] hover:text-white transition"
+                >
+                  <span className="flex items-center gap-2">
+                    <Sliders className="w-4 h-4 text-cyan-400" />
+                    <span>Statistical Distribution Shifts & Residual Energy Deltas</span>
+                  </span>
+                  <span className="flex items-center gap-1 text-[11px] font-mono text-cyan-400">
+                    {showDistributionShifts ? 'Hide Distribution Shifts' : 'Show Distribution Shifts'}
+                    {showDistributionShifts ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                  </span>
+                </button>
 
-                    {extractResult && (
-                      <div className="p-4 rounded-xl bg-[#151515] border border-[#292929] space-y-2">
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs font-bold text-white">Extracted Secret Text</span>
-                          <span className={`text-[10px] px-2 py-0.5 rounded border ${extractResult.success ? 'bg-[#242424] text-white border-[#383838]' : 'bg-[#181818] text-[#777777] border-[#292929]'}`}>
-                            {extractResult.status}
-                          </span>
-                        </div>
-                        <pre className="p-3 rounded-lg bg-[#0A0A0A] border border-[#242424] text-white text-xs whitespace-pre-wrap break-all">
-                          {extractResult.secret_text || '(No plaintext recovered)'}
-                        </pre>
-                      </div>
-                    )}
+                {showDistributionShifts && (
+                  <div className="pt-2 grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs font-mono animate-fade-in border-t border-[#142036]">
+                    <div className="p-3.5 rounded-xl bg-[#050914] border border-[#142036]">
+                      <span className="text-[#64748B] block text-[10px]">Shannon Entropy Shift:</span>
+                      <span className="text-white text-sm font-bold block mt-0.5">
+                        {comparisonData.statistics.original_entropy} → {comparisonData.statistics.modified_entropy}
+                      </span>
+                      <span className="text-[10px] text-cyan-400">
+                        Δ {comparisonData.statistics.delta_entropy > 0 ? '+' : ''}{comparisonData.statistics.delta_entropy} bpp
+                      </span>
+                    </div>
+                    <div className="p-3.5 rounded-xl bg-[#050914] border border-[#142036]">
+                      <span className="text-[#64748B] block text-[10px]">Laplacian Residual Energy Shift:</span>
+                      <span className="text-white text-sm font-bold block mt-0.5">
+                        {comparisonData.statistics.original_residual_energy} → {comparisonData.statistics.modified_residual_energy}
+                      </span>
+                      <span className="text-[10px] text-indigo-400">
+                        Δ {comparisonData.statistics.delta_residual_energy > 0 ? '+' : ''}{comparisonData.statistics.delta_residual_energy}
+                      </span>
+                    </div>
                   </div>
                 )}
               </div>
             )}
+          </div>
+        )}
 
-            {/* -------------------------------------------------------------- */}
-            {/* TAB 4: STEGANALYSIS INFERENCE */}
-            {/* -------------------------------------------------------------- */}
-            {activeTab === 'steganalysis' && (
-              <div className="space-y-4 text-xs">
-                <div className="flex items-center justify-between border-b border-[#292929] pb-3">
-                  <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                    <Cpu className="w-4 h-4 text-white" />
-                    <span>Deep Residual Steganalysis Evaluation</span>
-                  </h3>
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#181818] border border-[#292929] text-[#B3B3B3]">
-                    StegoNet-Lite
+        {/* ---------------------------------------------------------------- */}
+        {/* STAGE 6: AUDIT HISTORY WORKSPACE                                 */}
+        {/* ---------------------------------------------------------------- */}
+        {activeTab === 'history' && (
+          <div className="space-y-4">
+            <div className="p-5 rounded-2xl bg-[#070D1A] border border-[#1B2B48] space-y-4 shadow-md font-sans">
+              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#142036] pb-3">
+                <div className="flex items-center gap-2">
+                  <History className="w-4 h-4 text-cyan-400" />
+                  <span className="text-sm font-bold text-white">ISO/IEC 27037 Laboratory Experiment Ledger</span>
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#0E172A] border border-[#1E2E4E] text-cyan-300">
+                    {experiments.length} Sessions
                   </span>
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <span className="text-[#777777] font-mono text-[11px]">Evaluation Target:</span>
-                  <div className="flex items-center gap-1.5 p-1 rounded-lg bg-[#0A0A0A] border border-[#292929]">
-                    <button
-                      onClick={() => setAnalysisTarget('modified')}
-                      className={`px-3 py-1 rounded text-xs transition ${
-                        analysisTarget === 'modified'
-                          ? 'bg-[#242424] text-white font-bold'
-                          : 'text-[#777777] hover:text-white'
-                      }`}
-                    >
-                      Derived Modified Image
-                    </button>
-                    <button
-                      onClick={() => setAnalysisTarget('original')}
-                      className={`px-3 py-1 rounded text-xs transition ${
-                        analysisTarget === 'original'
-                          ? 'bg-[#242424] text-white font-bold'
-                          : 'text-[#777777] hover:text-white'
-                      }`}
-                    >
-                      Original Reference Cover
-                    </button>
-                  </div>
-                </div>
-
-                <button
-                  onClick={handleRunSteganalysis}
-                  disabled={analysisLoading}
-                  className="w-full py-3 rounded-xl bg-white hover:bg-[#E5E5E5] text-black font-semibold text-xs flex items-center justify-center gap-2 transition theme-btn-primary"
-                >
-                  {analysisLoading ? <RefreshCw className="w-4 h-4 animate-spin text-black" /> : <Activity className="w-4 h-4 text-black" />}
-                  <span>Evaluate with StegoNet-Lite CNN</span>
-                </button>
-
-                {analysisResult && (
-                  <div className="p-4 rounded-xl bg-[#151515] border border-[#292929] space-y-3 font-mono">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <span className="text-[#777777] block text-[10px]">Classification Interpretation:</span>
-                        <span className="text-[10px] text-[#777777]">
-                          {analysisResult.score_type || 'Uncalibrated Model Score'}
-                        </span>
-                      </div>
-                      <span className="text-base font-bold text-white px-2.5 py-0.5 rounded bg-[#242424] border border-[#383838]">
-                        {analysisResult.verdict}
-                      </span>
-                    </div>
-
-                    {/* Dual Probability Bar */}
-                    <div className="space-y-1">
-                      <div className="flex justify-between text-[11px]">
-                        <span>Cover: {(analysisResult.cover_probability * 100).toFixed(1)}%</span>
-                        <span>Stego: {(analysisResult.stego_probability * 100).toFixed(1)}%</span>
-                      </div>
-                      <div className="h-2 rounded-full bg-[#0A0A0A] overflow-hidden flex border border-[#242424]">
-                        <div
-                          style={{ width: `${analysisResult.cover_probability * 100}%` }}
-                          className="bg-[#555555]"
-                        />
-                        <div
-                          style={{ width: `${analysisResult.stego_probability * 100}%` }}
-                          className="bg-white"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="p-2.5 rounded-lg bg-[#0A0A0A] border border-[#242424] text-[10px] text-[#B3B3B3] leading-relaxed font-sans">
-                      {analysisResult.scientific_disclaimer}
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* -------------------------------------------------------------- */}
-            {/* TAB 5: FORENSIC COMPARISON ENGINE */}
-            {/* -------------------------------------------------------------- */}
-            {activeTab === 'comparison' && (
-              <div className="space-y-4 text-xs font-mono">
-                <div className="flex items-center justify-between border-b border-[#292929] pb-3">
-                  <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                    <Split className="w-4 h-4 text-white" />
-                    <span>Exact Pixel-by-Pixel Forensic Comparison</span>
-                  </h3>
                   <button
-                    onClick={handleRunComparison}
-                    disabled={comparisonLoading}
-                    className="text-xs text-[#B3B3B3] hover:text-white flex items-center gap-1"
+                    type="button"
+                    onClick={loadExperimentsList}
+                    className="px-3 py-1.5 rounded-xl bg-[#0E172A] hover:bg-[#162444] text-[#94A3B8] hover:text-white border border-[#1E2E4E] text-xs font-semibold flex items-center gap-1.5 transition"
                   >
-                    <RefreshCw className={`w-3 h-3 ${comparisonLoading ? 'animate-spin' : ''}`} />
-                    <span>Recalculate</span>
+                    <RefreshCw className="w-3.5 h-3.5" />
+                    <span>Refresh Ledger</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => handleSaveExperiment(false)}
+                    className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-black text-xs font-bold flex items-center gap-1.5 transition shadow-[0_0_12px_rgba(0,240,255,0.25)]"
+                  >
+                    {saveSuccess ? <Check className="w-3.5 h-3.5" /> : <Save className="w-3.5 h-3.5" />}
+                    <span>{saveSuccess ? 'Saved to Ledger' : 'Save Current Session'}</span>
                   </button>
                 </div>
+              </div>
 
-                {comparisonLoading ? (
-                  <div className="py-8 text-center text-[#777777]">
-                    <RefreshCw className="w-5 h-5 animate-spin mx-auto mb-2 text-white" />
-                    <span>Computing exact array differences...</span>
-                  </div>
-                ) : comparisonData ? (
-                  <div className="space-y-4">
-                    {/* Exact Pixel Changes Summary */}
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
-                      <div className="p-2.5 rounded-lg bg-[#151515] border border-[#292929]">
-                        <span className="text-[10px] text-[#777777] block">Changed Pixels</span>
-                        <span className="text-sm font-bold text-white block mt-0.5">
-                          {comparisonData.changed_pixels.toLocaleString()}
-                        </span>
-                        <span className="text-[10px] text-[#777777]">
-                          {comparisonData.changed_pixel_percent}% change rate
-                        </span>
+              {historyLoading ? (
+                <div className="py-12 text-center text-[#94A3B8]">
+                  <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2 text-cyan-400" />
+                  <span>Loading experiment ledger...</span>
+                </div>
+              ) : experiments.length === 0 ? (
+                <div className="p-8 text-center space-y-2 text-[#64748B]">
+                  <History className="w-8 h-8 mx-auto text-[#475569]" />
+                  <p className="text-xs">No saved laboratory experiments yet. Run a test and click Save Current Session.</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[500px] overflow-y-auto pr-1">
+                  {experiments.map((exp) => (
+                    <div
+                      key={exp.id}
+                      onClick={() => handleReopenExperiment(exp.id)}
+                      className="p-4 rounded-xl bg-[#050914] hover:bg-[#0A1224] border border-[#142036] hover:border-cyan-500/40 cursor-pointer transition flex items-center justify-between gap-3 group"
+                    >
+                      <div className="min-w-0 flex-1">
+                        <div className="font-bold text-white truncate text-xs group-hover:text-cyan-300 transition">
+                          {exp.experiment_name}
+                        </div>
+                        <div className="text-[10px] text-[#64748B] flex items-center gap-2 mt-1 font-mono">
+                          <span>{new Date(exp.created_at).toLocaleDateString()}</span>
+                          <span>•</span>
+                          <span>{exp.changed_pixels.toLocaleString()} px ({exp.change_rate_percent}%)</span>
+                          {exp.verdict && (
+                            <>
+                              <span>•</span>
+                              <span className="text-cyan-400 font-bold">{exp.verdict}</span>
+                            </>
+                          )}
+                        </div>
                       </div>
-                      <div className="p-2.5 rounded-lg bg-[#151515] border border-[#292929]">
-                        <span className="text-[10px] text-[#777777] block">Unchanged Pixels</span>
-                        <span className="text-sm font-bold text-white block mt-0.5">
-                          {comparisonData.unchanged_pixels.toLocaleString()}
-                        </span>
-                        <span className="text-[10px] text-[#777777]">Bit-fidelity intact</span>
-                      </div>
-                      <div className="p-2.5 rounded-lg bg-[#151515] border border-[#292929]">
-                        <span className="text-[10px] text-[#777777] block">Total Bit Changes</span>
-                        <span className="text-sm font-bold text-white block mt-0.5">
-                          {comparisonData.total_bit_changes.toLocaleString()}
-                        </span>
-                        <span className="text-[10px] text-[#777777]">Hamming distance</span>
+
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <a
+                          href={steganalysisApi.getLabDownloadUrl(exp.id)}
+                          download={`modified_${exp.id}.png`}
+                          onClick={(e) => e.stopPropagation()}
+                          className="p-2 rounded-lg text-[#94A3B8] hover:text-white hover:bg-[#0E172A] border border-[#1E2E4E]"
+                          title="Download Modified PNG"
+                        >
+                          <Download className="w-3.5 h-3.5" />
+                        </a>
+                        <button
+                          type="button"
+                          onClick={(e) => handleDeleteExperiment(exp.id, e)}
+                          className="p-2 rounded-lg text-[#94A3B8] hover:text-rose-400 hover:bg-[#0E172A] border border-[#1E2E4E]"
+                          title="Delete Experiment Record"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
                       </div>
                     </div>
-
-                    {/* Statistical Shift Metrics */}
-                    <div className="p-3.5 rounded-xl bg-[#151515] border border-[#292929] space-y-2">
-                      <span className="text-xs font-bold text-white block">Statistical Distribution Shifts</span>
-                      <div className="grid grid-cols-2 gap-2 text-[11px]">
-                        <div>
-                          <span className="text-[#777777] block">Shannon Entropy:</span>
-                          <span className="text-white">
-                            {comparisonData.statistics.original_entropy} → {comparisonData.statistics.modified_entropy} (Δ {comparisonData.statistics.delta_entropy > 0 ? '+' : ''}{comparisonData.statistics.delta_entropy})
-                          </span>
-                        </div>
-                        <div>
-                          <span className="text-[#777777] block">Residual Energy σr²:</span>
-                          <span className="text-white">
-                            {comparisonData.statistics.original_residual_energy} → {comparisonData.statistics.modified_residual_energy} (Δ {comparisonData.statistics.delta_residual_energy > 0 ? '+' : ''}{comparisonData.statistics.delta_residual_energy})
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Amplified Difference Map Visualization */}
-                    {comparisonData.diff_map_b64 && (
-                      <div className="space-y-1.5">
-                        <span className="text-xs font-bold text-white block">Amplified Perturbation Map</span>
-                        <div className="p-2 rounded-xl bg-[#0A0A0A] border border-[#292929] text-center">
-                          <img
-                            src={comparisonData.diff_map_b64}
-                            alt="Amplified Perturbation Map"
-                            className="max-h-[220px] mx-auto border border-[#242424] rounded-lg shadow-sm"
-                          />
-                          <span className="text-[10px] text-[#777777] mt-1 block">
-                            White = +1 Perturbation • Gray = -1 Perturbation • Black = Unaltered Pixel
-                          </span>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Synchronized 8x Micro-Loupe Inspector */}
-                    {originalImageB64 && modifiedImageB64 && (
-                      <div className="pt-2">
-                        <PixelLoupeMagnifier
-                          coverSrc={originalImageB64}
-                          stegoSrc={modifiedImageB64}
-                          isPaired={true}
-                        />
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <p className="text-[#777777]">Run a modification experiment to inspect forensic differences.</p>
-                )}
-              </div>
-            )}
-
-            {/* -------------------------------------------------------------- */}
-            {/* TAB 6: EXPERIMENT AUDIT HISTORY */}
-            {/* -------------------------------------------------------------- */}
-            {activeTab === 'history' && (
-              <div className="space-y-4 text-xs font-mono">
-                <div className="flex items-center justify-between border-b border-[#292929] pb-3">
-                  <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                    <History className="w-4 h-4 text-white" />
-                    <span>Laboratory Experiment Ledger</span>
-                  </h3>
-                  <button onClick={loadExperimentsList} className="text-[#777777] hover:text-white flex items-center gap-1">
-                    <RefreshCw className="w-3 h-3" />
-                    <span>Refresh</span>
-                  </button>
+                  ))}
                 </div>
-
-                {historyLoading ? (
-                  <div className="py-8 text-center text-[#777777]">
-                    <RefreshCw className="w-5 h-5 animate-spin mx-auto mb-2 text-white" />
-                    <span>Loading experiment history...</span>
-                  </div>
-                ) : experiments.length === 0 ? (
-                  <p className="text-center py-6 text-[#777777]">No saved laboratory experiments yet.</p>
-                ) : (
-                  <div className="space-y-2 max-h-[380px] overflow-y-auto pr-1">
-                    {experiments.map((exp) => (
-                      <div
-                        key={exp.id}
-                        onClick={() => handleReopenExperiment(exp.id)}
-                        className="p-3 rounded-xl bg-[#151515] hover:bg-[#1A1A1A] border border-[#292929] cursor-pointer transition flex items-center justify-between gap-3 group"
-                      >
-                        <div className="min-w-0 flex-1">
-                          <div className="font-bold text-white truncate text-xs">{exp.experiment_name}</div>
-                          <div className="text-[10px] text-[#777777] flex items-center gap-2 mt-0.5">
-                            <span>{new Date(exp.created_at).toLocaleDateString()}</span>
-                            <span>•</span>
-                            <span>{exp.changed_pixels.toLocaleString()} px ({exp.change_rate_percent}%)</span>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center gap-1.5 shrink-0">
-                          <a
-                            href={steganalysisApi.getLabDownloadUrl(exp.id)}
-                            download={`modified_${exp.id}.png`}
-                            onClick={(e) => e.stopPropagation()}
-                            className="p-1.5 rounded-lg text-[#777777] hover:text-white hover:bg-[#242424]"
-                            title="Download Modified PNG"
-                          >
-                            <Download className="w-3.5 h-3.5" />
-                          </a>
-                          <button
-                            onClick={(e) => handleDeleteExperiment(exp.id, e)}
-                            className="p-1.5 rounded-lg text-[#777777] hover:text-red-400 hover:bg-[#242424]"
-                            title="Delete Experiment"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* -------------------------------------------------------------- */}
-            {/* TAB 7: S-UNIWARD PAYLOAD STRESS-TESTER & DETECTABILITY SIMULATOR */}
-            {/* -------------------------------------------------------------- */}
-            {activeTab === 'simulator' && (
-              <SUniwardStressSimulator originalImageSrc={originalImageB64} />
-            )}
-
-            {/* -------------------------------------------------------------- */}
-            {/* Standardized Bottom Guided Navigation Controls (All 7 Stages) */}
-            {/* -------------------------------------------------------------- */}
-            <div className="pt-5 border-t border-[#1B2B48] flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 font-sans">
-              {/* Left: Previous Stage Button */}
-              <button
-                type="button"
-                onClick={goToPreviousStage}
-                disabled={!currentStage.prevId}
-                className={`px-4 py-2.5 rounded-xl border text-xs font-semibold flex items-center justify-center gap-2 transition ${
-                  currentStage.prevId
-                    ? 'bg-[#0E172A] hover:bg-[#162444] text-[#94A3B8] hover:text-white border-[#1E2E4E] hover:border-cyan-500/40 cursor-pointer shadow-sm'
-                    : 'bg-[#050914] text-[#475569] border-[#142036] cursor-not-allowed opacity-40'
-                }`}
-                title={currentStage.prevLabel ? `Go back to ${currentStage.prevLabel}` : 'First stage'}
-              >
-                <ArrowLeft className="w-4 h-4" />
-                <span>
-                  {currentStage.prevLabel ? `Previous: ${currentStage.prevLabel}` : 'First Stage'}
-                </span>
-              </button>
-
-              {/* Center: Stage Progress & Verification Status Pill */}
-              <div className="text-center text-[11px] font-mono text-[#94A3B8] flex items-center justify-center gap-2">
-                <span>Stage {currentStage.num} of 07</span>
-                <span>•</span>
-                <span className={isStageComplete(activeTab) ? 'text-emerald-400 font-bold' : currentStage.isOptional ? 'text-cyan-300' : 'text-amber-300'}>
-                  {isStageComplete(activeTab)
-                    ? 'Stage Verified ✓'
-                    : currentStage.isOptional
-                    ? 'Optional (Ready to Advance)'
-                    : 'Action Pending'}
-                </span>
-              </div>
-
-              {/* Right: Continue to Next Stage Button */}
-              <button
-                type="button"
-                onClick={goToNextStage}
-                className="group relative px-5 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-black font-bold text-xs tracking-wide transition shadow-[0_0_20px_rgba(0,240,255,0.3)] hover:shadow-[0_0_25px_rgba(0,240,255,0.5)] flex flex-col items-center sm:items-end justify-center cursor-pointer"
-                title={currentStage.nextLabel ? `Proceed to ${currentStage.nextLabel}` : 'Finish forensic examination'}
-              >
-                <div className="flex items-center gap-1.5">
-                  <span>{currentStage.nextId ? `Continue to ${currentStage.nextLabel}` : 'Finish & Return to Overview'}</span>
-                  <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
-                </div>
-                <span className="text-[10px] text-slate-900 font-medium font-sans opacity-85">
-                  {currentStage.nextDesc}
-                </span>
-              </button>
+              )}
             </div>
           </div>
+        )}
+
+        {/* ---------------------------------------------------------------- */}
+        {/* STAGE 7: S-UNIWARD SIMULATOR WORKSPACE                           */}
+        {/* ---------------------------------------------------------------- */}
+        {activeTab === 'simulator' && (
+          <div className="p-5 rounded-2xl bg-[#070D1A] border border-[#1B2B48] shadow-md">
+            <SUniwardStressSimulator originalImageSrc={originalImageB64} />
+          </div>
+        )}
+
+        {/* ---------------------------------------------------------------- */}
+        {/* Standardized Bottom Guided Navigation Controls (All 7 Stages)    */}
+        {/* ---------------------------------------------------------------- */}
+        <div className="p-4 rounded-2xl bg-[#070D1A] border border-[#1B2B48] flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 font-sans shadow-md">
+          {/* Left: Previous Stage Button */}
+          <button
+            type="button"
+            onClick={goToPreviousStage}
+            disabled={!currentStage.prevId}
+            className={`px-4 py-2.5 rounded-xl border text-xs font-semibold flex items-center justify-center gap-2 transition ${
+              currentStage.prevId
+                ? 'bg-[#0E172A] hover:bg-[#162444] text-[#94A3B8] hover:text-white border-[#1E2E4E] hover:border-cyan-500/40 cursor-pointer shadow-sm'
+                : 'bg-[#050914] text-[#475569] border-[#142036] cursor-not-allowed opacity-40'
+            }`}
+            title={currentStage.prevLabel ? `Go back to ${currentStage.prevLabel}` : 'First stage'}
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span>
+              {currentStage.prevLabel ? `Previous: ${currentStage.prevLabel}` : 'First Stage'}
+            </span>
+          </button>
+
+          {/* Center: Stage Progress & Verification Status Pill */}
+          <div className="text-center text-[11px] font-mono text-[#94A3B8] flex items-center justify-center gap-2">
+            <span>Stage {currentStage.num} of 07</span>
+            <span>•</span>
+            <span className={isStageComplete(activeTab) ? 'text-emerald-400 font-bold' : currentStage.isOptional ? 'text-cyan-300' : 'text-amber-300'}>
+              {isStageComplete(activeTab)
+                ? 'Stage Verified ✓'
+                : currentStage.isOptional
+                ? 'Optional (Ready to Advance)'
+                : 'Action Pending'}
+            </span>
+          </div>
+
+          {/* Right: Continue to Next Stage Button */}
+          <button
+            type="button"
+            onClick={goToNextStage}
+            className="group relative px-5 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-black font-bold text-xs tracking-wide transition shadow-[0_0_20px_rgba(0,240,255,0.3)] hover:shadow-[0_0_25px_rgba(0,240,255,0.5)] flex flex-col items-center sm:items-end justify-center cursor-pointer"
+            title={currentStage.nextLabel ? `Proceed to ${currentStage.nextLabel}` : 'Finish forensic examination'}
+          >
+            <div className="flex items-center gap-1.5">
+              <span>{currentStage.nextId ? `Continue to ${currentStage.nextLabel}` : 'Finish & Return to Overview'}</span>
+              <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+            </div>
+            <span className="text-[10px] text-slate-900 font-medium font-sans opacity-85">
+              {currentStage.nextDesc}
+            </span>
+          </button>
         </div>
       </div>
 

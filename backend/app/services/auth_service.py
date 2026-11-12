@@ -34,12 +34,13 @@ REFRESH_COOKIE_NAME = "stego_refresh_token"
 
 def set_refresh_cookie(response: Response, refresh_token: str, max_age_seconds: int) -> None:
     """Sets a secure HttpOnly cookie for refresh token."""
+    is_secure = settings.COOKIE_SECURE or (not settings.DEBUG)
     response.set_cookie(
         key=REFRESH_COOKIE_NAME,
         value=refresh_token,
         max_age=max_age_seconds,
         httponly=True,
-        secure=settings.COOKIE_SECURE,
+        secure=is_secure,
         samesite=settings.COOKIE_SAMESITE,
         path="/",
     )
@@ -117,7 +118,7 @@ class AuthService:
         set_refresh_cookie(response, raw_refresh_token, int(session_duration.total_seconds()))
 
         logger.info(f"User registered successfully: {clean_email} (ID: {user.id})")
-        return user, access_token, raw_refresh_token, expires_in
+        return user, access_token, expires_in
 
     @staticmethod
     async def login(
@@ -181,7 +182,7 @@ class AuthService:
         set_refresh_cookie(response, raw_refresh_token, int(session_duration.total_seconds()))
 
         logger.info(f"User logged in successfully: {clean_email} (ID: {user.id})")
-        return user, access_token, raw_refresh_token, expires_in
+        return user, access_token, expires_in
 
     @staticmethod
     async def refresh(
@@ -245,7 +246,7 @@ class AuthService:
 
         set_refresh_cookie(response, new_raw_refresh, int(session_duration.total_seconds()))
 
-        return user, new_access_token, new_raw_refresh, expires_in
+        return user, new_access_token, expires_in
 
     @staticmethod
     async def logout(
@@ -358,3 +359,4 @@ class AuthService:
         user.updated_at = datetime.now(timezone.utc)
         await db.commit()
         logger.info(f"Password changed successfully for user ID {user.id}")
+

@@ -292,12 +292,6 @@ export default function TopHeader({
           </div>
         ) : (
           <div className="flex items-center gap-2">
-            {/* Guest Pill */}
-            <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#0B1222] border border-[#17253E] text-[11px] font-mono text-[#94A3B8]">
-              <span className="w-1.5 h-1.5 rounded-full bg-cyan-400/80" />
-              <span>Guest Analyst</span>
-            </div>
-
             <button
               type="button"
               onClick={() => {

@@ -6,6 +6,20 @@ const AuthContext = createContext(null);
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isGuestSession, setIsGuestSession] = useState(() => {
+    try {
+      return sessionStorage.getItem('stego_guest_session') === 'true';
+    } catch (e) {
+      return false;
+    }
+  });
+
+  const continueAsGuest = useCallback(() => {
+    try {
+      sessionStorage.setItem('stego_guest_session', 'true');
+    } catch (e) {}
+    setIsGuestSession(true);
+  }, []);
 
   // Modal states for unified cyber auth dialogs
   const [authModal, setAuthModal] = useState({
@@ -136,6 +150,10 @@ export function AuthProvider({ children }) {
     });
     setAuthToken(res.access_token);
     setUser(res.user);
+    setIsGuestSession(false);
+    try {
+      sessionStorage.removeItem('stego_guest_session');
+    } catch (e) {}
     closeAuthModal();
     return res.user;
   };
@@ -150,6 +168,10 @@ export function AuthProvider({ children }) {
     });
     setAuthToken(res.access_token);
     setUser(res.user);
+    setIsGuestSession(false);
+    try {
+      sessionStorage.removeItem('stego_guest_session');
+    } catch (e) {}
     closeAuthModal();
     return res.user;
   };
@@ -163,7 +185,9 @@ export function AuthProvider({ children }) {
       // Clear all authentication-related in-memory and persistent state
       setAuthToken(null);
       setUser(null);
+      setIsGuestSession(false);
       try {
+        sessionStorage.removeItem('stego_guest_session');
         sessionStorage.clear();
       } catch (e) {
         // ignore
@@ -191,7 +215,10 @@ export function AuthProvider({ children }) {
   const value = {
     user,
     isAuthenticated: Boolean(user),
-    isGuest: !user,
+    isGuest: Boolean(!user && isGuestSession),
+    isGuestSession,
+    continueAsGuest,
+    hasAccess: Boolean(user || isGuestSession),
     isLoading,
     login,
     register,

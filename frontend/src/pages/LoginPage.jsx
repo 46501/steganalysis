@@ -11,20 +11,19 @@ import {
   AlertCircle,
   ArrowRight,
   ShieldCheck,
-  Sparkles,
   KeyRound,
-  FileText,
-  Activity,
+  ArrowLeft,
 } from 'lucide-react';
+import { authApi } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { playCyberClick } from '../utils/cyberSoundEffects';
 
 export default function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, login, register, openAuthModal } = useAuth();
+  const { user, login, register, continueAsGuest, isGuestSession } = useAuth();
 
-  const [activeTab, setActiveTab] = useState('login'); // 'login' | 'register'
+  const [activeTab, setActiveTab] = useState('login'); // 'login' | 'register' | 'forgot'
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -35,12 +34,13 @@ export default function LoginPage() {
 
   const [error, setError] = useState(null);
   const [notification, setNotification] = useState(location.state?.message || null);
+  const [recoverySuccess, setRecoverySuccess] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // If already authenticated, redirect to destination or dashboard
   useEffect(() => {
     if (user) {
-      const destination = location.state?.from?.pathname || '/';
+      const destination = location.state?.from?.pathname || '/dashboard';
       navigate(destination, { replace: true });
     }
   }, [user, navigate, location]);
@@ -73,6 +73,7 @@ export default function LoginPage() {
     e.preventDefault();
     setError(null);
     setNotification(null);
+    setRecoverySuccess(null);
     setIsSubmitting(true);
     playCyberClick();
 
@@ -82,9 +83,9 @@ export default function LoginPage() {
           throw new Error('Please enter both email address and password.');
         }
         await login(email.trim(), password, rememberMe);
-        const destination = location.state?.from?.pathname || '/';
+        const destination = location.state?.from?.pathname || '/dashboard';
         navigate(destination, { replace: true });
-      } else {
+      } else if (activeTab === 'register') {
         if (!fullName.trim()) {
           throw new Error('Please enter your full name or callsign.');
         }
@@ -98,11 +99,21 @@ export default function LoginPage() {
           throw new Error('Passwords do not match.');
         }
         await register(fullName.trim(), email.trim(), password, confirmPassword);
-        const destination = location.state?.from?.pathname || '/';
+        const destination = location.state?.from?.pathname || '/dashboard';
         navigate(destination, { replace: true });
+      } else if (activeTab === 'forgot') {
+        if (!email.trim()) {
+          throw new Error('Please enter your registered email address.');
+        }
+        const res = await authApi.forgotPassword(email.trim());
+        setRecoverySuccess(
+          res.detail
+            ? `Password recovery instructions generated. Dev Token: ${res.detail}`
+            : res.message || 'If an account exists with this email address, password reset instructions have been generated.'
+        );
       }
     } catch (err) {
-      const msg = err.response?.data?.detail || err.message || 'Authentication failed. Please verify your credentials.';
+      const msg = err.response?.data?.detail || err.message || 'Authentication operation failed.';
       setError(msg);
     } finally {
       setIsSubmitting(false);
@@ -111,14 +122,15 @@ export default function LoginPage() {
 
   const handleContinueAsGuest = () => {
     playCyberClick();
-    navigate('/', { replace: true });
+    continueAsGuest();
+    navigate('/dashboard', { replace: true });
   };
 
   return (
     <div className="min-h-screen bg-[#000000] text-white flex flex-col justify-center items-center px-4 py-12 relative overflow-hidden font-sans select-none">
       {/* Background Cyber Ambient Glows */}
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-cyan-500/10 rounded-full blur-[140px] pointer-events-none" />
-      <div className="absolute bottom-10 right-10 w-[400px] h-[400px] bg-indigo-600/10 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[650px] h-[650px] bg-cyan-500/10 rounded-full blur-[140px] pointer-events-none" />
+      <div className="absolute bottom-10 right-10 w-[450px] h-[450px] bg-indigo-600/10 rounded-full blur-[130px] pointer-events-none" />
 
       {/* Cyber Grid Lines */}
       <div
@@ -142,18 +154,18 @@ export default function LoginPage() {
               Stego<span className="text-cyan-400">Shield</span> AI
             </h1>
             <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-cyan-950/80 border border-cyan-500/30 text-cyan-300">
-              SEC-OPS
+              OPERATIONS
             </span>
           </div>
 
           <p className="text-xs text-[#94A3B8] font-mono">
-            Digital Image Forensics & Neural Steganalysis Workstation
+            Digital Image Forensics & Neural Steganalysis Platform
           </p>
         </div>
 
         {/* Main Authentication Card */}
         <div className="rounded-3xl bg-[#070D1A]/95 border border-[#1B2B48] shadow-[0_0_50px_rgba(0,0,0,0.8)] p-6 sm:p-8 backdrop-blur-xl">
-          {/* Notification Banner (e.g. Logout Success) */}
+          {/* Notification Banner (e.g. Logout Success or Auth Requirement) */}
           {notification && (
             <div className="mb-5 p-3.5 rounded-xl bg-emerald-950/60 border border-emerald-500/40 text-xs text-emerald-200 flex items-start gap-2.5 animate-fade-in">
               <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
@@ -165,6 +177,24 @@ export default function LoginPage() {
                 onClick={() => setNotification(null)}
                 className="text-emerald-400 hover:text-white text-xs font-bold px-1"
                 aria-label="Dismiss message"
+              >
+                ✕
+              </button>
+            </div>
+          )}
+
+          {/* Recovery Success Banner */}
+          {recoverySuccess && (
+            <div className="mb-5 p-3.5 rounded-xl bg-cyan-950/60 border border-cyan-500/40 text-xs text-cyan-200 flex items-start gap-2.5 animate-fade-in">
+              <KeyRound className="w-4 h-4 text-cyan-400 shrink-0 mt-0.5" />
+              <div className="flex-1 font-mono text-[11px] leading-relaxed break-all">
+                {recoverySuccess}
+              </div>
+              <button
+                type="button"
+                onClick={() => setRecoverySuccess(null)}
+                className="text-cyan-400 hover:text-white text-xs font-bold px-1"
+                aria-label="Dismiss recovery message"
               >
                 ✕
               </button>
@@ -189,39 +219,63 @@ export default function LoginPage() {
             </div>
           )}
 
-          {/* Mode Tabs */}
-          <div className="grid grid-cols-2 p-1 rounded-xl bg-[#050914] border border-[#142036] mb-6">
-            <button
-              type="button"
-              onClick={() => {
-                setActiveTab('login');
-                setError(null);
-                playCyberClick();
-              }}
-              className={`py-2 text-xs font-semibold rounded-lg transition-all ${
-                activeTab === 'login'
-                  ? 'bg-gradient-to-r from-cyan-500/20 to-indigo-500/20 text-cyan-300 border border-cyan-500/40 shadow-[0_0_12px_rgba(0,240,255,0.2)]'
-                  : 'text-[#94A3B8] hover:text-white'
-              }`}
-            >
-              Sign In
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setActiveTab('register');
-                setError(null);
-                playCyberClick();
-              }}
-              className={`py-2 text-xs font-semibold rounded-lg transition-all ${
-                activeTab === 'register'
-                  ? 'bg-gradient-to-r from-cyan-500/20 to-indigo-500/20 text-cyan-300 border border-cyan-500/40 shadow-[0_0_12px_rgba(0,240,255,0.2)]'
-                  : 'text-[#94A3B8] hover:text-white'
-              }`}
-            >
-              Create Account
-            </button>
-          </div>
+          {/* Mode Switcher Tabs */}
+          {activeTab !== 'forgot' ? (
+            <div className="grid grid-cols-2 p-1 rounded-xl bg-[#050914] border border-[#142036] mb-6">
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveTab('login');
+                  setError(null);
+                  playCyberClick();
+                }}
+                className={`py-2 text-xs font-semibold rounded-lg transition-all ${
+                  activeTab === 'login'
+                    ? 'bg-gradient-to-r from-cyan-500/20 to-indigo-500/20 text-cyan-300 border border-cyan-500/40 shadow-[0_0_12px_rgba(0,240,255,0.2)]'
+                    : 'text-[#94A3B8] hover:text-white'
+                }`}
+              >
+                Sign In
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveTab('register');
+                  setError(null);
+                  playCyberClick();
+                }}
+                className={`py-2 text-xs font-semibold rounded-lg transition-all ${
+                  activeTab === 'register'
+                    ? 'bg-gradient-to-r from-cyan-500/20 to-indigo-500/20 text-cyan-300 border border-cyan-500/40 shadow-[0_0_12px_rgba(0,240,255,0.2)]'
+                    : 'text-[#94A3B8] hover:text-white'
+                }`}
+              >
+                Create Account
+              </button>
+            </div>
+          ) : (
+            <div className="flex items-center justify-between pb-3 mb-5 border-b border-[#142036]">
+              <div className="flex items-center gap-2">
+                <KeyRound className="w-4 h-4 text-cyan-400" />
+                <span className="text-xs font-mono font-bold uppercase tracking-wider text-white">
+                  Password Recovery
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveTab('login');
+                  setError(null);
+                  setRecoverySuccess(null);
+                  playCyberClick();
+                }}
+                className="text-xs text-[#94A3B8] hover:text-cyan-300 flex items-center gap-1 transition"
+              >
+                <ArrowLeft className="w-3.5 h-3.5" />
+                <span>Back to Sign In</span>
+              </button>
+            </div>
+          )}
 
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -262,60 +316,64 @@ export default function LoginPage() {
               </div>
             </div>
 
-            <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <label className="text-xs font-mono text-[#94A3B8] uppercase tracking-wider">
-                  Password
-                </label>
-                {activeTab === 'login' && (
+            {activeTab !== 'forgot' && (
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="text-xs font-mono text-[#94A3B8] uppercase tracking-wider">
+                    Password
+                  </label>
+                  {activeTab === 'login' && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setActiveTab('forgot');
+                        setError(null);
+                        setRecoverySuccess(null);
+                        playCyberClick();
+                      }}
+                      className="text-xs text-cyan-400 hover:text-cyan-300 transition"
+                    >
+                      Forgot password?
+                    </button>
+                  )}
+                </div>
+                <div className="relative">
+                  <Lock className="w-4 h-4 text-[#94A3B8] absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••••••••"
+                    className="w-full pl-10 pr-10 py-2.5 rounded-xl bg-[#050914] border border-[#1E2E4E] focus:border-cyan-400 focus:outline-none focus:ring-1 focus:ring-cyan-400 text-sm text-white placeholder-gray-500 transition font-sans"
+                  />
                   <button
                     type="button"
-                    onClick={() => {
-                      openAuthModal('forgot');
-                      playCyberClick();
-                    }}
-                    className="text-xs text-cyan-400 hover:text-cyan-300 transition"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#94A3B8] hover:text-white"
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
                   >
-                    Forgot password?
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
+                </div>
+
+                {/* Password strength feedback */}
+                {activeTab === 'register' && password.length > 0 && (
+                  <div className="mt-2 space-y-1.5">
+                    <div className="flex items-center justify-between text-[11px] font-mono">
+                      <span className="text-[#94A3B8]">Strength:</span>
+                      <span className={`font-semibold ${strength.text}`}>{strength.label}</span>
+                    </div>
+                    <div className="h-1.5 w-full bg-[#142036] rounded-full overflow-hidden">
+                      <div
+                        className={`h-full ${strength.color} transition-all duration-300`}
+                        style={{ width: `${strength.percent}%` }}
+                      />
+                    </div>
+                  </div>
                 )}
               </div>
-              <div className="relative">
-                <Lock className="w-4 h-4 text-[#94A3B8] absolute left-3.5 top-1/2 -translate-y-1/2" />
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••••••"
-                  className="w-full pl-10 pr-10 py-2.5 rounded-xl bg-[#050914] border border-[#1E2E4E] focus:border-cyan-400 focus:outline-none focus:ring-1 focus:ring-cyan-400 text-sm text-white placeholder-gray-500 transition font-sans"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#94A3B8] hover:text-white"
-                  aria-label={showPassword ? 'Hide password' : 'Show password'}
-                >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
-              </div>
-
-              {/* Password strength feedback */}
-              {activeTab === 'register' && password.length > 0 && (
-                <div className="mt-2 space-y-1.5">
-                  <div className="flex items-center justify-between text-[11px] font-mono">
-                    <span className="text-[#94A3B8]">Strength:</span>
-                    <span className={`font-semibold ${strength.text}`}>{strength.label}</span>
-                  </div>
-                  <div className="h-1.5 w-full bg-[#142036] rounded-full overflow-hidden">
-                    <div
-                      className={`h-full ${strength.color} transition-all duration-300`}
-                      style={{ width: `${strength.percent}%` }}
-                    />
-                  </div>
-                </div>
-              )}
-            </div>
+            )}
 
             {activeTab === 'register' && (
               <div>
@@ -370,22 +428,28 @@ export default function LoginPage() {
               {isSubmitting ? (
                 <>
                   <span className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
-                  <span>Authenticating...</span>
+                  <span>Processing...</span>
                 </>
               ) : (
                 <>
-                  <span>{activeTab === 'login' ? 'Authenticate Session' : 'Initialize Account'}</span>
+                  <span>
+                    {activeTab === 'login'
+                      ? 'Authenticate Session'
+                      : activeTab === 'register'
+                      ? 'Initialize Account'
+                      : 'Send Recovery Link'}
+                  </span>
                   <ArrowRight className="w-4 h-4" />
                 </>
               )}
             </button>
           </form>
 
-          {/* Continue as Guest Divider */}
+          {/* Optional Guest Mode Access */}
           <div className="mt-6 pt-5 border-t border-[#142036] flex items-center justify-between text-xs font-mono">
             <span className="text-[#94A3B8] flex items-center gap-1.5">
               <ShieldCheck className="w-3.5 h-3.5 text-cyan-400" />
-              <span>NIST SP 800-86 Compliant</span>
+              <span>NIST SP 800-86</span>
             </span>
 
             <button
@@ -393,7 +457,7 @@ export default function LoginPage() {
               onClick={handleContinueAsGuest}
               className="text-cyan-400 hover:text-cyan-300 font-semibold flex items-center gap-1 transition group"
             >
-              <span>Continue as Guest</span>
+              <span>Continue as Guest Analyst</span>
               <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition" />
             </button>
           </div>
@@ -409,4 +473,3 @@ export default function LoginPage() {
     </div>
   );
 }
-

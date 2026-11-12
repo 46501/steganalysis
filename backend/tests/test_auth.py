@@ -167,9 +167,14 @@ class TestTokenRefreshAndRotation:
         assert new_access is not None
         assert new_refresh != initial_refresh
 
-        # Old refresh token should now be revoked and rejected
+        # Old refresh token should now trigger theft detection, revoking the whole family
         second_resp = client.post("/api/v1/auth/refresh", json={"refresh_token": initial_refresh})
         assert second_resp.status_code == 401
+        assert "Compromised or re-used" in second_resp.json()["detail"]
+
+        # The new refresh token must also be revoked as part of the compromised token family
+        third_resp = client.post("/api/v1/auth/refresh", json={"refresh_token": new_refresh})
+        assert third_resp.status_code == 401
 
 
 class TestPasswordRecoveryAndReset:

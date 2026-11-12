@@ -3,7 +3,7 @@
 import re
 from datetime import datetime
 from typing import Optional, List, Dict, Any
-from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator, model_validator
 
 
 class UserRegisterRequest(BaseModel):
@@ -26,20 +26,15 @@ class UserRegisterRequest(BaseModel):
             raise ValueError("Password must contain at least one digit")
         return v
 
-    @field_validator("confirm_password", "password_confirm")
-    @classmethod
-    def passwords_match(cls, v: Optional[str], info) -> Optional[str]:
-        if v is not None and "password" in info.data and v != info.data["password"]:
-            raise ValueError("Passwords do not match")
-        return v
-
-    def get_confirmation(self) -> str:
+    @model_validator(mode="after")
+    def verify_passwords(self):
         conf = self.confirm_password or self.password_confirm
         if not conf:
             raise ValueError("confirm_password is required")
         if conf != self.password:
             raise ValueError("Passwords do not match")
-        return conf
+        self.confirm_password = conf
+        return self
 
 
 class UserLoginRequest(BaseModel):
@@ -93,13 +88,6 @@ class ResetPasswordRequest(BaseModel):
     confirm_password: Optional[str] = Field(None, min_length=8, max_length=128, description="Confirm new password")
     new_password_confirm: Optional[str] = Field(None, min_length=8, max_length=128, description="Confirm new password alias")
 
-    @field_validator("confirm_password", "new_password_confirm")
-    @classmethod
-    def passwords_match(cls, v: Optional[str], info) -> Optional[str]:
-        if v is not None and "new_password" in info.data and v != info.data["new_password"]:
-            raise ValueError("Passwords do not match")
-        return v
-
     @field_validator("new_password")
     @classmethod
     def validate_password_strength(cls, v: str) -> str:
@@ -110,6 +98,16 @@ class ResetPasswordRequest(BaseModel):
         if not re.search(r"\d", v):
             raise ValueError("Password must contain at least one digit")
         return v
+
+    @model_validator(mode="after")
+    def verify_passwords(self):
+        conf = self.confirm_password or self.new_password_confirm
+        if not conf:
+            raise ValueError("confirm_password is required")
+        if conf != self.new_password:
+            raise ValueError("Passwords do not match")
+        self.confirm_password = conf
+        return self
 
 
 class ChangePasswordRequest(BaseModel):
@@ -120,13 +118,6 @@ class ChangePasswordRequest(BaseModel):
     confirm_password: Optional[str] = Field(None, min_length=8, max_length=128, description="Confirm new password")
     new_password_confirm: Optional[str] = Field(None, min_length=8, max_length=128, description="Confirm new password alias")
 
-    @field_validator("confirm_password", "new_password_confirm")
-    @classmethod
-    def passwords_match(cls, v: Optional[str], info) -> Optional[str]:
-        if v is not None and "new_password" in info.data and v != info.data["new_password"]:
-            raise ValueError("Passwords do not match")
-        return v
-
     @field_validator("new_password")
     @classmethod
     def validate_password_strength(cls, v: str) -> str:
@@ -137,6 +128,16 @@ class ChangePasswordRequest(BaseModel):
         if not re.search(r"\d", v):
             raise ValueError("Password must contain at least one digit")
         return v
+
+    @model_validator(mode="after")
+    def verify_passwords(self):
+        conf = self.confirm_password or self.new_password_confirm
+        if not conf:
+            raise ValueError("confirm_password is required")
+        if conf != self.new_password:
+            raise ValueError("Passwords do not match")
+        self.confirm_password = conf
+        return self
 
 
 class MessageResponse(BaseModel):

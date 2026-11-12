@@ -118,7 +118,7 @@ class AuthService:
         set_refresh_cookie(response, raw_refresh_token, int(session_duration.total_seconds()))
 
         logger.info(f"User registered successfully: {clean_email} (ID: {user.id})")
-        return user, access_token, expires_in
+        return user, access_token, raw_refresh_token, expires_in
 
     @staticmethod
     async def login(
@@ -182,7 +182,7 @@ class AuthService:
         set_refresh_cookie(response, raw_refresh_token, int(session_duration.total_seconds()))
 
         logger.info(f"User logged in successfully: {clean_email} (ID: {user.id})")
-        return user, access_token, expires_in
+        return user, access_token, raw_refresh_token, expires_in
 
     @staticmethod
     async def refresh(
@@ -204,11 +204,38 @@ class AuthService:
         res = await db.execute(stmt)
         session = res.scalar_one_or_none()
 
-        if not session or not session.is_valid:
+        if not session:
             clear_refresh_cookie(response)
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Refresh token is expired, revoked, or invalid. Please sign in again.",
+                detail="Refresh token missing or invalid. Please sign in again.",
+            )
+
+        # RFC 6749 Section 10.4: Token Reuse / Theft Detection
+        if session.revoked_at is not None:
+            logger.warning(
+                f"SECURITY ALERT: Revoked refresh token re-used for user ID {session.user_id}! "
+                f"Possible token theft or replay attack. Invalidating all sessions for this user."
+            )
+            # Invalidate all active sessions for this compromised user account (token family invalidation)
+            revoke_all_stmt = (
+                update(UserSession)
+                .where(UserSession.user_id == session.user_id, UserSession.revoked_at.is_(None))
+                .values(revoked_at=datetime.now(timezone.utc))
+            )
+            await db.execute(revoke_all_stmt)
+            await db.commit()
+            clear_refresh_cookie(response)
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Security Alert: Compromised or re-used session token detected. All active sessions have been revoked. Please sign in again.",
+            )
+
+        if not session.is_valid:
+            clear_refresh_cookie(response)
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Refresh token is expired. Please sign in again.",
             )
 
         # Fetch user
@@ -246,7 +273,7 @@ class AuthService:
 
         set_refresh_cookie(response, new_raw_refresh, int(session_duration.total_seconds()))
 
-        return user, new_access_token, expires_in
+        return user, new_access_token, new_raw_refresh, expires_in
 
     @staticmethod
     async def logout(

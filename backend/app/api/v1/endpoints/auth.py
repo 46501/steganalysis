@@ -39,12 +39,12 @@ async def register(
     Registers a new user account, creates an active session with secure cookies,
     and returns a signed JWT access token.
     """
-    user, access_token, refresh_token, expires_in = await AuthService.register(db, req, request, response)
+    user, access_token, refresh_token_val, expires_in = await AuthService.register(db, req, request, response)
     return TokenResponse(
         access_token=access_token,
         token_type="bearer",
         expires_in=expires_in,
-        refresh_token=refresh_token,
+        refresh_token=refresh_token_val,
         user=UserResponse.model_validate(user),
     )
 
@@ -64,12 +64,12 @@ async def login(
     Authenticates user credentials, applies brute-force rate limiting,
     issues an HttpOnly refresh cookie, and returns a signed JWT access token.
     """
-    user, access_token, refresh_token, expires_in = await AuthService.login(db, req, request, response)
+    user, access_token, refresh_token_val, expires_in = await AuthService.login(db, req, request, response)
     return TokenResponse(
         access_token=access_token,
         token_type="bearer",
         expires_in=expires_in,
-        refresh_token=refresh_token,
+        refresh_token=refresh_token_val,
         user=UserResponse.model_validate(user),
     )
 
@@ -90,13 +90,24 @@ async def refresh_token(
     Validates the refresh token (from HttpOnly cookie or request body),
     executes cryptographic refresh-token rotation, and returns a fresh access token.
     """
-    token_str = (body.refresh_token if (body and body.refresh_token) else None) or stego_refresh_token
-    user, access_token, refresh_token, expires_in = await AuthService.refresh(db, token_str, request, response)
+    body_token = None
+    if body and body.refresh_token:
+        body_token = body.refresh_token
+    else:
+        try:
+            raw_json = await request.json()
+            if isinstance(raw_json, dict):
+                body_token = raw_json.get("refresh_token")
+        except Exception:
+            pass
+
+    token_str = body_token or stego_refresh_token
+    user, access_token, refresh_token_val, expires_in = await AuthService.refresh(db, token_str, request, response)
     return TokenResponse(
         access_token=access_token,
         token_type="bearer",
         expires_in=expires_in,
-        refresh_token=refresh_token,
+        refresh_token=refresh_token_val,
         user=UserResponse.model_validate(user),
     )
 
@@ -180,3 +191,4 @@ async def change_password(
     """
     await AuthService.change_password(db, current_user, req)
     return MessageResponse(message="Password changed successfully.")
+

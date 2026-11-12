@@ -8,6 +8,7 @@ import {
   AlertTriangle,
   Activity,
   CheckCircle2,
+  HelpCircle,
   Clock,
   Sparkles,
   RefreshCw,
@@ -153,8 +154,11 @@ export default function BatchTriageWorkstation({ onSelectImageForInspection }) {
 
   const results = batchData?.results || [];
   const filteredResults = results.filter((item) => {
-    if (filterMode === 'stego') return item.verdict === 'Stego';
-    if (filterMode === 'cover') return item.verdict === 'Cover';
+    const v = item.verdict || '';
+    const isInconclusive = v.toLowerCase().includes('inconclusive') || item.is_conclusive === false;
+    if (filterMode === 'stego') return !isInconclusive && (v === 'Stego' || v === 'Stego Indicated');
+    if (filterMode === 'cover') return !isInconclusive && (v === 'Cover' || v === 'Cover Indicated');
+    if (filterMode === 'inconclusive') return isInconclusive;
     return true;
   });
 
@@ -408,11 +412,24 @@ export default function BatchTriageWorkstation({ onSelectImageForInspection }) {
                   }}
                   className={`px-3 py-1 rounded-lg transition ${
                     filterMode === 'cover'
-                      ? 'bg-cyan-950/60 text-cyan-300 border border-cyan-500/40 shadow-[0_0_8px_rgba(6,182,212,0.2)]'
+                      ? 'bg-emerald-950/60 text-emerald-300 border border-emerald-500/40 shadow-[0_0_8px_rgba(16,185,129,0.2)]'
                       : 'text-[#64748B] hover:text-white'
                   }`}
                 >
                   Cover ({batchData.cover_count})
+                </button>
+                <button
+                  onClick={() => {
+                    playCyberClick();
+                    setFilterMode('inconclusive');
+                  }}
+                  className={`px-3 py-1 rounded-lg transition ${
+                    filterMode === 'inconclusive'
+                      ? 'bg-amber-950/60 text-amber-300 border border-amber-500/40 shadow-[0_0_8px_rgba(245,158,11,0.2)]'
+                      : 'text-[#64748B] hover:text-white'
+                  }`}
+                >
+                  Inconclusive ({batchData.inconclusive_count || 0})
                 </button>
               </div>
             </div>
@@ -433,7 +450,10 @@ export default function BatchTriageWorkstation({ onSelectImageForInspection }) {
                 </thead>
                 <tbody className="divide-y divide-[#1B2B48] text-[#94A3B8]">
                   {filteredResults.map((item, idx) => {
-                    const isStego = item.verdict === 'Stego';
+                    const vStr = item.verdict || '';
+                    const isInconclusive = vStr.toLowerCase().includes('inconclusive') || item.is_conclusive === false;
+                    const isStego = !isInconclusive && (vStr.includes('Stego'));
+                    const isCover = !isInconclusive && (vStr.includes('Cover'));
                     const isCopied = copiedHash === item.file_hash;
 
                     return (
@@ -461,15 +481,19 @@ export default function BatchTriageWorkstation({ onSelectImageForInspection }) {
                         <td className="py-3 px-3">
                           <span
                             className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold ${
-                              isStego
+                              isInconclusive
+                                ? 'bg-amber-950/40 text-amber-300 border border-amber-500/40 shadow-[0_0_8px_rgba(245,158,11,0.2)]'
+                                : isStego
                                 ? 'bg-rose-950/40 text-rose-300 border border-rose-500/40 shadow-[0_0_8px_rgba(244,63,94,0.2)]'
-                                : 'bg-cyan-950/40 text-cyan-300 border border-cyan-500/40 shadow-[0_0_8px_rgba(6,182,212,0.2)]'
+                                : 'bg-emerald-950/40 text-emerald-300 border border-emerald-500/40 shadow-[0_0_8px_rgba(16,185,129,0.2)]'
                             }`}
                           >
-                            {isStego ? (
+                            {isInconclusive ? (
+                              <HelpCircle className="w-3 h-3 text-amber-400" />
+                            ) : isStego ? (
                               <AlertTriangle className="w-3 h-3 text-rose-400" />
                             ) : (
-                              <CheckCircle2 className="w-3 h-3 text-cyan-400" />
+                              <CheckCircle2 className="w-3 h-3 text-emerald-400" />
                             )}
                             <span>{item.verdict}</span>
                           </span>

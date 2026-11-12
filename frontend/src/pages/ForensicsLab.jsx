@@ -517,7 +517,11 @@ export default function ForensicsLab() {
       setAnalysisLoading(true);
       const res = await steganalysisApi.analyzeLabImage(targetB64, 'StegoNet-Lite');
       setAnalysisResult(res);
-      showStatus(`StegoNet-Lite classified as ${res.verdict} (${(res.confidence * 100).toFixed(1)}%)`);
+      const margin = Math.abs((res.stego_probability ?? 0.5) - (res.cover_probability ?? 0.5));
+      const statusMsg = res.is_conclusive
+        ? `StegoNet-Lite classified as ${res.verdict} (${(res.confidence * 100).toFixed(1)}%)`
+        : `StegoNet-Lite result: Inconclusive (Margin: ${(margin * 100).toFixed(1)}% < 15% threshold)`;
+      showStatus(statusMsg);
     } catch (err) {
       showStatus(err.response?.data?.detail || 'Steganalysis failed', true);
     } finally {
@@ -1913,43 +1917,66 @@ export default function ForensicsLab() {
                   {analysisResult ? (
                     <div className="space-y-4 font-mono">
                       {/* Prominent Verdict Card */}
-                      <div className="p-4 rounded-xl bg-[#050914] border border-[#142036] flex items-center justify-between">
-                        <div>
-                          <span className="text-[#64748B] block text-[10px] uppercase tracking-wider">Classification Verdict</span>
-                          <span className="text-xs text-[#94A3B8]">
-                            {analysisResult.score_type || 'Uncalibrated Model Score'}
-                          </span>
-                        </div>
-                        <span
-                          className={`text-base font-extrabold px-3 py-1 rounded-xl border ${
-                            analysisResult.verdict === 'Cover'
-                              ? 'bg-emerald-950/80 text-emerald-300 border-emerald-500/50 shadow-[0_0_12px_rgba(16,185,129,0.3)]'
-                              : analysisResult.verdict === 'Stego'
-                              ? 'bg-cyan-950/80 text-cyan-300 border-cyan-500/50 shadow-[0_0_12px_rgba(0,240,255,0.3)]'
-                              : 'bg-amber-950/80 text-amber-300 border-amber-500/50 shadow-[0_0_12px_rgba(245,158,11,0.3)]'
-                          }`}
-                        >
-                          {analysisResult.verdict}
-                        </span>
-                      </div>
+                      {(() => {
+                        const verdictStr = analysisResult.verdict || '';
+                        const isInconc = verdictStr.toLowerCase().includes('inconclusive') || analysisResult.is_conclusive === false;
+                        const isStego = !isInconc && (verdictStr.includes('Stego'));
+                        const isCover = !isInconc && (verdictStr.includes('Cover'));
+                        const marginVal = Math.abs((analysisResult.stego_probability ?? 0.5) - (analysisResult.cover_probability ?? 0.5));
 
-                      {/* Dual Probability Bar */}
-                      <div className="space-y-1.5 text-xs">
-                        <div className="flex justify-between text-[11px]">
-                          <span className="text-[#94A3B8]">Cover Probability: <strong className="text-white">{(analysisResult.cover_probability * 100).toFixed(1)}%</strong></span>
-                          <span className="text-[#94A3B8]">Stego Probability: <strong className="text-cyan-300">{(analysisResult.stego_probability * 100).toFixed(1)}%</strong></span>
-                        </div>
-                        <div className="h-2.5 rounded-full bg-[#050914] overflow-hidden flex border border-[#142036]">
-                          <div
-                            style={{ width: `${analysisResult.cover_probability * 100}%` }}
-                            className="bg-emerald-500/80"
-                          />
-                          <div
-                            style={{ width: `${analysisResult.stego_probability * 100}%` }}
-                            className="bg-cyan-400"
-                          />
-                        </div>
-                      </div>
+                        return (
+                          <>
+                            <div className={`p-4 rounded-xl border flex items-center justify-between ${
+                              isInconc
+                                ? 'bg-amber-950/20 border-amber-500/40'
+                                : isStego
+                                ? 'bg-rose-950/20 border-rose-500/40'
+                                : 'bg-emerald-950/20 border-emerald-500/40'
+                            }`}>
+                              <div>
+                                <span className="text-[#64748B] block text-[10px] uppercase tracking-wider">Classification Verdict</span>
+                                <span className="text-xs text-[#94A3B8]">
+                                  {analysisResult.score_type || 'Uncalibrated Model Score'}
+                                </span>
+                              </div>
+                              <span
+                                className={`text-base font-extrabold px-3 py-1 rounded-xl border ${
+                                  isInconc
+                                    ? 'bg-amber-950/80 text-amber-300 border-amber-500/50 shadow-[0_0_12px_rgba(245,158,11,0.3)]'
+                                    : isStego
+                                    ? 'bg-rose-950/80 text-rose-300 border-rose-500/50 shadow-[0_0_12px_rgba(244,63,94,0.3)]'
+                                    : 'bg-emerald-950/80 text-emerald-300 border-emerald-500/50 shadow-[0_0_12px_rgba(16,185,129,0.3)]'
+                                }`}
+                              >
+                                {analysisResult.verdict}
+                              </span>
+                            </div>
+
+                            {/* Dual Probability Bar */}
+                            <div className="space-y-1.5 text-xs">
+                              <div className="flex justify-between text-[11px]">
+                                <span className="text-[#94A3B8]">Cover Probability: <strong className="text-white">{(analysisResult.cover_probability * 100).toFixed(1)}%</strong></span>
+                                <span className="text-[#94A3B8]">Stego Probability: <strong className="text-cyan-300">{(analysisResult.stego_probability * 100).toFixed(1)}%</strong></span>
+                              </div>
+                              <div className="h-2.5 rounded-full bg-[#050914] overflow-hidden flex border border-[#142036]">
+                                <div
+                                  style={{ width: `${analysisResult.cover_probability * 100}%` }}
+                                  className="bg-emerald-500/80"
+                                />
+                                <div
+                                  style={{ width: `${analysisResult.stego_probability * 100}%` }}
+                                  className="bg-cyan-400"
+                                />
+                              </div>
+                              {isInconc && (
+                                <p className="text-[10px] text-amber-400/90 font-mono mt-1">
+                                  Decision Margin: {(marginVal * 100).toFixed(1)}% (below 15.0% threshold). Insufficient evidence to classify.
+                                </p>
+                              )}
+                            </div>
+                          </>
+                        );
+                      })()}
 
                       {/* Forensic Explanation */}
                       <div className="p-3 rounded-xl bg-[#050914] border border-[#142036] text-[11px] text-[#CBD5E1] leading-relaxed font-sans">

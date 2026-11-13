@@ -1,6 +1,8 @@
 """
-Database configuration and session management with automatic resilience fallback.
-Tries PostgreSQL first; if unreachable, automatically falls back to local SQLite on Drive D:.
+Database configuration and session management with strict production guarantees.
+Supports Neon PostgreSQL with serverless cold-start resilience, connection pooling,
+SSL enforcement, credential masking in logs, and explicit local SQLite development mode.
+Automatic SQLite fallback is strictly DISABLED in production.
 """
 
 import logging
@@ -9,6 +11,7 @@ from pathlib import Path
 from typing import AsyncGenerator
 from urllib.parse import urlparse
 
+from sqlalchemy.engine import make_url
 from sqlalchemy.ext.asyncio import (
     AsyncSession,
     async_sessionmaker,
@@ -20,15 +23,33 @@ from app.models.base import Base
 
 logger = logging.getLogger("stego.database")
 
-# Ensure storage directory exists on Drive D:
+# Ensure storage directory exists for local development SQLite database
 STORAGE_DIR = Path(__file__).resolve().parent.parent.parent / "storage"
 STORAGE_DIR.mkdir(parents=True, exist_ok=True)
 SQLITE_DB_PATH = STORAGE_DIR / "stego.db"
 SQLITE_URL = f"sqlite+aiosqlite:///{SQLITE_DB_PATH.as_posix()}"
 
 
-def _is_host_reachable(url_str: str, timeout: float = 0.5) -> bool:
-    """Quick socket check to verify database server port is open before attempting pool connections."""
+class DatabaseConnectionError(RuntimeError):
+    """Raised when the primary configured database cannot be reached or fails to connect."""
+    pass
+
+
+def _mask_url_credentials(url_str: str) -> str:
+    """Masks sensitive password credentials from database URLs for safe audit logging."""
+    try:
+        url = make_url(url_str)
+        return url.render_as_string(hide_password=True)
+    except Exception:
+        import re
+        return re.sub(r"://([^:]+):([^@]+)@", r"://\1:***@", str(url_str))
+
+
+def _is_host_reachable(url_str: str, timeout: float = 5.0) -> bool:
+    """
+    Verifies database host reachability.
+    Uses 5.0s timeout to accommodate Neon serverless cold-start wake-up latency.
+    """
     try:
         parsed = urlparse(url_str)
         host = parsed.hostname or "localhost"
@@ -40,26 +61,81 @@ def _is_host_reachable(url_str: str, timeout: float = 0.5) -> bool:
 
 
 def _select_engine():
-    """Selects PostgreSQL if available; otherwise falls back gracefully to SQLite."""
-    is_pg = "postgres" in settings.DATABASE_URL.lower()
-    if is_pg and _is_host_reachable(settings.DATABASE_URL):
-        logger.info(f"Connecting to PostgreSQL database at {settings.DATABASE_URL}")
-        eng = create_async_engine(
-            settings.DATABASE_URL,
-            echo=False,
-            future=True,
-            pool_pre_ping=True,
+    """
+    Selects database engine based on explicit environment configuration.
+    
+    Mandatory Rules:
+    1. In production (ENVIRONMENT='production'), PostgreSQL/Neon is strictly required.
+       If Neon is unreachable or unconfigured, an explicit DatabaseConnectionError is raised.
+       Automatic silent fallback to SQLite is DISABLED in production.
+    2. In local development (ENVIRONMENT='development' / USE_SQLITE=True), local SQLite
+       is used explicitly, preserving backend/storage/stego.db.
+    """
+    is_prod = settings.ENVIRONMENT.lower() == "production"
+    async_url = settings.get_async_database_url()
+    is_postgres = "postgres" in async_url.lower()
+
+    # Rule 1: Production validation
+    if is_prod and not is_postgres:
+        err_msg = (
+            "FATAL: Production environment requires a valid PostgreSQL/Neon DATABASE_URL. "
+            "SQLite is disabled in production. Aborting startup."
         )
-        db_type = "PostgreSQL"
-    else:
-        logger.info(f"PostgreSQL not reachable or not configured. Using local SQLite database at {SQLITE_DB_PATH}")
+        logger.critical(err_msg)
+        raise DatabaseConnectionError(err_msg)
+
+    # Rule 2: Explicit Local SQLite development mode
+    if not is_postgres or (settings.USE_SQLITE and not is_prod):
+        logger.info(f"Using local SQLite database at {SQLITE_DB_PATH} (Explicit Development Mode)")
         eng = create_async_engine(
             SQLITE_URL,
             echo=False,
             future=True,
         )
-        db_type = "SQLite (Local Storage)"
+        return eng, "SQLite (Local Storage)"
 
+    # Rule 3: PostgreSQL / Neon Connection
+    masked_url = _mask_url_credentials(async_url)
+    logger.info(f"Connecting to PostgreSQL database at {masked_url}")
+
+    # Check host reachability with cold-start tolerance
+    reachable = _is_host_reachable(async_url, timeout=5.0)
+    if not reachable:
+        if is_prod:
+            err_msg = (
+                f"FATAL: Connection to PostgreSQL/Neon database at '{masked_url}' failed (server unreachable). "
+                "Automatic fallback to SQLite is DISABLED in production. Aborting startup."
+            )
+            logger.critical(err_msg)
+            raise DatabaseConnectionError(err_msg)
+        else:
+            logger.warning(
+                f"PostgreSQL '{masked_url}' unreachable. Development mode active: "
+                f"falling back to local SQLite at {SQLITE_DB_PATH}."
+            )
+            eng = create_async_engine(SQLITE_URL, echo=False, future=True)
+            return eng, "SQLite (Local Fallback)"
+
+    # Configure asyncpg connection arguments for Neon
+    connect_args = {}
+    if "postgres" in async_url.lower():
+        # Neon requirement: SSL mode
+        if "ssl" not in async_url.lower():
+            connect_args["ssl"] = "require"
+        # Neon pooler requirement: disable prepared statement cache when using PgBouncer pooler
+        if "pooler" in async_url.lower():
+            connect_args["statement_cache_size"] = 0
+
+    eng = create_async_engine(
+        async_url,
+        echo=False,
+        future=True,
+        pool_pre_ping=True,
+        pool_recycle=300,
+        connect_args=connect_args,
+    )
+    db_type = "Neon PostgreSQL" if "neon" in async_url.lower() else "PostgreSQL"
+    logger.info(f"Successfully initialized {db_type} engine ({masked_url}).")
     return eng, db_type
 
 
@@ -96,7 +172,7 @@ def _sync_schema_migrations(connection) -> None:
 
 
 async def init_db() -> None:
-    """Ensures database schema tables exist on application startup."""
+    """Ensures database schema tables exist on application startup (non-destructive)."""
     try:
         async with engine.begin() as conn:
             await conn.run_sync(Base.metadata.create_all)
@@ -104,6 +180,8 @@ async def init_db() -> None:
         logger.info(f"Database schema initialized successfully ({ACTIVE_DB_TYPE}).")
     except Exception as e:
         logger.error(f"Error initializing database schema: {e}", exc_info=True)
+        if settings.ENVIRONMENT.lower() == "production":
+            raise DatabaseConnectionError(f"Failed to initialize database schema: {e}") from e
 
 
 async def get_db() -> AsyncGenerator[AsyncSession, None]:

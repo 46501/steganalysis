@@ -1,18 +1,21 @@
 import os
-from typing import List
+from pathlib import Path
+from typing import List, Optional
 
 try:
     from pydantic_settings import BaseSettings, SettingsConfigDict
 
     class Settings(BaseSettings):
-        PROJECT_NAME: str = "SRNet Steganalysis API"
+        PROJECT_NAME: str = "StegoShield AI Forensic Steganalysis API"
         VERSION: str = "1.0.0"
         API_V1_STR: str = "/api/v1"
         DEBUG: bool = True
+        ENVIRONMENT: str = "development"  # "development", "production", "test"
+        USE_SQLITE: bool = False  # Set to True for explicit local SQLite usage
 
-        # Database
-        DATABASE_URL: str = "postgresql+asyncpg://postgres:postgres_secure_password@localhost:5432/steganalysis"
-        SYNC_DATABASE_URL: str = "postgresql+psycopg2://postgres:postgres_secure_password@localhost:5432/steganalysis"
+        # Database URLs (read dynamically from environment variables or .env)
+        DATABASE_URL: Optional[str] = None
+        SYNC_DATABASE_URL: Optional[str] = None
 
         # ML Configuration
         DEVICE: str = "cpu"
@@ -45,29 +48,61 @@ try:
         ]
 
         model_config = SettingsConfigDict(
-            env_file=".env",
+            env_file=(".env", "backend/.env", "../.env"),
             env_file_encoding="utf-8",
             case_sensitive=True,
             extra="ignore",
         )
 
+        def get_async_database_url(self) -> str:
+            """
+            Resolves and normalizes the asynchronous database URL.
+            Automatically converts postgres:// or postgresql:// schemes to postgresql+asyncpg://
+            """
+            url = self.DATABASE_URL
+            if not url or self.USE_SQLITE or "sqlite" in str(url).lower():
+                storage_dir = Path(__file__).resolve().parent.parent.parent / "storage"
+                storage_dir.mkdir(parents=True, exist_ok=True)
+                sqlite_path = storage_dir / "stego.db"
+                return f"sqlite+aiosqlite:///{sqlite_path.as_posix()}"
+
+            # Normalize schemes for asyncpg
+            if url.startswith("postgres://"):
+                url = url.replace("postgres://", "postgresql+asyncpg://", 1)
+            elif url.startswith("postgresql://") and not url.startswith("postgresql+"):
+                url = url.replace("postgresql://", "postgresql+asyncpg://", 1)
+
+            return url
+
+        def get_sync_database_url(self) -> str:
+            """
+            Resolves synchronous database URL for Alembic migrations.
+            Automatically converts postgresql+asyncpg:// to postgresql+psycopg2://
+            """
+            if self.SYNC_DATABASE_URL:
+                return self.SYNC_DATABASE_URL
+
+            async_url = self.get_async_database_url()
+            if async_url.startswith("postgresql+asyncpg://"):
+                return async_url.replace("postgresql+asyncpg://", "postgresql+psycopg2://", 1)
+            elif async_url.startswith("sqlite+aiosqlite:///"):
+                return async_url.replace("sqlite+aiosqlite:///", "sqlite:///", 1)
+
+            return async_url
+
 except ImportError:
     from pydantic import BaseModel
 
     class Settings(BaseModel):
-        PROJECT_NAME: str = "SRNet Steganalysis API"
+        PROJECT_NAME: str = "StegoShield AI Forensic Steganalysis API"
         VERSION: str = "1.0.0"
         API_V1_STR: str = "/api/v1"
         DEBUG: bool = True
+        ENVIRONMENT: str = os.getenv("ENVIRONMENT", "development")
+        USE_SQLITE: bool = os.getenv("USE_SQLITE", "false").lower() in ("true", "1")
 
-        DATABASE_URL: str = os.getenv(
-            "DATABASE_URL",
-            "postgresql+asyncpg://postgres:postgres_secure_password@localhost:5432/steganalysis",
-        )
-        SYNC_DATABASE_URL: str = os.getenv(
-            "SYNC_DATABASE_URL",
-            "postgresql+psycopg2://postgres:postgres_secure_password@localhost:5432/steganalysis",
-        )
+        DATABASE_URL: Optional[str] = os.getenv("DATABASE_URL")
+        SYNC_DATABASE_URL: Optional[str] = os.getenv("SYNC_DATABASE_URL")
 
         DEVICE: str = os.getenv("DEVICE", "cpu")
         SRNET_WEIGHTS_PATH: str = os.getenv("SRNET_WEIGHTS_PATH", "app/ml/weights/srnet_weights.pth")
@@ -95,6 +130,32 @@ except ImportError:
             "http://localhost:3000",
         ]
 
+        def get_async_database_url(self) -> str:
+            url = self.DATABASE_URL
+            if not url or self.USE_SQLITE or "sqlite" in str(url).lower():
+                storage_dir = Path(__file__).resolve().parent.parent.parent / "storage"
+                storage_dir.mkdir(parents=True, exist_ok=True)
+                sqlite_path = storage_dir / "stego.db"
+                return f"sqlite+aiosqlite:///{sqlite_path.as_posix()}"
+
+            if url.startswith("postgres://"):
+                url = url.replace("postgres://", "postgresql+asyncpg://", 1)
+            elif url.startswith("postgresql://") and not url.startswith("postgresql+"):
+                url = url.replace("postgresql://", "postgresql+asyncpg://", 1)
+
+            return url
+
+        def get_sync_database_url(self) -> str:
+            if self.SYNC_DATABASE_URL:
+                return self.SYNC_DATABASE_URL
+
+            async_url = self.get_async_database_url()
+            if async_url.startswith("postgresql+asyncpg://"):
+                return async_url.replace("postgresql+asyncpg://", "postgresql+psycopg2://", 1)
+            elif async_url.startswith("sqlite+aiosqlite:///"):
+                return async_url.replace("sqlite+aiosqlite:///", "sqlite:///", 1)
+
+            return async_url
+
 
 settings = Settings()
-

@@ -1,9 +1,46 @@
 import os
+import urllib.parse
 from pathlib import Path
 from typing import List, Optional
 
+# Compute absolute directory anchors
+BACKEND_DIR = Path(__file__).resolve().parent.parent.parent
+ROOT_DIR = BACKEND_DIR.parent
+ENV_FILE_PATHS = [str(BACKEND_DIR / ".env"), str(ROOT_DIR / ".env")]
+
+# Proactively load backend/.env into environment with override to prevent stale shell variables
+try:
+    from dotenv import load_dotenv
+    if (BACKEND_DIR / ".env").is_file():
+        load_dotenv(BACKEND_DIR / ".env", override=True)
+except ImportError:
+    pass
+
+
+def _normalize_asyncpg_url(raw_url: str) -> str:
+    """
+    Normalizes PostgreSQL URLs to postgresql+asyncpg:// and cleans libpq query parameters
+    (e.g., sslmode, channel_binding) which asyncpg rejects as unexpected keyword arguments.
+    SSL and statement caching are configured via connect_args in core/database.py.
+    """
+    url = raw_url.strip()
+    if url.startswith("postgres://"):
+        url = url.replace("postgres://", "postgresql+asyncpg://", 1)
+    elif url.startswith("postgresql://") and not url.startswith("postgresql+"):
+        url = url.replace("postgresql://", "postgresql+asyncpg://", 1)
+
+    if "asyncpg" in url:
+        parsed = urllib.parse.urlparse(url)
+        if parsed.query:
+            query_params = urllib.parse.parse_qsl(parsed.query)
+            filtered = [(k, v) for k, v in query_params if k.lower() not in ("sslmode", "channel_binding")]
+            new_query = urllib.parse.urlencode(filtered)
+            url = urllib.parse.urlunparse((parsed.scheme, parsed.netloc, parsed.path, parsed.params, new_query, parsed.fragment))
+    return url
+
 try:
     from pydantic_settings import BaseSettings, SettingsConfigDict
+    from pydantic import field_validator
 
     class Settings(BaseSettings):
         PROJECT_NAME: str = "StegoShield AI Forensic Steganalysis API"
@@ -48,11 +85,19 @@ try:
         ]
 
         model_config = SettingsConfigDict(
-            env_file=(".env", "backend/.env", "../.env"),
+            env_file=ENV_FILE_PATHS,
             env_file_encoding="utf-8",
             case_sensitive=True,
             extra="ignore",
         )
+
+        @field_validator("USE_SQLITE", mode="before")
+        @classmethod
+        def parse_use_sqlite(cls, v):
+            """Robustly parses boolean values even with accidental trailing whitespace."""
+            if isinstance(v, str):
+                return v.strip().lower() in ("true", "1", "yes", "on")
+            return bool(v)
 
         def get_async_database_url(self) -> str:
             """
@@ -61,34 +106,37 @@ try:
             """
             url = self.DATABASE_URL
             if not url or self.USE_SQLITE or "sqlite" in str(url).lower():
-                storage_dir = Path(__file__).resolve().parent.parent.parent / "storage"
+                storage_dir = BACKEND_DIR / "storage"
                 storage_dir.mkdir(parents=True, exist_ok=True)
                 sqlite_path = storage_dir / "stego.db"
                 return f"sqlite+aiosqlite:///{sqlite_path.as_posix()}"
 
-            # Normalize schemes for asyncpg
-            if url.startswith("postgres://"):
-                url = url.replace("postgres://", "postgresql+asyncpg://", 1)
-            elif url.startswith("postgresql://") and not url.startswith("postgresql+"):
-                url = url.replace("postgresql://", "postgresql+asyncpg://", 1)
-
-            return url
+            return _normalize_asyncpg_url(url)
 
         def get_sync_database_url(self) -> str:
             """
             Resolves synchronous database URL for Alembic migrations.
-            Automatically converts postgresql+asyncpg:// to postgresql+psycopg2://
+            Automatically converts postgresql+asyncpg:// or postgresql:// to postgresql+psycopg2://
             """
             if self.SYNC_DATABASE_URL:
-                return self.SYNC_DATABASE_URL
+                return self.SYNC_DATABASE_URL.strip()
 
-            async_url = self.get_async_database_url()
-            if async_url.startswith("postgresql+asyncpg://"):
-                return async_url.replace("postgresql+asyncpg://", "postgresql+psycopg2://", 1)
-            elif async_url.startswith("sqlite+aiosqlite:///"):
-                return async_url.replace("sqlite+aiosqlite:///", "sqlite:///", 1)
+            url = self.DATABASE_URL
+            if not url or self.USE_SQLITE or "sqlite" in str(url).lower():
+                storage_dir = BACKEND_DIR / "storage"
+                storage_dir.mkdir(parents=True, exist_ok=True)
+                sqlite_path = storage_dir / "stego.db"
+                return f"sqlite:///{sqlite_path.as_posix()}"
 
-            return async_url
+            url = url.strip()
+            if url.startswith("postgres://"):
+                url = url.replace("postgres://", "postgresql+psycopg2://", 1)
+            elif url.startswith("postgresql+asyncpg://"):
+                url = url.replace("postgresql+asyncpg://", "postgresql+psycopg2://", 1)
+            elif url.startswith("postgresql://") and not url.startswith("postgresql+"):
+                url = url.replace("postgresql://", "postgresql+psycopg2://", 1)
+
+            return url
 
 except ImportError:
     from pydantic import BaseModel
@@ -99,7 +147,7 @@ except ImportError:
         API_V1_STR: str = "/api/v1"
         DEBUG: bool = True
         ENVIRONMENT: str = os.getenv("ENVIRONMENT", "development")
-        USE_SQLITE: bool = os.getenv("USE_SQLITE", "false").lower() in ("true", "1")
+        USE_SQLITE: bool = os.getenv("USE_SQLITE", "false").strip().lower() in ("true", "1")
 
         DATABASE_URL: Optional[str] = os.getenv("DATABASE_URL")
         SYNC_DATABASE_URL: Optional[str] = os.getenv("SYNC_DATABASE_URL")
@@ -133,29 +181,33 @@ except ImportError:
         def get_async_database_url(self) -> str:
             url = self.DATABASE_URL
             if not url or self.USE_SQLITE or "sqlite" in str(url).lower():
-                storage_dir = Path(__file__).resolve().parent.parent.parent / "storage"
+                storage_dir = BACKEND_DIR / "storage"
                 storage_dir.mkdir(parents=True, exist_ok=True)
                 sqlite_path = storage_dir / "stego.db"
                 return f"sqlite+aiosqlite:///{sqlite_path.as_posix()}"
 
-            if url.startswith("postgres://"):
-                url = url.replace("postgres://", "postgresql+asyncpg://", 1)
-            elif url.startswith("postgresql://") and not url.startswith("postgresql+"):
-                url = url.replace("postgresql://", "postgresql+asyncpg://", 1)
-
-            return url
+            return _normalize_asyncpg_url(url)
 
         def get_sync_database_url(self) -> str:
             if self.SYNC_DATABASE_URL:
-                return self.SYNC_DATABASE_URL
+                return self.SYNC_DATABASE_URL.strip()
 
-            async_url = self.get_async_database_url()
-            if async_url.startswith("postgresql+asyncpg://"):
-                return async_url.replace("postgresql+asyncpg://", "postgresql+psycopg2://", 1)
-            elif async_url.startswith("sqlite+aiosqlite:///"):
-                return async_url.replace("sqlite+aiosqlite:///", "sqlite:///", 1)
+            url = self.DATABASE_URL
+            if not url or self.USE_SQLITE or "sqlite" in str(url).lower():
+                storage_dir = BACKEND_DIR / "storage"
+                storage_dir.mkdir(parents=True, exist_ok=True)
+                sqlite_path = storage_dir / "stego.db"
+                return f"sqlite:///{sqlite_path.as_posix()}"
 
-            return async_url
+            url = url.strip()
+            if url.startswith("postgres://"):
+                url = url.replace("postgres://", "postgresql+psycopg2://", 1)
+            elif url.startswith("postgresql+asyncpg://"):
+                url = url.replace("postgresql+asyncpg://", "postgresql+psycopg2://", 1)
+            elif url.startswith("postgresql://") and not url.startswith("postgresql+"):
+                url = url.replace("postgresql://", "postgresql+psycopg2://", 1)
+
+            return url
 
 
 settings = Settings()

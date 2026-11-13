@@ -73,3 +73,4 @@ for name, arr in synthetic_tests.items():
     tensor, meta = SRNetPreprocessor.process_bytes(buf.getvalue())
     res = engine.predict(tensor)
     print(f"SYNTHETIC {name}: Cover={res['cover_probability']:.4f}, Stego={res['stego_probability']:.4f}, Margin={res['decision_margin']:.4f}, Verdict={res['verdict']}")
+

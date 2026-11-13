@@ -1,0 +1,40 @@
+# =============================================================================
+# StegoShield AI — Backend Docker Ignore
+# Ensures no sensitive environment files, secrets, or local databases are copied
+# =============================================================================
+
+# Environment files
+.env
+.env.*
+*.env
+*.env.*
+!.env.example
+
+# Secret keys and credentials
+*.pem
+*.key
+*.cert
+*.crt
+*.pfx
+*.secret
+secrets/
+
+# Local databases and logs
+storage/*.db
+storage/*.log
+storage/e2e_backend*.log
+*.sqlite
+*.sqlite3
+
+# Python Bytecode & Environments
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+venv/
+.venv/
+.pytest_cache/
+.coverage
+htmlcov/
+tests/
+

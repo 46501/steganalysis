@@ -1,0 +1,38 @@
+# =============================================================================
+# StegoShield AI — Backend Local .gitignore
+# =============================================================================
+
+# Environments & Secret Configurations
+.env
+.env.*
+*.env
+*.env.*
+!.env.example
+
+# Secret Keys, Certificates & Credentials
+*.pem
+*.key
+*.cert
+*.crt
+*.pfx
+*.p12
+*.secret
+secrets/
+
+# Local SQLite databases & ephemeral logs
+storage/*.db
+storage/*.log
+storage/e2e_backend*.log
+*.sqlite
+*.sqlite3
+
+# Python Bytecode & Cache
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+.pytest_cache/
+.coverage
+htmlcov/
+

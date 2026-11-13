@@ -27,3 +27,4 @@ print("fc.bias difference (Stego - Cover):", b_diff.item())
 print(f"fc.weight difference (Stego - Cover): mean={w_diff.mean().item():+.6f}, std={w_diff.std().item():.6f}")
 print("Positive weights favoring Stego:", (w_diff > 0).sum().item(), "out of", len(w_diff))
 print("Negative weights favoring Cover:", (w_diff < 0).sum().item(), "out of", len(w_diff))
+

@@ -41,3 +41,4 @@ print("logits:", logits)
 print("probs (0=Cover, 1=Stego):", probs)
 print(f"fc(feat) contribution without bias: {feat_flat @ model.fc.weight.T}")
 print(f"fc bias: {model.fc.bias}")
+

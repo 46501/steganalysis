@@ -343,3 +343,87 @@ async def test_lab_experiment_persistence_and_immutability(sample_test_png):
         final_orig_hash = hashlib.sha256(sample_test_png).hexdigest()
         assert final_orig_hash == orig_hash
 
+
+# -----------------------------------------------------------------------------
+# TEST 10: Toggle Pixel Bit API - Atomic Mutation & Cumulative Retention
+# -----------------------------------------------------------------------------
+@pytest.mark.asyncio
+async def test_toggle_pixel_bit_api_cumulative(sample_test_png):
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        # Inspect to get base64
+        insp = await client.post(
+            "/api/v1/lab/inspect",
+            files={"file": ("test_carrier.png", sample_test_png, "image/png")},
+        )
+        assert insp.status_code == 200
+        orig_b64 = insp.json()["lossless_png_b64"]
+        orig_hash = insp.json()["sha256_hash"]
+
+        # 1. Flip LSB (bit 0) at (12, 14)
+        res1 = await client.post(
+            "/api/v1/lab/toggle-pixel-bit",
+            json={
+                "image_b64": orig_b64,
+                "x": 12,
+                "y": 14,
+                "channel": "red",
+                "bit_position": 0,
+            },
+        )
+        assert res1.status_code == 200
+        data1 = res1.json()
+        assert data1["success"] is True
+        assert abs(data1["delta"]) == 1
+        assert data1["modified_sha256"] != orig_hash
+        mod_b64_1 = data1["modified_image_b64"]
+
+        # 2. Cumulative test: flip bit 7 on the RESULTING image mod_b64_1 at (12, 14)
+        res2 = await client.post(
+            "/api/v1/lab/toggle-pixel-bit",
+            json={
+                "image_b64": mod_b64_1,
+                "x": 12,
+                "y": 14,
+                "channel": "red",
+                "bit_position": 7,
+            },
+        )
+        assert res2.status_code == 200
+        data2 = res2.json()
+        assert data2["success"] is True
+        assert abs(data2["delta"]) == 128
+        assert data2["modified_sha256"] != data1["modified_sha256"]
+        assert data2["modified_sha256"] != orig_hash
+
+        # Verify pixel details in response reflect the updated values
+        assert data2["pixel_details"]["x"] == 12
+        assert data2["pixel_details"]["y"] == 14
+
+        # 3. Validation: bit_position out of range (e.g. 8) must return 422
+        res_invalid_bit = await client.post(
+            "/api/v1/lab/toggle-pixel-bit",
+            json={
+                "image_b64": orig_b64,
+                "x": 0,
+                "y": 0,
+                "channel": "red",
+                "bit_position": 8,
+            },
+        )
+        assert res_invalid_bit.status_code == 422
+
+        # 4. Validation: coordinates out of range must return 400
+        res_oob = await client.post(
+            "/api/v1/lab/toggle-pixel-bit",
+            json={
+                "image_b64": orig_b64,
+                "x": 9999,
+                "y": 9999,
+                "channel": "red",
+                "bit_position": 0,
+            },
+        )
+        assert res_oob.status_code == 400
+
+

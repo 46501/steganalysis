@@ -86,7 +86,10 @@ function ForensicsLabContent() {
   // Step 2: Pixel Inspection & Bit Toggling State
   const [zoomLevel, setZoomLevel] = useState(1);
   const [selectedPixel, setSelectedPixel] = useState({ x: 0, y: 0 });
+  const [coordInput, setCoordInput] = useState({ x: '0', y: '0' });
   const [pixelDetails, setPixelDetails] = useState(null);
+  const [lastModification, setLastModification] = useState(null);
+  const [modificationCount, setModificationCount] = useState(0);
   const [inspectLoading, setInspectLoading] = useState(false);
   const [activePlane, setActivePlane] = useState(0);
   const [activeChannel, setActiveChannel] = useState('gray');
@@ -204,6 +207,8 @@ function ForensicsLabContent() {
       setOriginalImageB64(data.lossless_png_b64);
       setModifiedImageB64(data.lossless_png_b64);
       setModifiedHash(data.sha256_hash);
+      setLastModification(null);
+      setModificationCount(0);
       setAnalysisResult(null);
       setComparisonData(null);
       setBulkResult(null);
@@ -213,6 +218,7 @@ function ForensicsLabContent() {
       const cx = Math.floor(data.width / 2);
       const cy = Math.floor(data.height / 2);
       setSelectedPixel({ x: cx, y: cy });
+      setCoordInput({ x: String(cx), y: String(cy) });
       await fetchPixelDetails(data.lossless_png_b64, cx, cy);
 
       setCompletedSteps((prev) => new Set([...prev, 1]));
@@ -261,6 +267,15 @@ function ForensicsLabContent() {
     }
   };
 
+  const handleCoordinateJump = (targetX, targetY) => {
+    if (!originalMeta) return;
+    const clampedX = Math.max(0, Math.min(originalMeta.width - 1, isNaN(targetX) ? 0 : targetX));
+    const clampedY = Math.max(0, Math.min(originalMeta.height - 1, isNaN(targetY) ? 0 : targetY));
+    setSelectedPixel({ x: clampedX, y: clampedY });
+    setCoordInput({ x: String(clampedX), y: String(clampedY) });
+    fetchPixelDetails(modifiedImageB64 || originalImageB64, clampedX, clampedY);
+  };
+
   const handleCanvasClick = (e) => {
     if (!canvasRef.current || !originalMeta) return;
     const rect = canvasRef.current.getBoundingClientRect();
@@ -275,6 +290,7 @@ function ForensicsLabContent() {
 
     if (imgX >= 0 && imgX < originalMeta.width && imgY >= 0 && imgY < originalMeta.height) {
       setSelectedPixel({ x: imgX, y: imgY });
+      setCoordInput({ x: String(imgX), y: String(imgY) });
       fetchPixelDetails(modifiedImageB64 || originalImageB64, imgX, imgY);
     }
   };
@@ -309,27 +325,55 @@ function ForensicsLabContent() {
     const targetB64 = modifiedImageB64 || originalImageB64;
     if (!targetB64 || !selectedPixel || !pixelDetails) return;
 
-    let currentVal = 0;
-    if (channel === 'red') currentVal = pixelDetails.red;
-    else if (channel === 'green') currentVal = pixelDetails.green;
-    else if (channel === 'blue') currentVal = pixelDetails.blue;
-    else currentVal = pixelDetails.gray ?? 0;
-
     try {
-      const res = await steganalysisApi.toggleLabBit(
-        targetB64,
-        selectedPixel.x,
-        selectedPixel.y,
-        channel,
-        currentVal,
-        bitPos
-      );
+      const res = await steganalysisApi.togglePixelBit({
+        imageB64: targetB64,
+        x: selectedPixel.x,
+        y: selectedPixel.y,
+        channel: channel,
+        bitPosition: bitPos,
+      });
 
       setModifiedImageB64(res.modified_image_b64);
       setModifiedHash(res.modified_sha256);
-      await fetchPixelDetails(res.modified_image_b64, selectedPixel.x, selectedPixel.y);
+      setLastModification(res);
+      setModificationCount((c) => c + 1);
+
+      // Synchronize pixel details directly from backend response
+      if (res.pixel_details) {
+        const raw = res.pixel_details;
+        const isRgb = Boolean(raw.is_rgb);
+        const channels = raw.channels || [];
+        const redCh = channels.find((c) => c.channel?.toLowerCase().includes('red')) || channels[0];
+        const greenCh = channels.find((c) => c.channel?.toLowerCase().includes('green')) || channels[1];
+        const blueCh = channels.find((c) => c.channel?.toLowerCase().includes('blue')) || channels[2];
+        const grayCh = channels.find((c) => c.channel?.toLowerCase().includes('gray') || c.channel?.toLowerCase().includes('intensity')) || channels[0];
+
+        setPixelDetails({
+          x: raw.x ?? selectedPixel.x,
+          y: raw.y ?? selectedPixel.y,
+          is_color: isRgb,
+          is_rgb: isRgb,
+          red: redCh?.value ?? 0,
+          green: greenCh?.value ?? 0,
+          blue: blueCh?.value ?? 0,
+          gray: grayCh?.value ?? 0,
+          luminance: isRgb
+            ? Math.round(0.299 * (redCh?.value ?? 0) + 0.587 * (greenCh?.value ?? 0) + 0.114 * (blueCh?.value ?? 0))
+            : (grayCh?.value ?? 0),
+          binary_bits_red: redCh?.binary || '00000000',
+          binary_bits_green: greenCh?.binary || '00000000',
+          binary_bits_blue: blueCh?.binary || '00000000',
+          binary_bits_gray: grayCh?.binary || '00000000',
+          channels: channels,
+        });
+      } else {
+        await fetchPixelDetails(res.modified_image_b64, selectedPixel.x, selectedPixel.y);
+      }
+
       setCompletedSteps((prev) => new Set([...prev, 2]));
-      showStatus(`Toggled bit ${bitPos} on ${channel} channel (${currentVal} → ${res.new_pixel_value}).`);
+      const sign = res.delta >= 0 ? `+${res.delta}` : `${res.delta}`;
+      showStatus(`Toggled bit ${bitPos} on ${channel} channel (${res.original_value} → ${res.new_pixel_value}, Δ = ${sign}). Image data mutated in memory.`);
     } catch (err) {
       showStatus(formatErrorDetail(err, 'Bit toggle failed'), true);
     }
@@ -369,8 +413,12 @@ function ForensicsLabContent() {
       setModifiedHash(originalMeta.sha256_hash);
       fetchPixelDetails(originalImageB64, selectedPixel.x, selectedPixel.y);
     }
+    setLastModification(null);
+    setModificationCount(0);
     setBulkResult(null);
     setEmbedResult(null);
+    setAnalysisResult(null);
+    setComparisonData(null);
     showStatus('Restored baseline unmodified cover image.');
   };
 
@@ -787,15 +835,109 @@ function ForensicsLabContent() {
                     />
                   </div>
 
-                  <div className="w-full flex items-center justify-between pt-2 px-2 text-[11px] font-mono text-[#94A3B8]">
-                    <span>Click canvas to focus coordinate</span>
-                    <span className="text-white font-bold">Target: ({selectedPixel.x}, {selectedPixel.y})</span>
+                  <div className="w-full flex flex-wrap items-center justify-between gap-2 pt-2 px-2 text-[11px] font-mono text-[#94A3B8]">
+                    <div className="flex items-center gap-1.5">
+                      <span>Coordinate:</span>
+                      <span className="text-[#64748B]">X</span>
+                      <input
+                        type="number"
+                        min="0"
+                        max={originalMeta?.width ? originalMeta.width - 1 : 1024}
+                        value={coordInput.x}
+                        onChange={(e) => setCoordInput((prev) => ({ ...prev, x: e.target.value }))}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            handleCoordinateJump(parseInt(coordInput.x, 10), parseInt(coordInput.y, 10));
+                          }
+                        }}
+                        className="w-14 px-1.5 py-0.5 rounded bg-[#0A1224] border border-[#1B2B48] text-white text-xs text-center focus:outline-none focus:border-cyan-400"
+                      />
+                      <span className="text-[#64748B]">Y</span>
+                      <input
+                        type="number"
+                        min="0"
+                        max={originalMeta?.height ? originalMeta.height - 1 : 1024}
+                        value={coordInput.y}
+                        onChange={(e) => setCoordInput((prev) => ({ ...prev, y: e.target.value }))}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            handleCoordinateJump(parseInt(coordInput.x, 10), parseInt(coordInput.y, 10));
+                          }
+                        }}
+                        className="w-14 px-1.5 py-0.5 rounded bg-[#0A1224] border border-[#1B2B48] text-white text-xs text-center focus:outline-none focus:border-cyan-400"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => handleCoordinateJump(parseInt(coordInput.x, 10), parseInt(coordInput.y, 10))}
+                        className="px-2.5 py-0.5 rounded bg-cyan-950 hover:bg-cyan-900 text-cyan-300 border border-cyan-500/40 text-[11px] font-bold transition cursor-pointer"
+                      >
+                        Inspect
+                      </button>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <span className="text-[#64748B]">Active Target:</span>
+                      <span className="text-white font-bold bg-[#0A1224] px-2 py-0.5 rounded border border-[#142036]">
+                        ({selectedPixel.x}, {selectedPixel.y})
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
 
               {/* Right (4 cols): Pixel Register & Bit Controls */}
               <div className="lg:col-span-4 space-y-3 font-mono text-xs">
+                {/* Active Modifications Counter HUD */}
+                <div className="flex items-center justify-between p-2.5 rounded-xl bg-[#050914] border border-[#142036]">
+                  <span className="text-[#94A3B8]">Carrier Status:</span>
+                  <span
+                    className={`px-2 py-0.5 rounded font-bold text-[10px] ${
+                      modificationCount > 0
+                        ? 'bg-amber-950 text-amber-300 border border-amber-500/40'
+                        : 'bg-[#0A1224] text-[#64748B] border border-[#142036]'
+                    }`}
+                  >
+                    {modificationCount > 0 ? `${modificationCount} Bit Modifications Applied` : 'Unperturbed Cover'}
+                  </span>
+                </div>
+
+                {/* Last Modification Audit Card */}
+                {lastModification && (
+                  <div className="p-3 rounded-xl bg-[#071324] border border-cyan-500/40 space-y-2 text-[11px]">
+                    <div className="flex items-center justify-between border-b border-[#142036] pb-1">
+                      <span className="text-cyan-300 font-bold flex items-center gap-1">
+                        <Sliders className="w-3.5 h-3.5 text-cyan-400" />
+                        <span>Bit Delta Audit</span>
+                      </span>
+                      <span
+                        className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
+                          lastModification.delta >= 0 ? 'bg-cyan-950 text-cyan-300' : 'bg-rose-950 text-rose-300'
+                        }`}
+                      >
+                        Δ = {lastModification.delta >= 0 ? `+${lastModification.delta}` : lastModification.delta}
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2 text-[10px]">
+                      <div className="p-2 rounded bg-[#050914] border border-[#142036]">
+                        <span className="text-[#64748B] block text-[9px] uppercase">Original Value</span>
+                        <div className="text-white font-bold text-xs">{lastModification.original_value}</div>
+                        <div className="text-[#94A3B8] font-mono text-[9px] mt-0.5">{lastModification.original_binary}</div>
+                      </div>
+                      <div className="p-2 rounded bg-[#050914] border border-cyan-500/40">
+                        <span className="text-cyan-400 block text-[9px] uppercase">New Value</span>
+                        <div className="text-cyan-300 font-bold text-xs">{lastModification.new_pixel_value}</div>
+                        <div className="text-cyan-200 font-mono text-[9px] mt-0.5">{lastModification.new_binary}</div>
+                      </div>
+                    </div>
+
+                    <div className="text-[10px] text-[#94A3B8] flex items-center justify-between pt-0.5">
+                      <span>Target: {lastModification.channel.toUpperCase()} &bull; Bit {lastModification.bit_position}</span>
+                      <span className="text-emerald-400 font-semibold">Active in Memory ✓</span>
+                    </div>
+                  </div>
+                )}
+
                 {/* Pixel Value Box */}
                 <div className="p-3.5 rounded-xl bg-[#050914] border border-[#142036] space-y-3">
                   <div className="flex items-center justify-between border-b border-[#142036] pb-1.5">

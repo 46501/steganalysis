@@ -22,6 +22,8 @@ from app.schemas.lab import (
     BitToggleRequest,
     BitToggleResponse,
     ApplyPixelChangeRequest,
+    TogglePixelBitRequest,
+    TogglePixelBitResponse,
     BulkManipulateRequest,
     BulkManipulateResponse,
     BitplaneRequest,
@@ -119,6 +121,64 @@ async def apply_single_pixel_modification(req: ApplyPixelChangeRequest):
         }
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Failed to apply pixel change: {str(e)}")
+
+
+@router.post("/toggle-pixel-bit", response_model=TogglePixelBitResponse, summary="Atomically toggle a single pixel bit and return updated image")
+async def toggle_pixel_bit_endpoint(req: TogglePixelBitRequest):
+    """Flipping a bit at (x, y) on a specific channel, updating image array and returning new PNG."""
+    try:
+        arr = ForensicsLabService.b64_to_array(req.image_b64)
+        h, w = arr.shape[:2]
+        if req.x < 0 or req.x >= w or req.y < 0 or req.y >= h:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Pixel coordinate ({req.x}, {req.y}) is outside image boundaries ({w}x{h})."
+            )
+        x = int(req.x)
+        y = int(req.y)
+        bit_pos = max(0, min(7, int(req.bit_position)))
+
+        is_rgb = (arr.ndim == 3 and arr.shape[2] == 3)
+
+        if is_rgb:
+            if req.channel_index is not None:
+                c = max(0, min(2, int(req.channel_index)))
+            else:
+                ch_map = {"red": 0, "green": 1, "blue": 2, "r": 0, "g": 1, "b": 2}
+                c = ch_map.get(req.channel.lower(), 0)
+            orig_val = int(arr[y, x, c])
+            new_val = orig_val ^ (1 << bit_pos)
+            arr[y, x, c] = new_val
+            ch_name = ["Red", "Green", "Blue"][c]
+        else:
+            orig_val = int(arr[y, x])
+            new_val = orig_val ^ (1 << bit_pos)
+            arr[y, x] = new_val
+            ch_name = "Grayscale"
+
+        mod_png_b64 = ForensicsLabService.array_to_b64_png(arr)
+        mod_bytes = ForensicsLabService.b64_to_bytes(mod_png_b64)
+        import hashlib
+        sha = hashlib.sha256(mod_bytes).hexdigest()
+        updated_details = ForensicsLabService.get_pixel_info(arr, x, y)
+
+        return TogglePixelBitResponse(
+            success=True,
+            modified_image_b64=mod_png_b64,
+            modified_sha256=sha,
+            x=x,
+            y=y,
+            channel=ch_name,
+            bit_position=bit_pos,
+            original_value=orig_val,
+            new_pixel_value=new_val,
+            delta=new_val - orig_val,
+            original_binary=f"{orig_val:08b}",
+            new_binary=f"{new_val:08b}",
+            pixel_details=updated_details,
+        )
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Failed to toggle pixel bit: {str(e)}")
 
 
 # -----------------------------------------------------------------------------

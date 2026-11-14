@@ -241,8 +241,35 @@ export const steganalysisApi = {
   },
 
   toggleLabBit: async (pixelValue, bitPosition) => {
+    // If called with legacy signature (targetB64, x, y, channel, currentVal, bitPos)
+    if (typeof pixelValue === 'string' && (pixelValue.startsWith('data:image') || pixelValue.length > 50)) {
+      const x = arguments[1] ?? 0;
+      const y = arguments[2] ?? 0;
+      const channel = arguments[3] ?? 'red';
+      const bitPos = arguments[5] ?? arguments[1] ?? 0;
+      return steganalysisApi.togglePixelBit({
+        imageB64: pixelValue,
+        x,
+        y,
+        channel,
+        bitPosition: bitPos,
+      });
+    }
+
     const response = await apiClient.post('/lab/toggle-bit', {
       pixel_value: pixelValue,
+      bit_position: bitPosition,
+    });
+    return response.data;
+  },
+
+  togglePixelBit: async ({ imageB64, x, y, channel, channelIndex, bitPosition }) => {
+    const response = await apiClient.post('/lab/toggle-pixel-bit', {
+      image_b64: imageB64,
+      x: Math.round(x),
+      y: Math.round(y),
+      channel: channel || 'red',
+      channel_index: channelIndex ?? null,
       bit_position: bitPosition,
     });
     return response.data;

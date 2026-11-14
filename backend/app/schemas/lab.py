@@ -69,6 +69,31 @@ class ApplyPixelChangeRequest(BaseModel):
     new_value: int = Field(ge=0, le=255)
 
 
+class TogglePixelBitRequest(BaseModel):
+    image_b64: str = Field(..., description="Lossless PNG base64 string or data URI of current carrier")
+    x: int = Field(..., description="X coordinate (horizontal, 0-indexed)")
+    y: int = Field(..., description="Y coordinate (vertical, 0-indexed)")
+    channel: str = Field(default="gray", description="'red', 'green', 'blue', or 'gray'")
+    channel_index: Optional[int] = Field(default=None, description="0 (Red/Gray), 1 (Green), 2 (Blue)")
+    bit_position: int = Field(default=0, ge=0, le=7, description="Bit index from 0 (LSB) to 7 (MSB)")
+
+
+class TogglePixelBitResponse(BaseModel):
+    success: bool
+    modified_image_b64: str
+    modified_sha256: str
+    x: int
+    y: int
+    channel: str
+    bit_position: int
+    original_value: int
+    new_pixel_value: int
+    delta: int
+    original_binary: str
+    new_binary: str
+    pixel_details: Dict[str, Any]
+
+
 class BulkManipulateRequest(BaseModel):
     image_b64: str
     mode: str = "lsb_only"  # 'lsb_only', 'two_lsb', 'custom_plane', 'random_bits'

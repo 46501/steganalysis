@@ -756,6 +756,57 @@ export default function Detector({ initialFile = null, onNavigateTab = null }) {
                     </p>
                   </div>
 
+                  {/* Statistical Steganalysis Suite (Mathematical Proof) */}
+                  {result.statistical_tests && (
+                    <div className="p-3.5 rounded-xl bg-[#050914] border border-indigo-500/30 text-xs space-y-2.5">
+                      <div className="flex items-center justify-between text-indigo-300 font-mono font-bold text-[11px] pb-1 border-b border-[#142036]">
+                        <div className="flex items-center gap-1.5">
+                          <Activity className="w-3.5 h-3.5 text-indigo-400" />
+                          <span>Statistical Steganalysis Suite (Math Proof)</span>
+                        </div>
+                        <span className={`text-[10px] px-2 py-0.5 rounded font-bold ${
+                          result.statistical_tests.aggregate_verdict.includes('Stego')
+                            ? 'bg-rose-950/80 text-rose-300 border border-rose-500/40'
+                            : 'bg-emerald-950/80 text-emerald-300 border border-emerald-500/40'
+                        }`}>
+                          {result.statistical_tests.aggregate_verdict}
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-3 gap-2 font-mono text-[10px]">
+                        <div className="p-2 rounded-lg bg-[#0B1222] border border-[#17253E]">
+                          <span className="text-[#64748B] block truncate">Chi-Square (χ²)</span>
+                          <span className="text-white font-bold block mt-0.5">
+                            p = {result.statistical_tests.chi_square?.p_value ?? '--'}
+                          </span>
+                          <span className={`block mt-0.5 ${result.statistical_tests.chi_square?.verdict?.includes('Stego') ? 'text-rose-400 font-bold' : 'text-emerald-400'}`}>
+                            {result.statistical_tests.chi_square?.verdict || '--'}
+                          </span>
+                        </div>
+
+                        <div className="p-2 rounded-lg bg-[#0B1222] border border-[#17253E]">
+                          <span className="text-[#64748B] block truncate">Sample Pair (SPA)</span>
+                          <span className="text-white font-bold block mt-0.5">
+                            {result.statistical_tests.sample_pair?.estimated_payload_bpp ? `${result.statistical_tests.sample_pair.estimated_payload_bpp} bpp` : '--'}
+                          </span>
+                          <span className={`block mt-0.5 ${result.statistical_tests.sample_pair?.verdict?.includes('Stego') ? 'text-rose-400 font-bold' : 'text-emerald-400'}`}>
+                            {result.statistical_tests.sample_pair?.verdict || '--'}
+                          </span>
+                        </div>
+
+                        <div className="p-2 rounded-lg bg-[#0B1222] border border-[#17253E]">
+                          <span className="text-[#64748B] block truncate">RS Analysis</span>
+                          <span className="text-white font-bold block mt-0.5">
+                            Δ = {result.statistical_tests.rs_analysis?.rs_delta ?? '--'}
+                          </span>
+                          <span className={`block mt-0.5 ${result.statistical_tests.rs_analysis?.verdict?.includes('Stego') ? 'text-rose-400 font-bold' : 'text-emerald-400'}`}>
+                            {result.statistical_tests.rs_analysis?.verdict || '--'}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Forensic Hash Fingerprint */}
                   <div className="p-2.5 rounded-xl bg-[#050914] border border-[#1B2B48] text-[11px] font-mono text-[#64748B] flex items-center justify-between">
                     <span className="flex items-center gap-1.5 truncate max-w-[280px]">

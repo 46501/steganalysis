@@ -11,6 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.ml.inference import engine
 from app.ml.statistical_detector import StatisticalForensicsDetector
+from app.ml.statistical_steganalysis import StatisticalSteganalysis
 from app.ml.forensic_analyzer import ForensicAnalyzer
 from app.models.scan import ScanRecord
 from app.schemas.analysis import AnalysisResultResponse, ImageMetadata
@@ -70,6 +71,7 @@ class SteganalysisService:
         fft_spectrum_b64 = None
         fft_stats = None
         statistical_metrics = None
+        statistical_tests = None
         try:
             arr = tensor.squeeze().cpu().numpy().astype(np.uint8)
             # Ensure array is 2D
@@ -84,6 +86,7 @@ class SteganalysisService:
                 bitplane_0_b64 = VisualForensicsService.generate_bitplane(arr, 0)
                 fft_spectrum_b64, fft_stats = VisualForensicsService.generate_fft_spectrum(arr)
                 statistical_metrics = StatisticalForensicsDetector.extract_metrics(arr)
+                statistical_tests = StatisticalSteganalysis.run_all_tests(arr)
         except Exception as e:
             logger.warning(f"Visual forensics / statistical metric calculation skipped: {e}")
 
@@ -237,6 +240,7 @@ class SteganalysisService:
             diff_map_b64=diff_map_b64,
             diff_stats=diff_stats,
             statistical_metrics=statistical_metrics,
+            statistical_tests=statistical_tests,
             fft_spectrum_b64=fft_spectrum_b64,
             fft_stats=fft_stats,
             difference_analysis=difference_analysis,

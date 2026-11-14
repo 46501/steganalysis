@@ -35,6 +35,30 @@ import PixelLoupeMagnifier from '../components/analysis/PixelLoupeMagnifier';
 import ForensicReportModal from '../components/analysis/ForensicReportModal';
 
 // --------------------------------------------------------------------------
+// Safe Error Detail Formatter (Prevents React Invariant #31 object child errors)
+// --------------------------------------------------------------------------
+const formatErrorDetail = (err, fallback = 'Operation failed') => {
+  if (!err) return fallback;
+  const detail = err.response?.data?.detail ?? err.message ?? err;
+  if (typeof detail === 'string') return detail;
+  if (Array.isArray(detail)) {
+    return detail
+      .map((item) => {
+        if (typeof item === 'string') return item;
+        if (item && typeof item === 'object') {
+          return item.msg || item.message || JSON.stringify(item);
+        }
+        return String(item);
+      })
+      .join('; ');
+  }
+  if (typeof detail === 'object' && detail !== null) {
+    return detail.msg || detail.message || JSON.stringify(detail);
+  }
+  return String(detail || fallback);
+};
+
+// --------------------------------------------------------------------------
 // Standardized 5-Step Forensic Workflow Definitions
 // --------------------------------------------------------------------------
 const STEPS = [
@@ -100,7 +124,19 @@ function ForensicsLabContent() {
   const fileInputRef = useRef(null);
 
   const showStatus = (msg, isError = false) => {
-    setStatusMessage({ text: msg, isError });
+    let text = '';
+    if (typeof msg === 'string') {
+      text = msg;
+    } else if (Array.isArray(msg)) {
+      text = msg
+        .map((m) => (m && typeof m === 'object' ? m.msg || m.message || JSON.stringify(m) : String(m)))
+        .join('; ');
+    } else if (msg && typeof msg === 'object') {
+      text = msg.msg || msg.message || (msg.response ? formatErrorDetail(msg) : JSON.stringify(msg));
+    } else {
+      text = String(msg || 'Status updated');
+    }
+    setStatusMessage({ text, isError });
     setTimeout(() => setStatusMessage(null), 5000);
   };
 
@@ -140,15 +176,17 @@ function ForensicsLabContent() {
     try {
       setInspectLoading(true);
       const res = await fetch('/samples/sample_cover.png');
-      if (!res.ok) {
-        throw new Error(`Failed to load preset sample cover (HTTP ${res.status})`);
+      const contentType = res.headers.get('content-type') || '';
+      if (!res.ok || contentType.includes('text/html')) {
+        console.warn('Preset cover image not available at /samples/sample_cover.png');
+        return;
       }
       const blob = await res.blob();
+      if (!blob || blob.size === 0) return;
       const file = new File([blob], 'sample_cover_5001.png', { type: 'image/png' });
       await handleImageUpload(file);
     } catch (e) {
       console.warn('Failed to load preset sample cover:', e);
-      showStatus('Sample cover could not be auto-loaded. Please upload an image manually.', false);
     } finally {
       setInspectLoading(false);
     }
@@ -180,7 +218,7 @@ function ForensicsLabContent() {
       setCompletedSteps((prev) => new Set([...prev, 1]));
       showStatus(`Ingested carrier baseline: ${data.filename} (${data.dimensions})`);
     } catch (err) {
-      showStatus(err.response?.data?.detail || err.message || 'Image upload failed', true);
+      showStatus(formatErrorDetail(err, 'Image upload failed'), true);
     } finally {
       setInspectLoading(false);
     }
@@ -191,8 +229,33 @@ function ForensicsLabContent() {
   // --------------------------------------------------------------------------
   const fetchPixelDetails = async (imgB64, x, y) => {
     try {
-      const details = await steganalysisApi.inspectLabPixel(imgB64, x, y);
-      setPixelDetails(details);
+      const raw = await steganalysisApi.inspectLabPixel(imgB64, x, y);
+      if (!raw) return;
+      const isRgb = Boolean(raw.is_rgb);
+      const channels = raw.channels || [];
+      const redCh = channels.find((c) => c.channel?.toLowerCase().includes('red')) || channels[0];
+      const greenCh = channels.find((c) => c.channel?.toLowerCase().includes('green')) || channels[1];
+      const blueCh = channels.find((c) => c.channel?.toLowerCase().includes('blue')) || channels[2];
+      const grayCh = channels.find((c) => c.channel?.toLowerCase().includes('gray') || c.channel?.toLowerCase().includes('intensity')) || channels[0];
+
+      setPixelDetails({
+        x: raw.x ?? x,
+        y: raw.y ?? y,
+        is_color: isRgb,
+        is_rgb: isRgb,
+        red: redCh?.value ?? 0,
+        green: greenCh?.value ?? 0,
+        blue: blueCh?.value ?? 0,
+        gray: grayCh?.value ?? 0,
+        luminance: isRgb
+          ? Math.round(0.299 * (redCh?.value ?? 0) + 0.587 * (greenCh?.value ?? 0) + 0.114 * (blueCh?.value ?? 0))
+          : (grayCh?.value ?? 0),
+        binary_bits_red: redCh?.binary || '00000000',
+        binary_bits_green: greenCh?.binary || '00000000',
+        binary_bits_blue: blueCh?.binary || '00000000',
+        binary_bits_gray: grayCh?.binary || '00000000',
+        channels: channels,
+      });
     } catch (e) {
       console.warn('Pixel inspection failed:', e);
     }
@@ -268,7 +331,7 @@ function ForensicsLabContent() {
       setCompletedSteps((prev) => new Set([...prev, 2]));
       showStatus(`Toggled bit ${bitPos} on ${channel} channel (${currentVal} → ${res.new_pixel_value}).`);
     } catch (err) {
-      showStatus(err.response?.data?.detail || 'Bit toggle failed', true);
+      showStatus(formatErrorDetail(err, 'Bit toggle failed'), true);
     }
   };
 
@@ -293,7 +356,7 @@ function ForensicsLabContent() {
       setCompletedSteps((prev) => new Set([...prev, 2]));
       showStatus(`Injected bulk perturbations: ${res.modified_pixels_count.toLocaleString()} pixels (${res.modification_percent}%) modified.`);
     } catch (err) {
-      showStatus(err.response?.data?.detail || 'Bulk mutation failed', true);
+      showStatus(formatErrorDetail(err, 'Bulk mutation failed'), true);
     } finally {
       setBulkProcessing(false);
     }
@@ -331,7 +394,7 @@ function ForensicsLabContent() {
       setCompletedSteps((prev) => new Set([...prev, 3]));
       showStatus(`Payload embedded into LSB bitstream (${res.payload_bytes} bytes).`);
     } catch (err) {
-      showStatus(err.response?.data?.detail || 'Embedding rejected', true);
+      showStatus(formatErrorDetail(err, 'Embedding rejected'), true);
     } finally {
       setEmbedProcessing(false);
     }
@@ -348,11 +411,12 @@ function ForensicsLabContent() {
       if (res.success) {
         showStatus('Message successfully recovered with 100% bit-fidelity!');
       } else {
-        showStatus(res.status || 'Extraction failed', true);
+        showStatus(String(res.status || 'Extraction failed'), true);
       }
     } catch (err) {
-      setExtractResult({ success: false, status: err.response?.data?.detail || 'Extraction failed' });
-      showStatus(err.response?.data?.detail || 'Extraction failed', true);
+      const errMsg = formatErrorDetail(err, 'Extraction failed');
+      setExtractResult({ success: false, status: errMsg });
+      showStatus(errMsg, true);
     } finally {
       setExtractProcessing(false);
     }
@@ -381,7 +445,7 @@ function ForensicsLabContent() {
       setCompletedSteps((prev) => new Set([...prev, 4]));
       showStatus(`Steganalysis completed: ${evalRes.verdict} (${(evalRes.confidence * 100).toFixed(1)}% confidence).`);
     } catch (err) {
-      showStatus(err.response?.data?.detail || 'Steganalysis evaluation failed', true);
+      showStatus(formatErrorDetail(err, 'Steganalysis evaluation failed'), true);
     } finally {
       setAnalysisLoading(false);
     }
@@ -484,7 +548,7 @@ function ForensicsLabContent() {
         >
           <div className="flex items-center gap-2">
             <Info className="w-4 h-4 text-cyan-400 shrink-0" />
-            <span>{statusMessage.text}</span>
+            <span>{typeof statusMessage.text === 'string' ? statusMessage.text : String(statusMessage.text || '')}</span>
           </div>
           <button onClick={() => setStatusMessage(null)} className="text-[#64748B] hover:text-white">
             ✕
@@ -611,7 +675,7 @@ function ForensicsLabContent() {
                   <div className="grid grid-cols-2 gap-2 text-[11px]">
                     <div className="p-2 rounded bg-[#0A1224] border border-[#142036]">
                       <span className="text-[#64748B] block text-[10px]">Format / Mode</span>
-                      <strong className="text-white">{originalMeta.image_format || 'PNG'} &bull; {originalMeta.color_mode || 'RGB'}</strong>
+                      <strong className="text-white">{originalMeta.image_format || originalMeta.format || 'PNG'} &bull; {originalMeta.color_mode || 'RGB'}</strong>
                     </div>
                     <div className="p-2 rounded bg-[#0A1224] border border-[#142036]">
                       <span className="text-[#64748B] block text-[10px]">File Size</span>
@@ -619,11 +683,11 @@ function ForensicsLabContent() {
                     </div>
                     <div className="p-2 rounded bg-[#0A1224] border border-[#142036]">
                       <span className="text-[#64748B] block text-[10px]">Shannon Entropy</span>
-                      <strong className="text-emerald-400">{originalMeta.entropy_shannon?.toFixed(3) || '7.981'}</strong>
+                      <strong className="text-emerald-400">{(originalMeta.entropy_shannon ?? originalMeta.entropy)?.toFixed(3) || '7.981'}</strong>
                     </div>
                     <div className="p-2 rounded bg-[#0A1224] border border-[#142036]">
                       <span className="text-[#64748B] block text-[10px]">Residual Energy</span>
-                      <strong className="text-cyan-400">{originalMeta.residual_variance?.toFixed(2) || '24.50'} &sigma;r&sup2;</strong>
+                      <strong className="text-cyan-400">{(originalMeta.residual_variance ?? originalMeta.residual_energy)?.toFixed(2) || '24.50'} &sigma;r&sup2;</strong>
                     </div>
                   </div>
 

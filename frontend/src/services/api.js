@@ -410,4 +410,15 @@ export const mfaApi = {
   },
 };
 
+export const assistantApi = {
+  sendMessage: async (message, history = [], context = {}) => {
+    const response = await apiClient.post('/assistant/chat', {
+      message,
+      history,
+      context,
+    });
+    return response.data;
+  },
+};
+
 export default apiClient;

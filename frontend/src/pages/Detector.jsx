@@ -38,8 +38,10 @@ import PixelHistogramChart from '../components/analysis/PixelHistogramChart';
 import FileStructureCarver from '../components/analysis/FileStructureCarver';
 import AdvancedForensicDashboard from '../components/analysis/AdvancedForensicDashboard';
 import { playLaserScan, playTargetLock, playCyberClick } from '../utils/cyberSoundEffects';
+import { useAssistant } from '../context/AssistantContext';
 
 export default function Detector({ initialFile = null, onNavigateTab = null }) {
+  const { setActiveAnalysisContext } = useAssistant();
   const [detectionMode, setDetectionMode] = useState('single'); // 'single' | 'batch'
   const [file, setFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
@@ -59,6 +61,28 @@ export default function Detector({ initialFile = null, onNavigateTab = null }) {
   const [isReportOpen, setIsReportOpen] = useState(false);
 
   const fileInputRef = useRef(null);
+
+  // Sync active detection results with the Global AI Assistant
+  useEffect(() => {
+    if (result) {
+      setActiveAnalysisContext({
+        source: 'detector',
+        verdict: result.verdict,
+        confidence: result.confidence,
+        cover_probability: result.cover_probability,
+        stego_probability: result.stego_probability,
+        psnr_db: result.psnr_db ?? null,
+        changed_pixels: result.changed_pixels ?? 0,
+        changed_percent: result.changed_percent ?? 0.0,
+        file_hash: result.file_hash,
+        filename: result.filename || file?.name,
+        model_used: result.model_used || modelChoice,
+        statistical_metrics: result.statistical_metrics,
+      });
+    } else {
+      setActiveAnalysisContext(null);
+    }
+  }, [result, file, modelChoice, setActiveAnalysisContext]);
 
   const handleQuickTriage = (tab, diffMode = null) => {
     playCyberClick();

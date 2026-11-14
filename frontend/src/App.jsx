@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { AssistantProvider } from './context/AssistantContext';
 import AppLayout from './components/layout/AppLayout';
 import Dashboard from './pages/Dashboard';
 import Detector from './pages/Detector';
@@ -16,6 +17,7 @@ import CommandPalette from './components/common/CommandPalette';
 import AuthModal from './components/auth/AuthModal';
 import ForgotPasswordModal from './components/auth/ForgotPasswordModal';
 import GuestPromptModal from './components/auth/GuestPromptModal';
+import GlobalAIAssistant from './components/assistant/GlobalAIAssistant';
 
 function AppContent() {
   const location = useLocation();
@@ -163,6 +165,9 @@ function AppContent() {
       <AuthModal />
       <ForgotPasswordModal />
       <GuestPromptModal />
+
+      {/* Global Floating AI Assistant (Active across all authenticated pages) */}
+      {hasAccess && <GlobalAIAssistant />}
     </>
   );
 }
@@ -170,7 +175,9 @@ function AppContent() {
 export default function App() {
   return (
     <AuthProvider>
-      <AppContent />
+      <AssistantProvider>
+        <AppContent />
+      </AssistantProvider>
     </AuthProvider>
   );
 }

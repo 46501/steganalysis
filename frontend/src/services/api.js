@@ -2,10 +2,11 @@ import axios from 'axios';
 
 /**
  * Resolves the backend API base URL with full normalization.
- * Checks VITE_API_BASE_URL and VITE_API_URL, strips trailing slashes,
- * ensures the /api/v1 path prefix is present, and provides a guaranteed
- * production fallback to https://stegoshield-api.onrender.com/api/v1.
- * Prevents production API calls from accidentally resolving to the Vercel hosting domain.
+ * Checks VITE_API_BASE_URL and VITE_API_URL if explicitly configured.
+ * Defaults cleanly to relative '/api/v1':
+ * - In local dev: Proxied by Vite to http://localhost:8000.
+ * - In production: Proxied by Vercel edge rewrite (vercel.json) to Render backend,
+ *   guaranteeing same-origin requests with zero CORS preflight overhead or Network Errors.
  */
 function resolveApiBaseUrl() {
   const envUrl = (
@@ -26,13 +27,7 @@ function resolveApiBaseUrl() {
     return url;
   }
 
-  // In production builds, default strictly to the deployed Render backend
-  // to avoid falling back to the Vercel static hosting origin
-  if (import.meta.env.PROD) {
-    return 'https://stegoshield-api.onrender.com/api/v1';
-  }
-
-  // Local development fallback proxied by Vite
+  // Same-origin default proxied seamlessly by Vite (dev) and Vercel edge rewrites (prod)
   return '/api/v1';
 }
 

@@ -96,16 +96,32 @@ try:
         @classmethod
         def parse_cors_origins(cls, v):
             """Parses CORS origins from list, JSON string, or comma-separated string."""
+            origins = []
             if isinstance(v, str):
                 v = v.strip()
                 if v.startswith("[") and v.endswith("]"):
                     try:
                         import json
-                        return json.loads(v)
+                        parsed = json.loads(v)
+                        origins = parsed if isinstance(parsed, list) else [parsed]
                     except Exception:
-                        pass
-                return [origin.strip() for origin in v.split(",") if origin.strip()]
-            return v
+                        origins = [origin.strip().strip("'\"") for origin in v.strip("[]").split(",") if origin.strip()]
+                else:
+                    origins = [origin.strip() for origin in v.split(",") if origin.strip()]
+            elif isinstance(v, list):
+                origins = list(v)
+
+            # Always guarantee production frontend domains are allowed
+            guaranteed = [
+                "https://steganalysis-beta.vercel.app",
+                "http://localhost:5173",
+                "http://127.0.0.1:5173",
+                "http://localhost:3000",
+            ]
+            for g in guaranteed:
+                if g not in origins:
+                    origins.append(g)
+            return origins
 
         @field_validator("USE_SQLITE", mode="before")
         @classmethod

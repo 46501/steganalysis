@@ -77,11 +77,12 @@ try:
         RATE_LIMIT_FORGOT_PW_PER_HOUR: int = 10
         RATE_LIMIT_ANALYZE_PER_MINUTE: int = 60
 
-        # CORS
+        # CORS Allowed Origins
         CORS_ORIGINS: List[str] = [
             "http://localhost:5173",
             "http://127.0.0.1:5173",
             "http://localhost:3000",
+            "https://steganalysis-beta.vercel.app",
         ]
 
         model_config = SettingsConfigDict(
@@ -90,6 +91,21 @@ try:
             case_sensitive=True,
             extra="ignore",
         )
+
+        @field_validator("CORS_ORIGINS", mode="before")
+        @classmethod
+        def parse_cors_origins(cls, v):
+            """Parses CORS origins from list, JSON string, or comma-separated string."""
+            if isinstance(v, str):
+                v = v.strip()
+                if v.startswith("[") and v.endswith("]"):
+                    try:
+                        import json
+                        return json.loads(v)
+                    except Exception:
+                        pass
+                return [origin.strip() for origin in v.split(",") if origin.strip()]
+            return v
 
         @field_validator("USE_SQLITE", mode="before")
         @classmethod
@@ -176,6 +192,7 @@ except ImportError:
             "http://localhost:5173",
             "http://127.0.0.1:5173",
             "http://localhost:3000",
+            "https://steganalysis-beta.vercel.app",
         ]
 
         def get_async_database_url(self) -> str:

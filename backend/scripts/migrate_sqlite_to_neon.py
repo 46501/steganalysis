@@ -1,5 +1,5 @@
 """
-StegoShield AI — SQLite to Neon PostgreSQL Data Migration Utility (OPTIONAL).
+StegoShield AI — SQLite to Neon PostgreSQL Data Migration Utility.
 
 Reads existing forensic records, user accounts, and experiment history from local
 backend/storage/stego.db (in strict READ-ONLY mode) and inserts them into Neon PostgreSQL.
@@ -8,9 +8,9 @@ SAFETY GUARANTEES:
 1. Strict Read-Only on SQLite: stego.db is never modified, deleted, or reset.
 2. Idempotent Upsert: Skips existing IDs without generating duplicate key violations.
 3. PostgreSQL Sequence Reset: Updates SERIAL sequences after insertion so new records don't collide.
-4. Dry-Run by Default: Requires explicit '--confirm' flag to perform write operations.
-
-DO NOT EXECUTE WITHOUT EXPLICIT OPERATOR APPROVAL.
+4. Foreign Key Safety: Filters out orphan child records that do not match existing user IDs.
+5. Boolean & Timestamp Normalization: Casts integer booleans to native PostgreSQL booleans.
+6. Dry-Run by Default: Requires explicit '--confirm' flag to perform write operations.
 """
 
 import argparse
@@ -19,20 +19,20 @@ import os
 import sqlite3
 import sys
 from pathlib import Path
-from typing import Dict, List
+from typing import Dict, List, Set
 
 # Ensure backend root is on path
 backend_dir = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(backend_dir))
 
 import psycopg2
-from psycopg2.extras import execute_values
 from app.core.config import settings
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger("stego.migration")
 
 SQLITE_PATH = backend_dir / "storage" / "stego.db"
+BOOLEAN_COLUMNS = {"is_active", "email_verified", "is_trained_weights"}
 
 
 def parse_args():
@@ -70,7 +70,12 @@ def migrate():
         logger.error("A valid PostgreSQL target connection URL must be provided via --target-url or DATABASE_URL in .env")
         sys.exit(1)
 
-    # Sanitize logged URL
+    # Clean URL for raw psycopg2 connection
+    if target_url.startswith("postgresql+psycopg2://"):
+        target_url = target_url.replace("postgresql+psycopg2://", "postgresql://", 1)
+    elif target_url.startswith("postgresql+asyncpg://"):
+        target_url = target_url.replace("postgresql+asyncpg://", "postgresql://", 1)
+
     masked_target = target_url.split("@")[-1] if "@" in target_url else "target database"
     logger.info(f"Source SQLite database: {sqlite_file} (Read-Only)")
     logger.info(f"Target PostgreSQL: ...@{masked_target}")
@@ -84,7 +89,6 @@ def migrate():
     sqlite_conn.row_factory = sqlite3.Row
     sqlite_cur = sqlite_conn.cursor()
 
-    # Tables in dependency order
     tables = [
         "users",
         "user_sessions",
@@ -117,7 +121,15 @@ def migrate():
     pg_cur = pg_conn.cursor()
 
     try:
+        # Check existing user IDs and emails in Neon
+        pg_cur.execute("SELECT id, email FROM users")
+        existing_users = pg_cur.fetchall()
+        existing_user_ids: Set[int] = set(r[0] for r in existing_users)
+        existing_emails: Set[str] = set(r[1] for r in existing_users)
+        logger.info(f"Existing Neon records: {len(existing_user_ids)} users found.")
+
         total_migrated = 0
+
         for table in tables:
             rows = table_data.get(table, [])
             if not rows:
@@ -126,31 +138,70 @@ def migrate():
             columns = list(rows[0].keys())
             cols_str = ", ".join([f'"{c}"' for c in columns])
             placeholders = ", ".join(["%s" for _ in columns])
+
             insert_query = f"""
                 INSERT INTO "{table}" ({cols_str})
                 VALUES ({placeholders})
                 ON CONFLICT (id) DO NOTHING;
             """
 
-            row_tuples = [tuple(r[c] for c in columns) for r in rows]
-            pg_cur.executemany(insert_query, row_tuples)
-            count = len(row_tuples)
-            total_migrated += count
-            logger.info(f"Successfully migrated {count} records into '{table}'.")
+            filtered_tuples = []
+            for r in rows:
+                row_dict = dict(r)
 
-            # Reset serial sequence so auto-increment works for subsequent inserts
-            try:
-                pg_cur.execute(f"""
-                    SELECT setval(
-                        pg_get_serial_sequence('{table}', 'id'),
-                        COALESCE((SELECT MAX(id) FROM "{table}"), 1)
-                    );
-                """)
-            except Exception as e:
-                logger.warning(f"Could not reset sequence for table '{table}': {e}")
+                # Convert integer booleans to native Python booleans
+                for c in columns:
+                    if c in BOOLEAN_COLUMNS and row_dict[c] is not None:
+                        row_dict[c] = bool(row_dict[c])
+
+                # Check foreign key integrity
+                if table == "users":
+                    if row_dict["email"] in existing_emails and row_dict["id"] not in existing_user_ids:
+                        logger.warning(f"Skipping user with conflicting email: {row_dict['email']}")
+                        continue
+                elif "user_id" in columns:
+                    uid = row_dict.get("user_id")
+                    if uid is not None and uid not in existing_user_ids:
+                        if table in ("scan_records", "lab_experiments"):
+                            row_dict["user_id"] = None
+                        else:
+                            continue
+
+                filtered_tuples.append(tuple(row_dict[c] for c in columns))
+
+            if filtered_tuples:
+                pg_cur.executemany(insert_query, filtered_tuples)
+                count = len(filtered_tuples)
+                total_migrated += count
+                logger.info(f"Successfully migrated {count} records into '{table}'.")
+
+                # If we just migrated users, update existing_user_ids
+                if table == "users":
+                    pg_cur.execute("SELECT id FROM users")
+                    existing_user_ids = set(r[0] for r in pg_cur.fetchall())
+
+                # Reset serial sequence
+                try:
+                    pg_cur.execute(f"""
+                        SELECT setval(
+                            pg_get_serial_sequence('{table}', 'id'),
+                            COALESCE((SELECT MAX(id) FROM "{table}"), 1)
+                        );
+                    """)
+                except Exception as e:
+                    logger.warning(f"Could not reset sequence for table '{table}': {e}")
 
         pg_conn.commit()
-        logger.info(f"MIGRATION COMPLETE: {total_migrated} total records migrated successfully to Neon PostgreSQL.")
+        logger.info(f"MIGRATION COMPLETE: {total_migrated} records processed into Neon PostgreSQL.")
+
+        # Verify specifically that omkulkarni031@gmail.com exists in Neon
+        pg_cur.execute("SELECT id, email, full_name, is_active FROM users WHERE email = 'omkulkarni031@gmail.com'")
+        om_user = pg_cur.fetchone()
+        if om_user:
+            logger.info(f"VERIFIED: User '{om_user[1]}' (id={om_user[0]}, name='{om_user[2]}') is now active in Neon PostgreSQL!")
+        else:
+            logger.warning("omkulkarni031@gmail.com was not found after migration.")
+
     except Exception as e:
         pg_conn.rollback()
         logger.error(f"Migration aborted due to error: {e}", exc_info=True)
@@ -161,4 +212,3 @@ def migrate():
 
 if __name__ == "__main__":
     migrate()
-

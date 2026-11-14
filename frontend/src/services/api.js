@@ -1,6 +1,42 @@
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || '/api/v1';
+/**
+ * Resolves the backend API base URL with full normalization.
+ * Checks VITE_API_BASE_URL and VITE_API_URL, strips trailing slashes,
+ * ensures the /api/v1 path prefix is present, and provides a guaranteed
+ * production fallback to https://stegoshield-api.onrender.com/api/v1.
+ * Prevents production API calls from accidentally resolving to the Vercel hosting domain.
+ */
+function resolveApiBaseUrl() {
+  const envUrl = (
+    import.meta.env.VITE_API_BASE_URL ||
+    import.meta.env.VITE_API_URL ||
+    ''
+  ).trim();
+
+  if (envUrl) {
+    let url = envUrl.replace(/\/+$/, '');
+    if (!url.endsWith('/api/v1')) {
+      if (url.endsWith('/api')) {
+        url = `${url}/v1`;
+      } else {
+        url = `${url}/api/v1`;
+      }
+    }
+    return url;
+  }
+
+  // In production builds, default strictly to the deployed Render backend
+  // to avoid falling back to the Vercel static hosting origin
+  if (import.meta.env.PROD) {
+    return 'https://stegoshield-api.onrender.com/api/v1';
+  }
+
+  // Local development fallback proxied by Vite
+  return '/api/v1';
+}
+
+const API_BASE_URL = resolveApiBaseUrl();
 
 // In-memory token storage (never stored in localStorage for XSS immunity)
 let memoryAccessToken = null;
@@ -10,6 +46,8 @@ export const setAuthToken = (token) => {
 };
 
 export const getAuthToken = () => memoryAccessToken;
+
+export const getApiBaseUrl = () => API_BASE_URL;
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,

@@ -1,0 +1,38 @@
+name: StegoShield Cloud Keep-Alive & Health Sentinel
+
+on:
+  schedule:
+    # Trigger every 14 minutes to prevent Render free-tier container cold spin-down
+    - cron: '*/14 * * * *'
+  workflow_dispatch:
+
+jobs:
+  keep_alive:
+    name: Ping Production Services
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Ping Render Backend Health Endpoint
+        run: |
+          echo "Pinging StegoShield API on Render..."
+          RESPONSE=$(curl -s -w "\nHTTP_STATUS:%{http_code}\nTIME_TOTAL:%{time_total}s" --max-time 60 https://stegoshield-api.onrender.com/api/v1/health)
+          echo "$RESPONSE"
+          STATUS=$(echo "$RESPONSE" | grep "HTTP_STATUS" | cut -d':' -f2)
+          if [ "$STATUS" -ge 200 ] && [ "$STATUS" -lt 400 ]; then
+            echo "✅ Render backend is active and warm (HTTP $STATUS)"
+          else
+            echo "⚠️ Render backend returned status $STATUS"
+          fi
+
+      - name: Ping Vercel Edge Proxy Health Endpoint
+        run: |
+          echo "Pinging StegoShield Web on Vercel..."
+          RESPONSE=$(curl -s -w "\nHTTP_STATUS:%{http_code}\nTIME_TOTAL:%{time_total}s" --max-time 30 https://steganalysis-beta.vercel.app/api/v1/health)
+          echo "$RESPONSE"
+          STATUS=$(echo "$RESPONSE" | grep "HTTP_STATUS" | cut -d':' -f2)
+          if [ "$STATUS" -ge 200 ] && [ "$STATUS" -lt 400 ]; then
+            echo "✅ Vercel edge proxy is active and healthy (HTTP $STATUS)"
+          else
+            echo "⚠️ Vercel proxy returned status $STATUS"
+          fi

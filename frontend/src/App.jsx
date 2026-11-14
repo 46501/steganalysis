@@ -166,8 +166,8 @@ function AppContent() {
       <ForgotPasswordModal />
       <GuestPromptModal />
 
-      {/* Global Floating AI Assistant (Active across all authenticated pages) */}
-      {hasAccess && <GlobalAIAssistant />}
+      {/* Global Floating AI Assistant (Accessible project-wide) */}
+      <GlobalAIAssistant />
     </>
   );
 }

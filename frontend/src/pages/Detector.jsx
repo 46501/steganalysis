@@ -78,6 +78,7 @@ export default function Detector({ initialFile = null, onNavigateTab = null }) {
         filename: result.filename || file?.name,
         model_used: result.model_used || modelChoice,
         statistical_metrics: result.statistical_metrics,
+        statistical_tests: result.statistical_tests,
       });
     } else {
       setActiveAnalysisContext(null);

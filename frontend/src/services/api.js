@@ -263,7 +263,7 @@ export const steganalysisApi = {
     return response.data;
   },
 
-  togglePixelBit: async ({ imageB64, x, y, channel, channelIndex, bitPosition }) => {
+  togglePixelBit: async ({ imageB64, x, y, channel, channelIndex, bitPosition, action = 'toggle' }) => {
     const response = await apiClient.post('/lab/toggle-pixel-bit', {
       image_b64: imageB64,
       x: Math.round(x),
@@ -271,6 +271,7 @@ export const steganalysisApi = {
       channel: channel || 'red',
       channel_index: channelIndex ?? null,
       bit_position: bitPosition,
+      action: action || 'toggle',
     });
     return response.data;
   },

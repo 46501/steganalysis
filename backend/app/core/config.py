@@ -58,6 +58,10 @@ try:
         DEVICE: str = "cpu"
         SRNET_WEIGHTS_PATH: str = "app/ml/weights/srnet_weights.pth"
 
+        # AI Conversational Assistant (Optional External LLM Providers)
+        GEMINI_API_KEY: Optional[str] = None
+        OPENAI_API_KEY: Optional[str] = None
+
         # File Upload Constraints
         MAX_UPLOAD_SIZE_MB: int = 25
         ALLOWED_EXTENSIONS: List[str] = ["png", "bmp", "pgm", "jpg", "jpeg", "webp", "ppm"]

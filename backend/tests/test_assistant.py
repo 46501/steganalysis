@@ -80,3 +80,76 @@ def test_assistant_validation_error_on_empty_message():
     response = client.post("/api/v1/assistant/chat", json={"message": "   "})
     assert response.status_code == 422
 
+
+def test_assistant_chat_beginner_how_to_modify_bits():
+    """Checks that asking how to modify bits returns actionable, step-by-step guidance."""
+    payload = {
+        "message": "How do I modify image bits?",
+        "history": [],
+        "context": {"current_page": "/lab", "workflow_step": 2},
+    }
+    response = client.post("/api/v1/assistant/chat", json=payload)
+    assert response.status_code == 200
+    reply = response.json()["reply"]
+    assert "Step 2" in reply or "Modify Bits" in reply
+    assert "canvas" in reply.lower() or "coordinate" in reply.lower()
+    assert "register" in reply.lower() or "b0" in reply.lower()
+
+
+def test_assistant_chat_what_should_i_do_next():
+    """Checks contextual guidance when user asks what to do next."""
+    payload = {
+        "message": "What should I do next?",
+        "history": [],
+        "context": {"current_page": "/lab", "workflow_step": 3},
+    }
+    response = client.post("/api/v1/assistant/chat", json=payload)
+    assert response.status_code == 200
+    reply = response.json()["reply"]
+    assert "Step 3" in reply
+    assert "message" in reply.lower() or "embed" in reply.lower()
+
+
+def test_assistant_chat_deep_forensic_evidence_audit():
+    """Checks that the assistant breaks down Chi-square, RS, Entropy, and residual energy."""
+    payload = {
+        "message": "Why is this image considered suspicious?",
+        "history": [],
+        "context": {
+            "current_page": "/detector",
+            "analysis_data": {
+                "verdict": "Stego Indicated",
+                "confidence": 0.965,
+                "cover_probability": 0.035,
+                "stego_probability": 0.965,
+                "statistical_metrics": {
+                    "chi_square": 248.5,
+                    "p_value": 0.0001,
+                    "entropy": 7.992,
+                    "residual_variance": 48.6,
+                    "lsb_ratio": 0.502,
+                },
+                "statistical_tests": {
+                    "rs_analysis": {
+                        "rm": 0.28,
+                        "sm": 0.24,
+                        "verdict": "Steganographic signature detected",
+                    }
+                },
+                "changed_pixels": 2500,
+                "changed_percent": 0.95,
+                "psnr_db": 49.8,
+            },
+        },
+    }
+    response = client.post("/api/v1/assistant/chat", json=payload)
+    assert response.status_code == 200
+    reply = response.json()["reply"]
+    assert "Chi-Square" in reply
+    assert "248.5" in reply
+    assert "7.992" in reply
+    assert "48.6" in reply
+    assert "Stego Indicated" in reply
+    assert "ISO/IEC 27037" in reply or "probabilistic" in reply.lower()
+
+

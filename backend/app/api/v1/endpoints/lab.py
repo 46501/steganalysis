@@ -140,6 +140,8 @@ async def toggle_pixel_bit_endpoint(req: TogglePixelBitRequest):
 
         is_rgb = (arr.ndim == 3 and arr.shape[2] == 3)
 
+        action = (getattr(req, "action", None) or "toggle").lower().strip()
+
         if is_rgb:
             if req.channel_index is not None:
                 c = max(0, min(2, int(req.channel_index)))
@@ -147,12 +149,22 @@ async def toggle_pixel_bit_endpoint(req: TogglePixelBitRequest):
                 ch_map = {"red": 0, "green": 1, "blue": 2, "r": 0, "g": 1, "b": 2}
                 c = ch_map.get(req.channel.lower(), 0)
             orig_val = int(arr[y, x, c])
-            new_val = orig_val ^ (1 << bit_pos)
+            if action == "set":
+                new_val = orig_val | (1 << bit_pos)
+            elif action == "clear":
+                new_val = orig_val & ~(1 << bit_pos)
+            else:
+                new_val = orig_val ^ (1 << bit_pos)
             arr[y, x, c] = new_val
             ch_name = ["Red", "Green", "Blue"][c]
         else:
             orig_val = int(arr[y, x])
-            new_val = orig_val ^ (1 << bit_pos)
+            if action == "set":
+                new_val = orig_val | (1 << bit_pos)
+            elif action == "clear":
+                new_val = orig_val & ~(1 << bit_pos)
+            else:
+                new_val = orig_val ^ (1 << bit_pos)
             arr[y, x] = new_val
             ch_name = "Grayscale"
 
@@ -170,6 +182,7 @@ async def toggle_pixel_bit_endpoint(req: TogglePixelBitRequest):
             y=y,
             channel=ch_name,
             bit_position=bit_pos,
+            action=action,
             original_value=orig_val,
             new_pixel_value=new_val,
             delta=new_val - orig_val,

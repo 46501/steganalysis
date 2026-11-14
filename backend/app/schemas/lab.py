@@ -76,6 +76,7 @@ class TogglePixelBitRequest(BaseModel):
     channel: str = Field(default="gray", description="'red', 'green', 'blue', or 'gray'")
     channel_index: Optional[int] = Field(default=None, description="0 (Red/Gray), 1 (Green), 2 (Blue)")
     bit_position: int = Field(default=0, ge=0, le=7, description="Bit index from 0 (LSB) to 7 (MSB)")
+    action: str = Field(default="toggle", description="Operation: 'toggle' (flip), 'set' (force 1), or 'clear' (force 0)")
 
 
 class TogglePixelBitResponse(BaseModel):
@@ -86,6 +87,7 @@ class TogglePixelBitResponse(BaseModel):
     y: int
     channel: str
     bit_position: int
+    action: str = "toggle"
     original_value: int
     new_pixel_value: int
     delta: int

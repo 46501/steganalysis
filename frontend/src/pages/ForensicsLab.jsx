@@ -87,6 +87,7 @@ function ForensicsLabContent() {
   const [zoomLevel, setZoomLevel] = useState(1);
   const [selectedPixel, setSelectedPixel] = useState({ x: 0, y: 0 });
   const [coordInput, setCoordInput] = useState({ x: '0', y: '0' });
+  const [bitActionMode, setBitActionMode] = useState('toggle'); // 'toggle' | 'set' | 'clear'
   const [pixelDetails, setPixelDetails] = useState(null);
   const [lastModification, setLastModification] = useState(null);
   const [modificationCount, setModificationCount] = useState(0);
@@ -332,6 +333,7 @@ function ForensicsLabContent() {
         y: selectedPixel.y,
         channel: channel,
         bitPosition: bitPos,
+        action: bitActionMode,
       });
 
       setModifiedImageB64(res.modified_image_b64);
@@ -373,10 +375,24 @@ function ForensicsLabContent() {
 
       setCompletedSteps((prev) => new Set([...prev, 2]));
       const sign = res.delta >= 0 ? `+${res.delta}` : `${res.delta}`;
-      showStatus(`Toggled bit ${bitPos} on ${channel} channel (${res.original_value} → ${res.new_pixel_value}, Δ = ${sign}). Image data mutated in memory.`);
+      const actLabel = bitActionMode === 'set' ? 'Set (forced 1)' : bitActionMode === 'clear' ? 'Cleared (forced 0)' : 'Toggled';
+      showStatus(`${actLabel} bit ${bitPos} on ${channel} channel (${res.original_value} → ${res.new_pixel_value}, Δ = ${sign}). Image buffer updated.`);
     } catch (err) {
       showStatus(formatErrorDetail(err, 'Bit toggle failed'), true);
     }
+  };
+
+  const handleDownloadCarrier = () => {
+    const targetB64 = modifiedImageB64 || originalImageB64;
+    if (!targetB64) return;
+    const isModified = Boolean(modifiedImageB64 && originalImageB64 && modifiedImageB64 !== originalImageB64);
+    const link = document.createElement('a');
+    link.href = targetB64;
+    link.download = isModified ? 'stego_modified_carrier.png' : (originalMeta?.filename || 'carrier_baseline.png');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    showStatus(`Downloaded carrier PNG (${isModified ? `${modificationCount} active bit modifications applied` : 'unperturbed baseline'}).`);
   };
 
   const handleRunBulk = async () => {
@@ -787,14 +803,23 @@ function ForensicsLabContent() {
               </div>
 
               {/* Status of modified pixels */}
-              <div className="font-mono text-xs flex items-center gap-2">
-                <span className="text-[#64748B]">Carrier Status:</span>
-                <span className={`px-2 py-0.5 rounded font-bold text-[11px] ${
+              <div className="flex items-center gap-2 font-mono text-xs">
+                <button
+                  type="button"
+                  onClick={handleDownloadCarrier}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#0A1224] hover:bg-[#142036] text-cyan-300 border border-cyan-500/30 text-xs font-semibold transition cursor-pointer"
+                  title="Download actual current image with all bit modifications applied"
+                >
+                  <Download className="w-3.5 h-3.5 text-cyan-400" />
+                  <span>Download Carrier (PNG)</span>
+                </button>
+                <span className="text-[#64748B]">Status:</span>
+                <span className={`px-2 py-1 rounded font-bold text-[11px] ${
                   modifiedImageB64 !== originalImageB64
                     ? 'bg-amber-950 text-amber-300 border border-amber-500/40'
                     : 'bg-[#142036] text-[#94A3B8]'
                 }`}>
-                  {modifiedImageB64 !== originalImageB64 ? 'Perturbed Carrier' : 'Identical to Baseline'}
+                  {modifiedImageB64 !== originalImageB64 ? `${modificationCount} Perturbations` : 'Identical to Baseline'}
                 </span>
               </div>
             </div>
@@ -947,6 +972,49 @@ function ForensicsLabContent() {
 
                   {pixelDetails ? (
                     <div className="space-y-3">
+                      {/* Operation Mode Selector: Toggle | Set | Clear */}
+                      <div className="flex items-center justify-between p-1.5 rounded-lg bg-[#0A1224] border border-[#142036] text-[11px]">
+                        <span className="text-[#94A3B8] text-[10px] uppercase font-bold">Bit Op:</span>
+                        <div className="flex items-center gap-1">
+                          <button
+                            type="button"
+                            onClick={() => setBitActionMode('toggle')}
+                            className={`px-2 py-0.5 rounded text-[10px] font-bold transition cursor-pointer ${
+                              bitActionMode === 'toggle'
+                                ? 'bg-cyan-500 text-black border border-cyan-400'
+                                : 'bg-[#050914] text-[#94A3B8] border border-transparent hover:text-white'
+                            }`}
+                            title="Toggle: invert bit 0 to 1 or 1 to 0"
+                          >
+                            Toggle (Flip)
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setBitActionMode('set')}
+                            className={`px-2 py-0.5 rounded text-[10px] font-bold transition cursor-pointer ${
+                              bitActionMode === 'set'
+                                ? 'bg-emerald-500 text-black border border-emerald-400'
+                                : 'bg-[#050914] text-[#94A3B8] border border-transparent hover:text-white'
+                            }`}
+                            title="Set: force bit to 1"
+                          >
+                            Set (1)
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setBitActionMode('clear')}
+                            className={`px-2 py-0.5 rounded text-[10px] font-bold transition cursor-pointer ${
+                              bitActionMode === 'clear'
+                                ? 'bg-rose-500 text-white border border-rose-400'
+                                : 'bg-[#050914] text-[#94A3B8] border border-transparent hover:text-white'
+                            }`}
+                            title="Clear: force bit to 0"
+                          >
+                            Clear (0)
+                          </button>
+                        </div>
+                      </div>
+
                       <div className="flex items-center justify-between p-2 rounded bg-[#0A1224] border border-[#142036]">
                         <div className="flex items-center gap-2">
                           <div
@@ -1248,6 +1316,17 @@ function ForensicsLabContent() {
 
                 <div className="w-full h-44 rounded-lg overflow-hidden border border-[#142036] bg-black/50 flex items-center justify-center">
                   <img src={modifiedImageB64 || originalImageB64} alt="Stego Output" className="max-h-full max-w-full object-contain" />
+                </div>
+
+                <div className="flex justify-end">
+                  <button
+                    type="button"
+                    onClick={handleDownloadCarrier}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#0A1224] hover:bg-[#142036] text-cyan-300 border border-cyan-500/30 text-xs font-semibold transition cursor-pointer"
+                  >
+                    <Download className="w-3.5 h-3.5 text-cyan-400" />
+                    <span>Download Stego Carrier (PNG)</span>
+                  </button>
                 </div>
 
                 {embedResult && (

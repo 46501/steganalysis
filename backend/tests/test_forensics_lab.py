@@ -426,4 +426,33 @@ async def test_toggle_pixel_bit_api_cumulative(sample_test_png):
         )
         assert res_oob.status_code == 400
 
+        # 5. Operations: Test action="set" (force bit to 1) and action="clear" (force bit to 0)
+        res_set = await client.post(
+            "/api/v1/lab/toggle-pixel-bit",
+            json={
+                "image_b64": orig_b64,
+                "x": 5,
+                "y": 5,
+                "channel": "red",
+                "bit_position": 0,
+                "action": "set",
+            },
+        )
+        assert res_set.status_code == 200
+        assert res_set.json()["new_pixel_value"] % 2 == 1
+
+        res_clear = await client.post(
+            "/api/v1/lab/toggle-pixel-bit",
+            json={
+                "image_b64": res_set.json()["modified_image_b64"],
+                "x": 5,
+                "y": 5,
+                "channel": "red",
+                "bit_position": 0,
+                "action": "clear",
+            },
+        )
+        assert res_clear.status_code == 200
+        assert res_clear.json()["new_pixel_value"] % 2 == 0
+
 

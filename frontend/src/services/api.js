@@ -388,4 +388,26 @@ export const userApi = {
   },
 };
 
+export const mfaApi = {
+  getStatus: async () => {
+    const response = await apiClient.get('/auth/mfa/status');
+    return response.data;
+  },
+
+  setup: async () => {
+    const response = await apiClient.post('/auth/mfa/setup');
+    return response.data;
+  },
+
+  enable: async (code) => {
+    const response = await apiClient.post('/auth/mfa/enable', { code });
+    return response.data;
+  },
+
+  disable: async (password) => {
+    const response = await apiClient.post('/auth/mfa/disable', { password });
+    return response.data;
+  },
+};
+
 export default apiClient;

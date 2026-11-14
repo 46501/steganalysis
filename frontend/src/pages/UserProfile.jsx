@@ -18,8 +18,11 @@ import {
   EyeOff,
   AlertTriangle,
   Lock,
+  QrCode,
+  Copy,
+  Check,
 } from 'lucide-react';
-import { userApi, authApi } from '../services/api';
+import { userApi, authApi, mfaApi } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { playCyberClick } from '../utils/cyberSoundEffects';
 import { useNavigate } from 'react-router-dom';
@@ -51,18 +54,91 @@ export default function UserProfile({ setActiveTab }) {
   const [deleteConfirmationText, setDeleteConfirmationText] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
 
+  // Multi-Factor Authentication (MFA/2FA) state
+  const [mfaStatus, setMfaStatus] = useState({ mfa_enabled: false, enrolled_at: null });
+  const [isMfaSetupOpen, setIsMfaSetupOpen] = useState(false);
+  const [mfaSetupData, setMfaSetupData] = useState(null);
+  const [mfaVerifyCode, setMfaVerifyCode] = useState('');
+  const [isSettingUpMfa, setIsSettingUpMfa] = useState(false);
+  const [isActivatingMfa, setIsActivatingMfa] = useState(false);
+  const [isMfaDisableOpen, setIsMfaDisableOpen] = useState(false);
+  const [mfaDisablePassword, setMfaDisablePassword] = useState('');
+  const [isDisablingMfa, setIsDisablingMfa] = useState(false);
+  const [isCopiedKey, setIsCopiedKey] = useState(false);
+
   // Fetch full user profile telemetry
   const fetchProfile = async () => {
     try {
       setIsLoading(true);
       setError(null);
-      const data = await userApi.getProfile();
-      setProfile(data);
-      setFullName(data.full_name || '');
+      const [profileData, mfaData] = await Promise.all([
+        userApi.getProfile(),
+        mfaApi.getStatus().catch(() => ({ mfa_enabled: false })),
+      ]);
+      setProfile(profileData);
+      setFullName(profileData.full_name || '');
+      setMfaStatus(mfaData);
     } catch (err) {
       setError(err.response?.data?.detail || 'Failed to load user profile telemetry.');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleStartMfaSetup = async () => {
+    try {
+      setIsSettingUpMfa(true);
+      setError(null);
+      const data = await mfaApi.setup();
+      setMfaSetupData(data);
+      setIsMfaSetupOpen(true);
+      setMfaVerifyCode('');
+    } catch (err) {
+      setError(err.response?.data?.detail || 'Failed to initiate 2FA enrollment.');
+    } finally {
+      setIsSettingUpMfa(false);
+    }
+  };
+
+  const handleConfirmMfa = async (e) => {
+    e.preventDefault();
+    if (!mfaVerifyCode || mfaVerifyCode.length !== 6) {
+      setError('Please enter a valid 6-digit TOTP verification code.');
+      return;
+    }
+    try {
+      setIsActivatingMfa(true);
+      setError(null);
+      await mfaApi.enable(mfaVerifyCode);
+      setSuccessMessage('Two-Factor Authentication (TOTP) successfully activated!');
+      setIsMfaSetupOpen(false);
+      setMfaSetupData(null);
+      setMfaStatus({ mfa_enabled: true, enrolled_at: new Date().toISOString() });
+    } catch (err) {
+      setError(err.response?.data?.detail || 'Verification code failed. Please check your device clock.');
+    } finally {
+      setIsActivatingMfa(false);
+    }
+  };
+
+  const handleDisableMfa = async (e) => {
+    e.preventDefault();
+    if (!mfaDisablePassword) {
+      setError('Password is required to disable 2FA.');
+      return;
+    }
+    try {
+      setIsDisablingMfa(true);
+      setError(null);
+      await mfaApi.disable(mfaDisablePassword);
+      setSuccessMessage('Two-Factor Authentication has been disabled.');
+      setIsMfaDisableOpen(false);
+      setMfaDisablePassword('');
+      setMfaStatus({ mfa_enabled: false, enrolled_at: null });
+    } catch (err) {
+      setError(err.response?.data?.detail || 'Failed to disable 2FA. Incorrect password.');
+    } finally {
+      setIsDisablingMfa(false);
     }
   };
 
@@ -467,6 +543,56 @@ export default function UserProfile({ setActiveTab }) {
         </div>
       </div>
 
+      {/* Multi-Factor Authentication (2FA) Security Card */}
+      <div className="p-6 rounded-2xl bg-[#070D1A] border border-[#1B2B48] space-y-4">
+        <div className="flex items-center justify-between pb-2 border-b border-[#142036]">
+          <div className="flex items-center gap-2.5">
+            <Shield className="w-4 h-4 text-cyan-400" />
+            <h2 className="text-sm font-bold text-white uppercase tracking-wider">
+              Two-Factor Authentication (2FA)
+            </h2>
+          </div>
+          <span className={`text-[10px] font-mono px-2.5 py-0.5 rounded-full font-semibold border ${
+            mfaStatus?.mfa_enabled
+              ? 'bg-emerald-950/80 border-emerald-500/40 text-emerald-300'
+              : 'bg-[#151515] border-[#292929] text-[#777777]'
+          }`}>
+            {mfaStatus?.mfa_enabled ? 'ACTIVE (TOTP)' : 'DISABLED'}
+          </span>
+        </div>
+
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="space-y-1">
+            <p className="text-xs text-[#94A3B8] leading-relaxed max-w-xl">
+              Add hardware-grade two-factor authentication to your investigator identity using standard TOTP authenticator apps (Google Authenticator, Microsoft Authenticator, 1Password).
+            </p>
+            {mfaStatus?.mfa_enabled && mfaStatus.enrolled_at && (
+              <p className="text-[11px] text-[#64748B] font-mono">
+                Enrolled: {new Date(mfaStatus.enrolled_at).toLocaleString()}
+              </p>
+            )}
+          </div>
+
+          {mfaStatus?.mfa_enabled ? (
+            <button
+              onClick={() => setIsMfaDisableOpen(true)}
+              className="py-2 px-4 rounded-xl bg-[#0E172A] hover:bg-rose-950/60 text-rose-300 hover:text-white border border-[#1E2E4E] hover:border-rose-500/40 text-xs font-semibold transition shrink-0"
+            >
+              Disable 2FA
+            </button>
+          ) : (
+            <button
+              onClick={handleStartMfaSetup}
+              disabled={isSettingUpMfa}
+              className="py-2 px-4 rounded-xl bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-black font-semibold text-xs transition shadow-[0_0_12px_rgba(0,240,255,0.25)] shrink-0 flex items-center gap-2"
+            >
+              <KeyRound className="w-3.5 h-3.5" />
+              <span>{isSettingUpMfa ? 'Generating...' : 'Configure 2FA'}</span>
+            </button>
+          )}
+        </div>
+      </div>
+
       {/* Danger Zone */}
       <div className="p-6 rounded-2xl bg-rose-950/20 border border-rose-500/30 space-y-4">
         <div className="flex items-center gap-2.5 pb-2 border-b border-rose-900/40">
@@ -553,6 +679,138 @@ export default function UserProfile({ setActiveTab }) {
                   className="py-2 px-4 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-semibold transition disabled:opacity-40 disabled:cursor-not-allowed shadow-[0_0_15px_rgba(244,63,94,0.3)]"
                 >
                   {isDeleting ? 'Deleting...' : 'Permanently Delete'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* 2FA Setup Enrollment Modal */}
+      {isMfaSetupOpen && mfaSetupData && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-fade-in">
+          <div className="fixed inset-0" onClick={() => setIsMfaSetupOpen(false)} />
+          <div className="relative w-full max-w-md bg-[#070D1A] border border-cyan-500/40 rounded-2xl p-6 shadow-[0_0_50px_rgba(0,240,255,0.2)] z-10 space-y-4">
+            <div className="flex items-center justify-between pb-2 border-b border-[#142036]">
+              <div className="flex items-center gap-2">
+                <QrCode className="w-4 h-4 text-cyan-400" />
+                <h3 className="text-sm font-bold text-white uppercase tracking-wider">
+                  Configure Two-Factor Auth
+                </h3>
+              </div>
+              <button onClick={() => setIsMfaSetupOpen(false)} className="text-[#64748B] hover:text-white text-xs">
+                ✕
+              </button>
+            </div>
+
+            <p className="text-xs text-[#94A3B8]">
+              Scan the QR code with your authenticator app, or enter the secret key manually:
+            </p>
+
+            {/* QR Code Container */}
+            <div className="flex justify-center p-3 bg-white rounded-xl w-44 h-44 mx-auto shadow-inner">
+              <img
+                src={`https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(mfaSetupData.otpauth_uri)}`}
+                alt="Authenticator QR Code"
+                className="w-full h-full object-contain"
+              />
+            </div>
+
+            {/* Secret Key Display */}
+            <div>
+              <label className="block text-[10px] font-mono text-[#64748B] uppercase mb-1">
+                Manual Entry Secret Key:
+              </label>
+              <div className="flex items-center gap-2 bg-[#0B1222] border border-[#1E2E4E] rounded-xl px-3 py-1.5 font-mono text-xs text-cyan-300">
+                <span className="truncate select-all">{mfaSetupData.secret}</span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    navigator.clipboard.writeText(mfaSetupData.secret);
+                    setIsCopiedKey(true);
+                    setTimeout(() => setIsCopiedKey(false), 2000);
+                  }}
+                  className="p-1 hover:text-white text-[#94A3B8] transition shrink-0 ml-auto"
+                  title="Copy secret"
+                >
+                  {isCopiedKey ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                </button>
+              </div>
+            </div>
+
+            {/* Code Verification Form */}
+            <form onSubmit={handleConfirmMfa} className="space-y-3 pt-2">
+              <div>
+                <label className="block text-xs font-medium text-white mb-1">
+                  Enter 6-Digit Authenticator Code
+                </label>
+                <input
+                  type="text"
+                  maxLength={6}
+                  required
+                  autoFocus
+                  placeholder="123456"
+                  value={mfaVerifyCode}
+                  onChange={(e) => setMfaVerifyCode(e.target.value.replace(/\D/g, ''))}
+                  className="w-full px-3.5 py-2.5 bg-[#0B1222] border border-[#1E2E4E] focus:border-cyan-400 rounded-xl text-center text-lg font-mono tracking-widest text-white outline-none transition"
+                />
+              </div>
+
+              <div className="flex gap-2 pt-1">
+                <button
+                  type="button"
+                  onClick={() => setIsMfaSetupOpen(false)}
+                  className="flex-1 py-2 rounded-xl bg-[#0B1222] hover:bg-[#142036] text-[#94A3B8] text-xs font-semibold transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isActivatingMfa || mfaVerifyCode.length !== 6}
+                  className="flex-1 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-black font-semibold text-xs transition shadow-[0_0_12px_rgba(0,240,255,0.25)] disabled:opacity-50"
+                >
+                  {isActivatingMfa ? 'Verifying...' : 'Activate 2FA'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* 2FA Disable Modal */}
+      {isMfaDisableOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-fade-in">
+          <div className="fixed inset-0" onClick={() => setIsMfaDisableOpen(false)} />
+          <div className="relative w-full max-w-md bg-[#070D1A] border border-rose-500/40 rounded-2xl p-6 shadow-[0_0_50px_rgba(244,63,94,0.2)] z-10 space-y-4">
+            <h3 className="text-sm font-bold text-white uppercase tracking-wider">
+              Disable Two-Factor Authentication
+            </h3>
+            <p className="text-xs text-[#94A3B8]">
+              To disable 2FA, please enter your account password to confirm:
+            </p>
+            <form onSubmit={handleDisableMfa} className="space-y-3">
+              <input
+                type="password"
+                required
+                placeholder="Account password"
+                value={mfaDisablePassword}
+                onChange={(e) => setMfaDisablePassword(e.target.value)}
+                className="w-full px-3.5 py-2 bg-[#0B1222] border border-[#1E2E4E] focus:border-rose-400 rounded-xl text-white text-xs outline-none transition"
+              />
+              <div className="flex gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setIsMfaDisableOpen(false)}
+                  className="flex-1 py-2 rounded-xl bg-[#0B1222] hover:bg-[#142036] text-[#94A3B8] text-xs font-semibold transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isDisablingMfa}
+                  className="flex-1 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-semibold text-xs transition disabled:opacity-50"
+                >
+                  {isDisablingMfa ? 'Disabling...' : 'Confirm Disable'}
                 </button>
               </div>
             </form>

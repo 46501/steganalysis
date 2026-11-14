@@ -1,10 +1,19 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
-import { assistantApi } from '../services/api';
+import { assistantApi, steganalysisApi } from '../services/api';
+import { formatApiError } from '../utils/errorUtils';
 
 const AssistantContext = createContext(null);
 
 const STORAGE_KEY = 'stegoshield_assistant_messages';
+
+const INITIAL_WELCOME = {
+  id: 'welcome',
+  role: 'assistant',
+  content:
+    "Hi! I'm your StegoShield AI Assistant. How can I help you?\n\nI can assist you with:\n- **Dashboard & Navigation**: Choosing the right forensic workflow\n- **Image Upload & Inspection**: Ingesting PNG/BMP images and reading dimensions/hashes\n- **Modify Bits**: Selecting pixels and toggling, setting, or clearing individual bits ($b_0$ to $b_7$)\n- **Add Hidden Message**: LSB concealment with optional AES encryption & recovery verification\n- **Run Steganalysis**: StegoNet-Lite model inference, residual noise analysis, and verdicts\n- **Metrics Interpretation**: Chi-Square (χ²), RS Steganalysis, Shannon Entropy, and PSNR",
+  timestamp: new Date().toISOString(),
+};
 
 export function AssistantProvider({ children }) {
   const location = useLocation();
@@ -15,23 +24,21 @@ export function AssistantProvider({ children }) {
   const [isMaximized, setIsMaximized] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
+  // Backend connection status: 'online' | 'checking' | 'offline'
+  const [connectionStatus, setConnectionStatus] = useState('checking');
+
   // Conversation history (saved to sessionStorage so navigation preserves it)
   const [messages, setMessages] = useState(() => {
     try {
       const saved = sessionStorage.getItem(STORAGE_KEY);
-      if (saved) return JSON.parse(saved);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
     } catch (e) {
       // ignore
     }
-    return [
-      {
-        id: 'welcome',
-        role: 'assistant',
-        content:
-          "👋 Hello! I am the **StegoShield AI Forensic Assistant**.\n\nI can help you navigate tools, inspect pixel bits, interpret steganalysis verdicts, and explain digital forensics.\n\n*How can I help you today?*",
-        timestamp: new Date().toISOString(),
-      },
-    ];
+    return [INITIAL_WELCOME];
   });
 
   // Dynamic contextual suggestions based on current route
@@ -49,6 +56,26 @@ export function AssistantProvider({ children }) {
     }
   }, [messages]);
 
+  // Check health and set live connection status on mount and periodically
+  const checkBackendHealth = useCallback(async () => {
+    try {
+      const res = await steganalysisApi.checkHealth();
+      if (res && (res.status === 'healthy' || res.status === 'ok' || res.model)) {
+        setConnectionStatus('online');
+      } else {
+        setConnectionStatus('offline');
+      }
+    } catch (err) {
+      setConnectionStatus('offline');
+    }
+  }, []);
+
+  useEffect(() => {
+    checkBackendHealth();
+    const interval = setInterval(checkBackendHealth, 45000);
+    return () => clearInterval(interval);
+  }, [checkBackendHealth]);
+
   // Derive current route label for UI badge
   const getRouteLabel = useCallback(() => {
     const path = location.pathname.toLowerCase();
@@ -62,7 +89,7 @@ export function AssistantProvider({ children }) {
   }, [location.pathname]);
 
   // Send a message to the assistant
-  const sendMessage = async (text) => {
+  const sendMessage = async (text, customHistory = null) => {
     if (!text || !text.trim() || isLoading) return;
 
     const userText = text.trim();
@@ -78,8 +105,9 @@ export function AssistantProvider({ children }) {
 
     try {
       // Build history payload (last 6 turns)
-      const historyPayload = messages
-        .filter((m) => m.id !== 'welcome')
+      const baseMessages = customHistory || messages;
+      const historyPayload = baseMessages
+        .filter((m) => m.id !== 'welcome' && !m.isError)
         .slice(-6)
         .map((m) => ({ role: m.role, content: m.content }));
 
@@ -100,16 +128,20 @@ export function AssistantProvider({ children }) {
       };
 
       setMessages((prev) => [...prev, assistantMsg]);
+      setConnectionStatus('online');
       if (res.suggested_prompts && res.suggested_prompts.length > 0) {
         setSuggestedPrompts(res.suggested_prompts);
       }
     } catch (err) {
       console.warn('Assistant error:', err);
+      setConnectionStatus('offline');
+      const formattedError = formatApiError(err, 'Temporary connection failure');
       const errorMsg = {
         id: `err-${Date.now()}`,
         role: 'assistant',
-        content:
-          "⚠️ I encountered a temporary connection issue. You can still ask me questions, or try asking about PSNR, LSB embedding, or how to use the current page.",
+        isError: true,
+        failedQuery: userText,
+        content: `⚠️ **Connection Issue**: Unable to reach the StegoShield assistant backend (${formattedError}). You can retry your question or verify the backend service is running.`,
         timestamp: new Date().toISOString(),
       };
       setMessages((prev) => [...prev, errorMsg]);
@@ -118,19 +150,21 @@ export function AssistantProvider({ children }) {
     }
   };
 
+  // Retry a failed query
+  const retryMessage = (failedQuery, errorMsgId = null) => {
+    if (!failedQuery) return;
+    // Remove the error message from the feed if errorMsgId is provided
+    if (errorMsgId) {
+      setMessages((prev) => prev.filter((m) => m.id !== errorMsgId));
+    }
+    sendMessage(failedQuery);
+  };
+
   const clearChat = () => {
-    const initial = [
-      {
-        id: 'welcome',
-        role: 'assistant',
-        content:
-          "👋 Conversation cleared. What forensic concept or StegoShield workflow would you like to explore?",
-        timestamp: new Date().toISOString(),
-      },
-    ];
-    setMessages(initial);
+    setMessages([INITIAL_WELCOME]);
+    setSuggestedPrompts([]);
     try {
-      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(initial));
+      sessionStorage.setItem(STORAGE_KEY, JSON.stringify([INITIAL_WELCOME]));
     } catch (e) {
       // ignore
     }
@@ -145,10 +179,13 @@ export function AssistantProvider({ children }) {
         setIsMinimized,
         isMaximized,
         setIsMaximized,
+        connectionStatus,
+        checkBackendHealth,
         messages,
         isLoading,
         suggestedPrompts,
         sendMessage,
+        retryMessage,
         clearChat,
         getRouteLabel,
         activeAnalysisContext,
@@ -168,3 +205,4 @@ export function useAssistant() {
   return ctx;
 }
 
+export default AssistantContext;

@@ -20,8 +20,10 @@ import {
 } from 'lucide-react';
 import { steganalysisApi } from '../services/api';
 import { formatApiError } from '../utils/errorUtils';
+import { useAssistant } from '../context/AssistantContext';
 
 export default function StegoStudio({ onSendToDetector }) {
+  const { setActiveAnalysisContext } = useAssistant();
   const [activeMode, setActiveMode] = useState('embed'); // 'embed' | 'extract'
 
   // Embed State
@@ -47,6 +49,31 @@ export default function StegoStudio({ onSendToDetector }) {
 
   const embedFileInputRef = useRef(null);
   const extractFileInputRef = useRef(null);
+
+  // Synchronize active StegoStudio context with Global AI Assistant
+  useEffect(() => {
+    if (embedResult) {
+      setActiveAnalysisContext({
+        source: 'stego_studio',
+        mode: 'embed',
+        algorithm: algorithm,
+        is_encrypted: Boolean(embedPassword.trim()),
+        payload_bytes: embedResult.payload_bytes,
+        carrier_filename: embedFile?.name || 'Carrier PNG',
+        modified_pixels: embedResult.modified_pixels_count,
+      });
+    } else if (extractResult) {
+      setActiveAnalysisContext({
+        source: 'stego_studio',
+        mode: 'extract',
+        is_encrypted: extractResult.is_encrypted,
+        recovered_length: (extractResult.recovered_message || extractResult.secret_text)?.length,
+        status: extractResult.status,
+      });
+    } else {
+      setActiveAnalysisContext(null);
+    }
+  }, [embedResult, extractResult, algorithm, embedPassword, embedFile, setActiveAnalysisContext]);
 
   // Preset sample messages
   const sampleMessages = [

@@ -145,3 +145,34 @@ class MessageResponse(BaseModel):
 
     message: str
     detail: Optional[str] = None
+
+
+class MFASetupResponse(BaseModel):
+    """MFA enrollment setup details."""
+
+    secret: str
+    otpauth_uri: str
+    issuer: str
+    algorithm: str
+    digits: int
+    period: int
+
+
+class MFAStatusResponse(BaseModel):
+    """MFA activation status for current user."""
+
+    mfa_enabled: bool
+    enrolled_at: Optional[str] = None
+
+
+class MFACodeRequest(BaseModel):
+    """6-digit TOTP code verification payload."""
+
+    code: str = Field(..., min_length=6, max_length=6, description="6-digit TOTP verification code")
+
+
+class MFADisableRequest(BaseModel):
+    """Password verification to disable MFA."""
+
+    password: str = Field(..., min_length=1, description="Current account password to confirm disablement")
+

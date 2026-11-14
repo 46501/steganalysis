@@ -423,6 +423,12 @@ async def delete_experiment(
     if record.user_id is not None:
         if not current_user or record.user_id != current_user.id:
             raise HTTPException(status_code=404, detail="Experiment record not found.")
+    else:
+        if current_user:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Cannot delete anonymous guest experiments from an authenticated account.",
+            )
 
     await db.delete(record)
     await db.commit()

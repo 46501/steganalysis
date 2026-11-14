@@ -34,7 +34,7 @@ REFRESH_COOKIE_NAME = "stego_refresh_token"
 
 def set_refresh_cookie(response: Response, refresh_token: str, max_age_seconds: int) -> None:
     """Sets a secure HttpOnly cookie for refresh token."""
-    is_secure = settings.COOKIE_SECURE or (not settings.DEBUG)
+    is_secure = settings.COOKIE_SECURE or (not settings.DEBUG) or (getattr(settings, "ENVIRONMENT", "").lower() == "production")
     response.set_cookie(
         key=REFRESH_COOKIE_NAME,
         value=refresh_token,
@@ -48,11 +48,12 @@ def set_refresh_cookie(response: Response, refresh_token: str, max_age_seconds: 
 
 def clear_refresh_cookie(response: Response) -> None:
     """Clears the refresh token cookie."""
+    is_secure = settings.COOKIE_SECURE or (not settings.DEBUG) or (getattr(settings, "ENVIRONMENT", "").lower() == "production")
     response.delete_cookie(
         key=REFRESH_COOKIE_NAME,
         path="/",
         httponly=True,
-        secure=settings.COOKIE_SECURE,
+        secure=is_secure,
         samesite=settings.COOKIE_SAMESITE,
     )
 

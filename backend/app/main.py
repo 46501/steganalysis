@@ -61,9 +61,20 @@ async def add_security_headers(request: Request, call_next):
     response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
     response.headers["Permissions-Policy"] = "geolocation=(), microphone=(), camera=()"
 
-    # Enforce HSTS when running on HTTPS or in production
-    if not settings.DEBUG or request.url.scheme == "https":
+    # Enforce HSTS (Strict-Transport-Security) for HTTPS connections and production
+    is_https = (
+        request.url.scheme == "https"
+        or request.headers.get("x-forwarded-proto") == "https"
+        or not settings.DEBUG
+        or getattr(settings, "ENVIRONMENT", "").lower() == "production"
+    )
+    if is_https:
         response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains; preload"
+
+    # Prevent public and intermediate proxy caching of forensic and authentication API responses
+    if request.url.path.startswith("/api"):
+        response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, private"
+        response.headers["Pragma"] = "no-cache"
 
     # Restrict CSP while permitting Vite frontend assets and local API communication
     response.headers["Content-Security-Policy"] = (

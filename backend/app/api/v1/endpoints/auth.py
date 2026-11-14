@@ -4,14 +4,19 @@ from typing import Optional
 from fastapi import APIRouter, Cookie, Depends, HTTPException, Request, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.auth import get_current_user, check_rate_limit
+from app.core.auth import get_current_user, check_rate_limit, verify_password
 from app.core.config import settings
 from app.core.database import get_db
+from app.core.mfa import MFAService
 from app.models.user import User
 from app.schemas.auth import (
     ChangePasswordRequest,
     ForgotPasswordRequest,
     MessageResponse,
+    MFACodeRequest,
+    MFADisableRequest,
+    MFASetupResponse,
+    MFAStatusResponse,
     RefreshTokenRequest,
     ResetPasswordRequest,
     TokenResponse,
@@ -240,4 +245,84 @@ async def change_password(
     """
     await AuthService.change_password(db, current_user, req)
     return MessageResponse(message="Password changed successfully.")
+
+
+# -----------------------------------------------------------------------------
+# Optional Multi-Factor Authentication (RFC 6238 TOTP) Endpoints
+# -----------------------------------------------------------------------------
+
+@router.get(
+    "/mfa/status",
+    response_model=MFAStatusResponse,
+    summary="Check MFA activation status for current authenticated user",
+)
+async def get_mfa_status(
+    current_user: User = Depends(get_current_user),
+):
+    """Returns whether TOTP multi-factor authentication is active for this account."""
+    status = MFAService.get_status(current_user.id)
+    return MFAStatusResponse(
+        mfa_enabled=status["mfa_enabled"],
+        enrolled_at=status.get("enrolled_at"),
+    )
+
+
+@router.post(
+    "/mfa/setup",
+    response_model=MFASetupResponse,
+    summary="Initiate optional MFA enrollment",
+)
+async def initiate_mfa_setup(
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Generates a secure 160-bit Base32 TOTP secret and standard otpauth:// URI
+    for enrollment into Google Authenticator, Microsoft Authenticator, or 1Password.
+    """
+    details = MFAService.initiate_setup(current_user.id, current_user.email)
+    return MFASetupResponse(**details)
+
+
+@router.post(
+    "/mfa/enable",
+    response_model=MessageResponse,
+    summary="Confirm enrollment and activate MFA with 6-digit TOTP code",
+)
+async def enable_mfa(
+    req: MFACodeRequest,
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Verifies initial 6-digit code against pending secret to confirm enrollment
+    and enables multi-factor authentication on the account.
+    """
+    success = MFAService.confirm_enrollment(current_user.id, req.code)
+    if not success:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid or expired verification code. Please check your authenticator clock and try again.",
+        )
+    return MessageResponse(message="Multi-factor authentication (TOTP) successfully activated.")
+
+
+@router.post(
+    "/mfa/disable",
+    response_model=MessageResponse,
+    summary="Disable MFA with password confirmation",
+)
+async def disable_mfa(
+    req: MFADisableRequest,
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Requires account password confirmation before revoking multi-factor authentication.
+    """
+    if not verify_password(req.password, current_user.password_hash):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect password. Cannot disable multi-factor authentication.",
+        )
+    MFAService.disable_mfa(current_user.id)
+    return MessageResponse(message="Multi-factor authentication has been disabled.")
+
 

@@ -275,6 +275,12 @@ async def delete_scan_record(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Scan record with ID {record_id} not found",
             )
+    else:
+        if current_user:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Cannot delete anonymous guest records from an authenticated account.",
+            )
 
     await db.delete(record)
     await db.commit()

@@ -19,6 +19,7 @@ import {
   Info,
 } from 'lucide-react';
 import { steganalysisApi } from '../services/api';
+import { formatApiError } from '../utils/errorUtils';
 
 export default function StegoStudio({ onSendToDetector }) {
   const [activeMode, setActiveMode] = useState('embed'); // 'embed' | 'extract'
@@ -144,7 +145,7 @@ export default function StegoStudio({ onSendToDetector }) {
       }
       setEmbedResult(res);
     } catch (err) {
-      setEmbedError(err.response?.data?.detail || err.message || 'Embedding failed.');
+      setEmbedError(formatApiError(err, 'Embedding failed.'));
     } finally {
       setIsEmbedding(false);
     }
@@ -168,7 +169,7 @@ export default function StegoStudio({ onSendToDetector }) {
       }
       setExtractResult(res);
     } catch (err) {
-      setExtractError(err.response?.data?.detail || err.message || 'Extraction failed.');
+      setExtractError(formatApiError(err, 'Extraction failed.'));
     } finally {
       setIsExtracting(false);
     }
@@ -408,7 +409,7 @@ export default function StegoStudio({ onSendToDetector }) {
               {embedError && (
                 <div className="p-3 bg-[#151515] border border-[#383838] text-white text-xs rounded-xl flex items-center gap-2">
                   <AlertTriangle className="w-4 h-4 shrink-0 text-white" />
-                  <span>{embedError}</span>
+                  <span>{typeof embedError === 'string' ? embedError : formatApiError(embedError)}</span>
                 </div>
               )}
 
@@ -660,7 +661,9 @@ export default function StegoStudio({ onSendToDetector }) {
                 <AlertTriangle className="w-4 h-4 shrink-0 text-white mt-0.5" />
                 <div>
                   <div className="font-semibold text-white">Extraction Notice</div>
-                  <div className="mt-0.5 text-[#B3B3B3]">{extractError}</div>
+                  <div className="mt-0.5 text-[#B3B3B3]">
+                    {typeof extractError === 'string' ? extractError : formatApiError(extractError)}
+                  </div>
                 </div>
               </div>
             )}
@@ -717,7 +720,11 @@ export default function StegoStudio({ onSendToDetector }) {
 
                 <div className="text-[11px] text-[#777777] font-mono flex items-center justify-between">
                   <span>Scanned: {extractResult.total_pixels_scanned} pixels</span>
-                  <span className="text-white font-sans">{extractResult.status}</span>
+                  <span className="text-white font-sans">
+                    {typeof extractResult.status === 'string'
+                      ? extractResult.status
+                      : formatApiError(extractResult.status, 'Operation complete')}
+                  </span>
                 </div>
               </div>
             )}

@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { playCyberClick } from '../../utils/cyberSoundEffects';
+import { formatApiError } from '../../utils/errorUtils';
 
 export default function AuthModal() {
   const { authModal, closeAuthModal, openAuthModal, login, register } = useAuth();
@@ -99,11 +100,7 @@ export default function AuthModal() {
         await register(fullName.trim(), email.trim(), password, confirmPassword);
       }
     } catch (err) {
-      const msg =
-        err.response?.data?.detail ||
-        err.message ||
-        'Authentication failed. Please verify your credentials.';
-      setError(typeof msg === 'string' ? msg : JSON.stringify(msg));
+      setError(formatApiError(err, 'Authentication failed. Please verify your credentials.'));
     } finally {
       setIsSubmitting(false);
     }
@@ -189,7 +186,9 @@ export default function AuthModal() {
         {error && (
           <div className="mx-6 mt-4 p-3 rounded-xl bg-rose-950/60 border border-rose-500/40 flex items-start gap-2.5 text-xs text-rose-200">
             <AlertCircle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
-            <div className="flex-1 leading-relaxed">{error}</div>
+            <div className="flex-1 leading-relaxed">
+              {typeof error === 'string' ? error : formatApiError(error)}
+            </div>
             <button
               type="button"
               onClick={() => setError(null)}

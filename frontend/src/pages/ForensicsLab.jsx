@@ -33,29 +33,13 @@ import { useAssistant } from '../context/AssistantContext';
 import ComparisonWipeSlider from '../components/analysis/ComparisonWipeSlider';
 import PixelLoupeMagnifier from '../components/analysis/PixelLoupeMagnifier';
 import ForensicReportModal from '../components/analysis/ForensicReportModal';
+import { formatApiError } from '../utils/errorUtils';
 
 // --------------------------------------------------------------------------
 // Safe Error Detail Formatter (Prevents React Invariant #31 object child errors)
 // --------------------------------------------------------------------------
 const formatErrorDetail = (err, fallback = 'Operation failed') => {
-  if (!err) return fallback;
-  const detail = err.response?.data?.detail ?? err.message ?? err;
-  if (typeof detail === 'string') return detail;
-  if (Array.isArray(detail)) {
-    return detail
-      .map((item) => {
-        if (typeof item === 'string') return item;
-        if (item && typeof item === 'object') {
-          return item.msg || item.message || JSON.stringify(item);
-        }
-        return String(item);
-      })
-      .join('; ');
-  }
-  if (typeof detail === 'object' && detail !== null) {
-    return detail.msg || detail.message || JSON.stringify(detail);
-  }
-  return String(detail || fallback);
+  return formatApiError(err, fallback);
 };
 
 // --------------------------------------------------------------------------
@@ -1292,9 +1276,15 @@ function ForensicsLabContent() {
                       {extractResult && (
                         <div className="p-2 rounded bg-[#050914] border border-[#142036] text-[11px]">
                           {extractResult.success ? (
-                            <span className="text-emerald-400 font-bold">Recovered: {extractResult.recovered_message}</span>
+                            <span className="text-emerald-400 font-bold">
+                              Recovered: {extractResult.recovered_message || extractResult.secret_text}
+                            </span>
                           ) : (
-                            <span className="text-rose-400">{extractResult.status}</span>
+                            <span className="text-rose-400">
+                              {typeof extractResult.status === 'string'
+                                ? extractResult.status
+                                : formatApiError(extractResult.status, 'Extraction failed')}
+                            </span>
                           )}
                         </div>
                       )}
@@ -1791,7 +1781,11 @@ class ForensicsLabErrorBoundary extends React.Component {
             The Forensic Lab caught a rendering exception. The application remains running.
           </p>
           <div className="p-3 rounded-lg bg-[#050914] border border-[#142036] text-[11px] text-red-300 text-left overflow-auto max-h-32">
-            <code>{this.state.error?.message || 'Unknown runtime error'}</code>
+            <code>
+              {typeof this.state.error?.message === 'string'
+                ? this.state.error.message
+                : formatApiError(this.state.error, 'Unknown runtime error')}
+            </code>
           </div>
           <div className="pt-2 flex justify-center gap-3">
             <button

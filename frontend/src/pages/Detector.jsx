@@ -33,6 +33,7 @@ import ForensicReportModal from '../components/analysis/ForensicReportModal';
 import PixelLoupeMagnifier from '../components/analysis/PixelLoupeMagnifier';
 import BatchTriageWorkstation from '../components/analysis/BatchTriageWorkstation';
 import ComparisonWipeSlider from '../components/analysis/ComparisonWipeSlider';
+import { formatApiError } from '../utils/errorUtils';
 import ForensicScanningHUD from '../components/analysis/ForensicScanningHUD';
 import PixelHistogramChart from '../components/analysis/PixelHistogramChart';
 import FileStructureCarver from '../components/analysis/FileStructureCarver';
@@ -250,13 +251,7 @@ export default function Detector({ initialFile = null, onNavigateTab = null }) {
       }
     } catch (err) {
       console.error('Steganalysis scan failed:', err);
-      const detailMsg =
-        typeof err.response?.data?.detail === 'string'
-          ? err.response.data.detail
-          : err.response?.data?.message ||
-            err.message ||
-            'Steganalysis inspection failed. Ensure backend API is active.';
-      setError(detailMsg);
+      setError(formatApiError(err, 'Steganalysis inspection failed. Ensure backend API is active.'));
     } finally {
       setIsAnalyzing(false);
     }
@@ -594,7 +589,7 @@ export default function Detector({ initialFile = null, onNavigateTab = null }) {
           {error && (
             <div className="p-4 rounded-xl bg-[#151515] border border-[#383838] text-white text-xs flex items-start gap-2.5">
               <AlertTriangle className="w-4 h-4 text-white mt-0.5 shrink-0" />
-              <span>{error}</span>
+              <span>{typeof error === 'string' ? error : formatApiError(error)}</span>
             </div>
           )}
         </div>

@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { steganalysisApi } from '../../services/api';
 import { playLaserScan, playCyberSuccess, playCyberClick } from '../../utils/cyberSoundEffects';
+import { formatApiError } from '../../utils/errorUtils';
 
 export default function BatchTriageWorkstation({ onSelectImageForInspection }) {
   const [isDragging, setIsDragging] = useState(false);
@@ -52,11 +53,7 @@ export default function BatchTriageWorkstation({ onSelectImageForInspection }) {
       playCyberSuccess();
     } catch (err) {
       console.error('Batch triage failed:', err);
-      setError(
-        err.response?.data?.detail ||
-          err.message ||
-          'Failed to process batch images. Ensure backend server is reachable.'
-      );
+      setError(formatApiError(err, 'Failed to process batch images. Ensure backend server is reachable.'));
     } finally {
       setIsProcessing(false);
     }
@@ -267,7 +264,7 @@ export default function BatchTriageWorkstation({ onSelectImageForInspection }) {
       {error && (
         <div className="p-4 rounded-xl bg-rose-950/40 border border-rose-500/40 text-rose-200 text-xs flex items-start gap-2.5">
           <AlertTriangle className="w-4 h-4 text-rose-400 mt-0.5 shrink-0" />
-          <span>{error}</span>
+          <span>{typeof error === 'string' ? error : formatApiError(error)}</span>
         </div>
       )}
 

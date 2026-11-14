@@ -25,6 +25,7 @@ import {
 import { userApi, authApi, mfaApi } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { playCyberClick } from '../utils/cyberSoundEffects';
+import { formatApiError } from '../utils/errorUtils';
 import { useNavigate } from 'react-router-dom';
 
 export default function UserProfile({ setActiveTab }) {
@@ -79,7 +80,7 @@ export default function UserProfile({ setActiveTab }) {
       setFullName(profileData.full_name || '');
       setMfaStatus(mfaData);
     } catch (err) {
-      setError(err.response?.data?.detail || 'Failed to load user profile telemetry.');
+      setError(formatApiError(err, 'Failed to load user profile telemetry.'));
     } finally {
       setIsLoading(false);
     }
@@ -94,7 +95,7 @@ export default function UserProfile({ setActiveTab }) {
       setIsMfaSetupOpen(true);
       setMfaVerifyCode('');
     } catch (err) {
-      setError(err.response?.data?.detail || 'Failed to initiate 2FA enrollment.');
+      setError(formatApiError(err, 'Failed to initiate 2FA enrollment.'));
     } finally {
       setIsSettingUpMfa(false);
     }
@@ -115,7 +116,7 @@ export default function UserProfile({ setActiveTab }) {
       setMfaSetupData(null);
       setMfaStatus({ mfa_enabled: true, enrolled_at: new Date().toISOString() });
     } catch (err) {
-      setError(err.response?.data?.detail || 'Verification code failed. Please check your device clock.');
+      setError(formatApiError(err, 'Verification code failed. Please check your device clock.'));
     } finally {
       setIsActivatingMfa(false);
     }
@@ -136,7 +137,7 @@ export default function UserProfile({ setActiveTab }) {
       setMfaDisablePassword('');
       setMfaStatus({ mfa_enabled: false, enrolled_at: null });
     } catch (err) {
-      setError(err.response?.data?.detail || 'Failed to disable 2FA. Incorrect password.');
+      setError(formatApiError(err, 'Failed to disable 2FA. Incorrect password.'));
     } finally {
       setIsDisablingMfa(false);
     }
@@ -194,7 +195,7 @@ export default function UserProfile({ setActiveTab }) {
       updateProfileState(updated);
       setSuccessMessage('Profile name updated successfully.');
     } catch (err) {
-      setError(err.response?.data?.detail || 'Failed to update display name.');
+      setError(formatApiError(err, 'Failed to update display name.'));
     } finally {
       setIsSavingName(false);
     }
@@ -228,7 +229,7 @@ export default function UserProfile({ setActiveTab }) {
       setNewPassword('');
       setConfirmPassword('');
     } catch (err) {
-      setError(err.response?.data?.detail || 'Failed to change password. Verify your current password.');
+      setError(formatApiError(err, 'Failed to change password. Verify your current password.'));
     } finally {
       setIsChangingPassword(false);
     }
@@ -255,7 +256,7 @@ export default function UserProfile({ setActiveTab }) {
         state: { message: 'Your account and personal forensic data have been permanently deleted.' },
       });
     } catch (err) {
-      setError(err.response?.data?.detail || 'Account deletion failed. Verify your password.');
+      setError(formatApiError(err, 'Account deletion failed. Verify your password.'));
       setIsDeleting(false);
     }
   };
@@ -340,7 +341,7 @@ export default function UserProfile({ setActiveTab }) {
         <div className="p-3.5 rounded-xl bg-rose-950/60 border border-rose-500/40 text-xs text-rose-200 flex items-center justify-between animate-fade-in">
           <div className="flex items-center gap-2">
             <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
-            <span>{error}</span>
+            <span>{typeof error === 'string' ? error : formatApiError(error)}</span>
           </div>
           <button onClick={() => setError(null)} className="text-rose-400 hover:text-white">
             ✕

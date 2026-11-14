@@ -19,8 +19,7 @@ from app.ml.inference import engine
 
 
 @pytest.fixture(scope="session", autouse=True)
-def setup_db():
-    asyncio.run(init_db())
+def setup_model():
     engine.load_model()
 
 
@@ -262,6 +261,7 @@ async def test_lab_api_endpoints_workflow(sample_test_png):
 # -----------------------------------------------------------------------------
 @pytest.mark.asyncio
 async def test_lab_experiment_persistence_and_immutability(sample_test_png):
+    await init_db()
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
         # Step A: Inspect

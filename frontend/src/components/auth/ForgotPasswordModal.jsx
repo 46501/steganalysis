@@ -15,6 +15,7 @@ import {
 import { authApi } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import { playCyberClick } from '../../utils/cyberSoundEffects';
+import { formatApiError } from '../../utils/errorUtils';
 
 export default function ForgotPasswordModal() {
   const { authModal, closeAuthModal, openAuthModal } = useAuth();
@@ -55,7 +56,7 @@ export default function ForgotPasswordModal() {
       }
       setStep(2);
     } catch (err) {
-      setError(err.response?.data?.detail || err.message || 'Failed to process request.');
+      setError(formatApiError(err, 'Failed to process request.'));
     } finally {
       setIsSubmitting(false);
     }
@@ -86,7 +87,7 @@ export default function ForgotPasswordModal() {
 
       setIsDone(true);
     } catch (err) {
-      setError(err.response?.data?.detail || err.message || 'Password reset failed.');
+      setError(formatApiError(err, 'Password reset failed.'));
     } finally {
       setIsSubmitting(false);
     }
@@ -127,7 +128,7 @@ export default function ForgotPasswordModal() {
         {error && (
           <div className="mx-6 mt-4 p-3 rounded-xl bg-rose-950/60 border border-rose-500/40 flex items-start gap-2.5 text-xs text-rose-200">
             <AlertCircle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
-            <div className="flex-1 leading-relaxed">{error}</div>
+            <div className="flex-1 leading-relaxed">{typeof error === 'string' ? error : formatApiError(error)}</div>
             <button onClick={() => setError(null)} className="text-rose-400 hover:text-white">
               <X className="w-3.5 h-3.5" />
             </button>

@@ -17,6 +17,7 @@ import {
 import { authApi } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { playCyberClick } from '../utils/cyberSoundEffects';
+import { formatApiError } from '../utils/errorUtils';
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -113,7 +114,7 @@ export default function LoginPage() {
         );
       }
     } catch (err) {
-      const msg = err.response?.data?.detail || err.message || 'Authentication operation failed.';
+      const msg = formatApiError(err, 'Authentication operation failed.');
       setError(msg);
     } finally {
       setIsSubmitting(false);
@@ -206,7 +207,7 @@ export default function LoginPage() {
             <div className="mb-5 p-3.5 rounded-xl bg-rose-950/60 border border-rose-500/40 text-xs text-rose-200 flex items-start gap-2.5 animate-fade-in">
               <AlertCircle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
               <div className="flex-1 font-mono text-[11px] leading-relaxed">
-                {error}
+                {typeof error === 'string' ? error : formatApiError(error)}
               </div>
               <button
                 type="button"

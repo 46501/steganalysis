@@ -74,9 +74,10 @@ class TogglePixelBitRequest(BaseModel):
     x: int = Field(..., description="X coordinate (horizontal, 0-indexed)")
     y: int = Field(..., description="Y coordinate (vertical, 0-indexed)")
     channel: str = Field(default="gray", description="'red', 'green', 'blue', or 'gray'")
-    channel_index: Optional[int] = Field(default=None, description="0 (Red/Gray), 1 (Green), 2 (Blue)")
+    channel_index: Optional[int] = Field(default=None, description="0 (Red/Gray), 1 (Green), 2 (Blue), 3 (Alpha)")
     bit_position: int = Field(default=0, ge=0, le=7, description="Bit index from 0 (LSB) to 7 (MSB)")
     action: str = Field(default="toggle", description="Operation: 'toggle' (flip), 'set' (force 1), or 'clear' (force 0)")
+    original_image_b64: Optional[str] = Field(default=None, description="Optional baseline cover image for delta tracking")
 
 
 class TogglePixelBitResponse(BaseModel):
@@ -94,6 +95,28 @@ class TogglePixelBitResponse(BaseModel):
     original_binary: str
     new_binary: str
     pixel_details: Dict[str, Any]
+    baseline_pixel: Optional[Dict[str, Any]] = None
+    total_modified_pixels: Optional[int] = None
+    is_identical_to_baseline: Optional[bool] = None
+
+
+class ResetPixelRequest(BaseModel):
+    original_image_b64: str = Field(..., description="Baseline reference image base64")
+    modified_image_b64: str = Field(..., description="Current modified image base64")
+    x: int = Field(..., description="X coordinate to restore")
+    y: int = Field(..., description="Y coordinate to restore")
+
+
+class ResetPixelResponse(BaseModel):
+    success: bool
+    modified_image_b64: str
+    modified_sha256: str
+    x: int
+    y: int
+    pixel_details: Dict[str, Any]
+    baseline_pixel: Dict[str, Any]
+    total_modified_pixels: int
+    is_identical_to_baseline: bool
 
 
 class BulkManipulateRequest(BaseModel):

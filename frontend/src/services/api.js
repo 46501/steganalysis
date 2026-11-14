@@ -263,7 +263,16 @@ export const steganalysisApi = {
     return response.data;
   },
 
-  togglePixelBit: async ({ imageB64, x, y, channel, channelIndex, bitPosition, action = 'toggle' }) => {
+  togglePixelBit: async ({
+    imageB64,
+    x,
+    y,
+    channel,
+    channelIndex,
+    bitPosition,
+    action = 'toggle',
+    originalImageB64 = null,
+  }) => {
     const response = await apiClient.post('/lab/toggle-pixel-bit', {
       image_b64: imageB64,
       x: Math.round(x),
@@ -272,6 +281,17 @@ export const steganalysisApi = {
       channel_index: channelIndex ?? null,
       bit_position: bitPosition,
       action: action || 'toggle',
+      original_image_b64: originalImageB64 || null,
+    });
+    return response.data;
+  },
+
+  resetPixel: async ({ originalImageB64, modifiedImageB64, x, y }) => {
+    const response = await apiClient.post('/lab/reset-pixel', {
+      original_image_b64: originalImageB64,
+      modified_image_b64: modifiedImageB64,
+      x: Math.round(x),
+      y: Math.round(y),
     });
     return response.data;
   },

@@ -456,3 +456,177 @@ async def test_toggle_pixel_bit_api_cumulative(sample_test_png):
         assert res_clear.json()["new_pixel_value"] % 2 == 0
 
 
+@pytest.mark.asyncio
+async def test_realtime_bit_toggle_255_to_254_to_255():
+    """Verifies acceptance criteria for real-time bit toggling:
+    255 -> 254 -> 255 with delta, channel isolation, and baseline tracking.
+    """
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        # Create a 32x32 RGB image
+        arr = np.zeros((32, 32, 3), dtype=np.uint8)
+        arr[4, 4] = [255, 128, 64]
+        arr[10, 10] = [100, 150, 200]
+        orig_b64 = ForensicsLabService.array_to_b64_png(arr)
+
+        # 1. Toggle Red b0: 255 (11111111) -> 254 (11111110)
+        res1 = await client.post(
+            "/api/v1/lab/toggle-pixel-bit",
+            json={
+                "image_b64": orig_b64,
+                "original_image_b64": orig_b64,
+                "x": 4,
+                "y": 4,
+                "channel": "red",
+                "bit_position": 0,
+                "action": "toggle",
+            },
+        )
+        assert res1.status_code == 200
+        data1 = res1.json()
+        assert data1["original_value"] == 255
+        assert data1["new_pixel_value"] == 254
+        assert data1["delta"] == -1
+        assert data1["original_binary"] == "11111111"
+        assert data1["new_binary"] == "11111110"
+        assert data1["total_modified_pixels"] == 1
+        assert data1["is_identical_to_baseline"] is False
+
+        # Channel isolation check on response pixel details
+        channels1 = {c["channel"].lower(): c["value"] for c in data1["pixel_details"]["channels"]}
+        assert channels1["red"] == 254
+        assert channels1["green"] == 128
+        assert channels1["blue"] == 64
+
+        # 2. Toggle Red b0 AGAIN on modified image: 254 (11111110) -> 255 (11111111)
+        res2 = await client.post(
+            "/api/v1/lab/toggle-pixel-bit",
+            json={
+                "image_b64": data1["modified_image_b64"],
+                "original_image_b64": orig_b64,
+                "x": 4,
+                "y": 4,
+                "channel": "red",
+                "bit_position": 0,
+                "action": "toggle",
+            },
+        )
+        assert res2.status_code == 200
+        data2 = res2.json()
+        assert data2["original_value"] == 254
+        assert data2["new_pixel_value"] == 255
+        assert data2["delta"] == 1
+        assert data2["new_binary"] == "11111111"
+        assert data2["total_modified_pixels"] == 0
+        assert data2["is_identical_to_baseline"] is True
+
+
+@pytest.mark.asyncio
+async def test_bit_toggle_msb_lsb_and_pixel_isolation():
+    """Verifies MSB (b7) toggle and pixel isolation."""
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        arr = np.zeros((16, 16, 3), dtype=np.uint8)
+        arr[2, 2] = [255, 100, 50]
+        arr[5, 5] = [77, 88, 99]
+        orig_b64 = ForensicsLabService.array_to_b64_png(arr)
+
+        # Toggle MSB (b7) on Red: 255 -> 127, delta = -128
+        res = await client.post(
+            "/api/v1/lab/toggle-pixel-bit",
+            json={
+                "image_b64": orig_b64,
+                "original_image_b64": orig_b64,
+                "x": 2,
+                "y": 2,
+                "channel": "red",
+                "bit_position": 7,
+                "action": "toggle",
+            },
+        )
+        assert res.status_code == 200
+        data = res.json()
+        assert data["original_value"] == 255
+        assert data["new_pixel_value"] == 127
+        assert data["delta"] == -128
+        assert data["new_binary"] == "01111111"
+
+        # Check pixel isolation: array at (5, 5) must be completely untouched
+        mod_arr = ForensicsLabService.b64_to_array(data["modified_image_b64"])
+        assert list(mod_arr[5, 5]) == [77, 88, 99]
+        assert list(mod_arr[2, 2]) == [127, 100, 50]
+
+
+@pytest.mark.asyncio
+async def test_reset_pixel_endpoint_flow():
+    """Verifies POST /api/v1/lab/reset-pixel functionality."""
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        arr = np.zeros((16, 16, 3), dtype=np.uint8)
+        arr[3, 3] = [200, 100, 50]
+        arr[7, 7] = [80, 90, 100]
+        orig_b64 = ForensicsLabService.array_to_b64_png(arr)
+
+        # Modify pixel (3, 3)
+        res1 = await client.post(
+            "/api/v1/lab/toggle-pixel-bit",
+            json={
+                "image_b64": orig_b64,
+                "original_image_b64": orig_b64,
+                "x": 3,
+                "y": 3,
+                "channel": "red",
+                "bit_position": 0,
+            },
+        )
+        mod1_b64 = res1.json()["modified_image_b64"]
+
+        # Modify pixel (7, 7)
+        res2 = await client.post(
+            "/api/v1/lab/toggle-pixel-bit",
+            json={
+                "image_b64": mod1_b64,
+                "original_image_b64": orig_b64,
+                "x": 7,
+                "y": 7,
+                "channel": "green",
+                "bit_position": 1,
+            },
+        )
+        mod2_b64 = res2.json()["modified_image_b64"]
+        assert res2.json()["total_modified_pixels"] == 2
+
+        # Reset pixel (3, 3)
+        reset1 = await client.post(
+            "/api/v1/lab/reset-pixel",
+            json={
+                "original_image_b64": orig_b64,
+                "modified_image_b64": mod2_b64,
+                "x": 3,
+                "y": 3,
+            },
+        )
+        assert reset1.status_code == 200
+        r_data1 = reset1.json()
+        assert r_data1["success"] is True
+        assert r_data1["total_modified_pixels"] == 1
+        assert r_data1["is_identical_to_baseline"] is False
+
+        # Reset pixel (7, 7)
+        reset2 = await client.post(
+            "/api/v1/lab/reset-pixel",
+            json={
+                "original_image_b64": orig_b64,
+                "modified_image_b64": r_data1["modified_image_b64"],
+                "x": 7,
+                "y": 7,
+            },
+        )
+        assert reset2.status_code == 200
+        r_data2 = reset2.json()
+        assert r_data2["success"] is True
+        assert r_data2["total_modified_pixels"] == 0
+        assert r_data2["is_identical_to_baseline"] is True
+
+
+

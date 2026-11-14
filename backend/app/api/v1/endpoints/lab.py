@@ -5,7 +5,9 @@ StegoShield AI — Interactive Forensics Laboratory Endpoints.
 import json
 import uuid
 import io
+import hashlib
 from typing import List, Optional
+import numpy as np
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
 from fastapi.responses import Response
 from sqlalchemy import select, desc
@@ -24,6 +26,8 @@ from app.schemas.lab import (
     ApplyPixelChangeRequest,
     TogglePixelBitRequest,
     TogglePixelBitResponse,
+    ResetPixelRequest,
+    ResetPixelResponse,
     BulkManipulateRequest,
     BulkManipulateResponse,
     BitplaneRequest,
@@ -138,25 +142,27 @@ async def toggle_pixel_bit_endpoint(req: TogglePixelBitRequest):
         y = int(req.y)
         bit_pos = max(0, min(7, int(req.bit_position)))
 
-        is_rgb = (arr.ndim == 3 and arr.shape[2] == 3)
-
+        is_color = (arr.ndim == 3 and arr.shape[2] >= 3)
         action = (getattr(req, "action", None) or "toggle").lower().strip()
 
-        if is_rgb:
+        if is_color:
             if req.channel_index is not None:
-                c = max(0, min(2, int(req.channel_index)))
+                c = max(0, min(arr.shape[2] - 1, int(req.channel_index)))
             else:
-                ch_map = {"red": 0, "green": 1, "blue": 2, "r": 0, "g": 1, "b": 2}
-                c = ch_map.get(req.channel.lower(), 0)
+                ch_map = {"red": 0, "green": 1, "blue": 2, "alpha": 3, "r": 0, "g": 1, "b": 2, "a": 3}
+                c = ch_map.get(req.channel.lower().strip(), 0)
+                c = min(c, arr.shape[2] - 1)
             orig_val = int(arr[y, x, c])
             if action == "set":
                 new_val = orig_val | (1 << bit_pos)
             elif action == "clear":
                 new_val = orig_val & ~(1 << bit_pos)
             else:
+                # Real bit toggle: newValue = oldValue ^ (1 << bitPosition)
                 new_val = orig_val ^ (1 << bit_pos)
             arr[y, x, c] = new_val
-            ch_name = ["Red", "Green", "Blue"][c]
+            ch_names = ["Red", "Green", "Blue", "Alpha"]
+            ch_name = ch_names[c] if c < len(ch_names) else f"Channel {c}"
         else:
             orig_val = int(arr[y, x])
             if action == "set":
@@ -174,6 +180,22 @@ async def toggle_pixel_bit_endpoint(req: TogglePixelBitRequest):
         sha = hashlib.sha256(mod_bytes).hexdigest()
         updated_details = ForensicsLabService.get_pixel_info(arr, x, y)
 
+        baseline_pixel = None
+        total_modified_pixels = None
+        is_identical = None
+
+        if req.original_image_b64:
+            try:
+                orig_arr = ForensicsLabService.b64_to_array(req.original_image_b64)
+                diff = (arr != orig_arr)
+                if diff.ndim == 3:
+                    diff = np.any(diff, axis=-1)
+                total_modified_pixels = int(np.sum(diff))
+                baseline_pixel = ForensicsLabService.get_pixel_info(orig_arr, x, y)
+                is_identical = (total_modified_pixels == 0)
+            except Exception:
+                pass
+
         return TogglePixelBitResponse(
             success=True,
             modified_image_b64=mod_png_b64,
@@ -189,9 +211,59 @@ async def toggle_pixel_bit_endpoint(req: TogglePixelBitRequest):
             original_binary=f"{orig_val:08b}",
             new_binary=f"{new_val:08b}",
             pixel_details=updated_details,
+            baseline_pixel=baseline_pixel,
+            total_modified_pixels=total_modified_pixels,
+            is_identical_to_baseline=is_identical,
         )
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Failed to toggle pixel bit: {str(e)}")
+
+
+@router.post("/reset-pixel", response_model=ResetPixelResponse, summary="Restore a single modified pixel back to original baseline")
+async def reset_pixel_endpoint(req: ResetPixelRequest):
+    """Restores pixel at (x, y) in modified image to match original baseline image."""
+    try:
+        orig_arr = ForensicsLabService.b64_to_array(req.original_image_b64)
+        mod_arr = ForensicsLabService.b64_to_array(req.modified_image_b64)
+        h, w = mod_arr.shape[:2]
+        if req.x < 0 or req.x >= w or req.y < 0 or req.y >= h:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Pixel coordinate ({req.x}, {req.y}) is outside image boundaries ({w}x{h})."
+            )
+        x = int(req.x)
+        y = int(req.y)
+
+        # Restore pixel
+        mod_arr[y, x] = orig_arr[y, x]
+
+        mod_png_b64 = ForensicsLabService.array_to_b64_png(mod_arr)
+        mod_bytes = ForensicsLabService.b64_to_bytes(mod_png_b64)
+        import hashlib
+        sha = hashlib.sha256(mod_bytes).hexdigest()
+
+        # Count differences
+        diff = (mod_arr != orig_arr)
+        if diff.ndim == 3:
+            diff = np.any(diff, axis=-1)
+        total_mod = int(np.sum(diff))
+
+        pixel_info = ForensicsLabService.get_pixel_info(mod_arr, x, y)
+        baseline_info = ForensicsLabService.get_pixel_info(orig_arr, x, y)
+
+        return ResetPixelResponse(
+            success=True,
+            modified_image_b64=mod_png_b64,
+            modified_sha256=sha,
+            x=x,
+            y=y,
+            pixel_details=pixel_info,
+            baseline_pixel=baseline_info,
+            total_modified_pixels=total_mod,
+            is_identical_to_baseline=(total_mod == 0),
+        )
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Failed to reset pixel: {str(e)}")
 
 
 # -----------------------------------------------------------------------------

@@ -37,3 +37,4 @@ def test_lsb_stego_image_detection():
     assert results["sample_pair"]["estimated_payload_bpp"] > 0.80
     assert results["rs_analysis"]["verdict"] == "Stego Indicated"
     assert results["rs_analysis"]["rs_delta"] > 0.20
+

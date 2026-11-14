@@ -28,6 +28,8 @@ export default function StegoStudio({ onSendToDetector }) {
   const [embedPreviewUrl, setEmbedPreviewUrl] = useState(null);
   const [secretText, setSecretText] = useState('CONFIDENTIAL: Operation StegoShield active verification token #2026-X7.');
   const [algorithm, setAlgorithm] = useState('lsb_replace'); // 'lsb_replace' | 'lsb_matching'
+  const [embedPassword, setEmbedPassword] = useState('');
+  const [showEmbedPassword, setShowEmbedPassword] = useState(false);
   const [isEmbedding, setIsEmbedding] = useState(false);
   const [embedResult, setEmbedResult] = useState(null);
   const [embedError, setEmbedError] = useState(null);
@@ -35,6 +37,8 @@ export default function StegoStudio({ onSendToDetector }) {
   // Extract State
   const [extractFile, setExtractFile] = useState(null);
   const [extractPreviewUrl, setExtractPreviewUrl] = useState(null);
+  const [extractPassword, setExtractPassword] = useState('');
+  const [showExtractPassword, setShowExtractPassword] = useState(false);
   const [isExtracting, setIsExtracting] = useState(false);
   const [extractResult, setExtractResult] = useState(null);
   const [extractError, setExtractError] = useState(null);
@@ -109,6 +113,15 @@ export default function StegoStudio({ onSendToDetector }) {
     }
   };
 
+  const fileToBase64 = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = (error) => reject(error);
+    });
+  };
+
   const handleRunEmbedding = async () => {
     if (!embedFile) {
       setEmbedError('Please select or generate a cover carrier image first.');
@@ -122,7 +135,13 @@ export default function StegoStudio({ onSendToDetector }) {
     setIsEmbedding(true);
     setEmbedError(null);
     try {
-      const res = await steganalysisApi.embedSecretMessage(embedFile, secretText, algorithm);
+      let res;
+      if (embedPassword.trim()) {
+        const b64 = await fileToBase64(embedFile);
+        res = await steganalysisApi.embedLabSecret(b64, secretText.trim(), embedPassword.trim());
+      } else {
+        res = await steganalysisApi.embedSecretMessage(embedFile, secretText, algorithm);
+      }
       setEmbedResult(res);
     } catch (err) {
       setEmbedError(err.response?.data?.detail || err.message || 'Embedding failed.');
@@ -140,7 +159,13 @@ export default function StegoStudio({ onSendToDetector }) {
     setIsExtracting(true);
     setExtractError(null);
     try {
-      const res = await steganalysisApi.extractSecretMessage(extractFile);
+      let res;
+      if (extractPassword.trim()) {
+        const b64 = await fileToBase64(extractFile);
+        res = await steganalysisApi.extractLabSecret(b64, extractPassword.trim());
+      } else {
+        res = await steganalysisApi.extractSecretMessage(extractFile);
+      }
       setExtractResult(res);
     } catch (err) {
       setExtractError(err.response?.data?.detail || err.message || 'Extraction failed.');
@@ -349,6 +374,33 @@ export default function StegoStudio({ onSendToDetector }) {
                   >
                     <div className="text-xs font-bold text-white">Spatial LSB Matching (±1)</div>
                     <div className="text-[11px] text-[#777777] mt-1">Symmetric ±1 addition. Evades PoV & Chi-Square.</div>
+                  </button>
+                </div>
+              </div>
+
+              {/* Optional AES Password Encryption */}
+              <div className="pt-2 border-t border-[#292929]">
+                <div className="flex items-center justify-between mb-2">
+                  <label className="text-xs font-semibold text-[#777777] uppercase tracking-wider flex items-center gap-1.5">
+                    <KeyRound className="w-3.5 h-3.5 text-cyan-400" />
+                    <span>Optional AES-256 Encryption Key</span>
+                  </label>
+                  <span className="text-[10px] text-[#555555]">Optional</span>
+                </div>
+                <div className="relative">
+                  <input
+                    type={showEmbedPassword ? 'text' : 'password'}
+                    value={embedPassword}
+                    onChange={(e) => setEmbedPassword(e.target.value)}
+                    placeholder="Enter passkey to cryptographically seal payload..."
+                    className="w-full bg-[#0A0A0A] border border-[#292929] rounded-xl px-3 py-2 text-xs text-white placeholder-[#555555] focus:outline-none focus:border-[#555555] font-mono pr-16"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowEmbedPassword(!showEmbedPassword)}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-[#777777] hover:text-white"
+                  >
+                    {showEmbedPassword ? 'Hide' : 'Show'}
                   </button>
                 </div>
               </div>
@@ -574,6 +626,33 @@ export default function StegoStudio({ onSendToDetector }) {
                   <p className="text-xs text-[#777777] mt-1">Supports PNG, PGM, BMP</p>
                 </div>
               )}
+            </div>
+
+            {/* Optional AES Password Decryption */}
+            <div className="pt-2 border-t border-[#292929]">
+              <div className="flex items-center justify-between mb-2">
+                <label className="text-xs font-semibold text-[#777777] uppercase tracking-wider flex items-center gap-1.5">
+                  <KeyRound className="w-3.5 h-3.5 text-cyan-400" />
+                  <span>Optional Decryption Passkey</span>
+                </label>
+                <span className="text-[10px] text-[#555555]">Leave blank if unencrypted</span>
+              </div>
+              <div className="relative">
+                <input
+                  type={showExtractPassword ? 'text' : 'password'}
+                  value={extractPassword}
+                  onChange={(e) => setExtractPassword(e.target.value)}
+                  placeholder="Enter passkey if payload was sealed with encryption..."
+                  className="w-full bg-[#0A0A0A] border border-[#292929] rounded-xl px-3 py-2 text-xs text-white placeholder-[#555555] focus:outline-none focus:border-[#555555] font-mono pr-16"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowExtractPassword(!showExtractPassword)}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-[#777777] hover:text-white"
+                >
+                  {showExtractPassword ? 'Hide' : 'Show'}
+                </button>
+              </div>
             </div>
 
             {extractError && (

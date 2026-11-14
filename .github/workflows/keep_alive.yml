@@ -36,3 +36,4 @@ jobs:
           else
             echo "⚠️ Vercel proxy returned status $STATUS"
           fi
+

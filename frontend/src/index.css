@@ -204,3 +204,29 @@ input:focus, textarea:focus, select:focus {
   animation: radarSweep 4s linear infinite;
   background: conic-gradient(from 0deg at 50% 50%, rgba(6, 182, 212, 0.3) 0deg, transparent 55deg);
 }
+
+/* ========================================================
+   ISO/IEC 27037 FORENSIC CERTIFICATE PRINT STYLES
+   ======================================================== */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 12mm;
+  }
+
+  body {
+    background: #FFFFFF !important;
+    color: #000000 !important;
+    background-image: none !important;
+  }
+
+  /* Force exact color reproduction for charts, badges, and evidence rasters */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  nav, header, footer, aside, .print\:hidden {
+    display: none !important;
+  }
+}

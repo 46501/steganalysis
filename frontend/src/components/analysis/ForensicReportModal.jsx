@@ -409,33 +409,33 @@ export default function ForensicReportModal({ isOpen, onClose, reportData, previ
                 <div className="flex items-center justify-between text-indigo-300 print:text-gray-900 font-bold text-[11px] pb-1.5 border-b border-[#142036] print:border-gray-300">
                   <span>Deterministic Mathematical Steganalysis Proofs</span>
                   <span className={`text-[10px] px-2 py-0.5 rounded font-bold ${
-                    reportData.statistical_tests.aggregate_verdict?.includes('Stego')
+                    String(reportData.statistical_tests.aggregate_verdict || '').includes('Stego')
                       ? 'bg-rose-950/80 text-rose-300 border border-rose-500/40 print:bg-rose-100 print:text-rose-900'
                       : 'bg-emerald-950/80 text-emerald-300 border border-emerald-500/40 print:bg-emerald-100 print:text-emerald-900'
                   }`}>
-                    {reportData.statistical_tests.aggregate_verdict} (Confidence: {((reportData.statistical_tests.aggregate_confidence || 0) * 100).toFixed(0)}%)
+                    {String(reportData.statistical_tests.aggregate_verdict || '--')} (Confidence: {((reportData.statistical_tests.aggregate_confidence || 0) * 100).toFixed(0)}%)
                   </span>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mt-2 text-[10px]">
                   <div className="p-2 rounded-lg bg-[#0B1222] print:bg-white border border-[#17253E] print:border-gray-300">
                     <span className="text-[#64748B] print:text-gray-600 block font-bold">Chi-Square (χ²) Attack</span>
-                    <span className="text-white print:text-black block mt-0.5">p = {reportData.statistical_tests.chi_square?.p_value ?? '--'}</span>
-                    <span className={`block font-semibold mt-0.5 ${reportData.statistical_tests.chi_square?.verdict?.includes('Stego') ? 'text-rose-400 print:text-rose-700' : 'text-emerald-400 print:text-emerald-700'}`}>
-                      {reportData.statistical_tests.chi_square?.verdict || '--'}
+                    <span className="text-white print:text-black block mt-0.5">p = {String(reportData.statistical_tests.chi_square?.p_value ?? '--')}</span>
+                    <span className={`block font-semibold mt-0.5 ${String(reportData.statistical_tests.chi_square?.verdict || '').includes('Stego') ? 'text-rose-400 print:text-rose-700' : 'text-emerald-400 print:text-emerald-700'}`}>
+                      {String(reportData.statistical_tests.chi_square?.verdict || '--')}
                     </span>
                   </div>
                   <div className="p-2 rounded-lg bg-[#0B1222] print:bg-white border border-[#17253E] print:border-gray-300">
                     <span className="text-[#64748B] print:text-gray-600 block font-bold">Sample Pair Analysis (SPA)</span>
-                    <span className="text-white print:text-black block mt-0.5">{reportData.statistical_tests.sample_pair?.estimated_payload_bpp ?? 0} bpp</span>
-                    <span className={`block font-semibold mt-0.5 ${reportData.statistical_tests.sample_pair?.verdict?.includes('Stego') ? 'text-rose-400 print:text-rose-700' : 'text-emerald-400 print:text-emerald-700'}`}>
-                      {reportData.statistical_tests.sample_pair?.verdict || '--'}
+                    <span className="text-white print:text-black block mt-0.5">{String(reportData.statistical_tests.sample_pair?.estimated_payload_bpp ?? 0)} bpp</span>
+                    <span className={`block font-semibold mt-0.5 ${String(reportData.statistical_tests.sample_pair?.verdict || '').includes('Stego') ? 'text-rose-400 print:text-rose-700' : 'text-emerald-400 print:text-emerald-700'}`}>
+                      {String(reportData.statistical_tests.sample_pair?.verdict || '--')}
                     </span>
                   </div>
                   <div className="p-2 rounded-lg bg-[#0B1222] print:bg-white border border-[#17253E] print:border-gray-300">
                     <span className="text-[#64748B] print:text-gray-600 block font-bold">RS Steganalysis</span>
-                    <span className="text-white print:text-black block mt-0.5">Δ = {reportData.statistical_tests.rs_analysis?.rs_delta ?? '--'}</span>
-                    <span className={`block font-semibold mt-0.5 ${reportData.statistical_tests.rs_analysis?.verdict?.includes('Stego') ? 'text-rose-400 print:text-rose-700' : 'text-emerald-400 print:text-emerald-700'}`}>
-                      {reportData.statistical_tests.rs_analysis?.verdict || '--'}
+                    <span className="text-white print:text-black block mt-0.5">Δ = {String(reportData.statistical_tests.rs_analysis?.rs_delta ?? '--')}</span>
+                    <span className={`block font-semibold mt-0.5 ${String(reportData.statistical_tests.rs_analysis?.verdict || '').includes('Stego') ? 'text-rose-400 print:text-rose-700' : 'text-emerald-400 print:text-emerald-700'}`}>
+                      {String(reportData.statistical_tests.rs_analysis?.verdict || '--')}
                     </span>
                   </div>
                 </div>

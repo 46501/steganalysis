@@ -133,16 +133,11 @@ function ForensicsLabContent() {
     let text = '';
     if (typeof msg === 'string') {
       text = msg;
-    } else if (Array.isArray(msg)) {
-      text = msg
-        .map((m) => (m && typeof m === 'object' ? m.msg || m.message || JSON.stringify(m) : String(m)))
-        .join('; ');
-    } else if (msg && typeof msg === 'object') {
-      text = msg.msg || msg.message || (msg.response ? formatErrorDetail(msg) : JSON.stringify(msg));
     } else {
-      text = String(msg || 'Status updated');
+      text = formatApiError(msg, isError ? 'Operation failed' : 'Status updated');
     }
-    setStatusMessage({ text, isError });
+    const safeText = typeof text === 'string' ? text : String(text || '');
+    setStatusMessage({ text: safeText, isError: Boolean(isError) });
     setTimeout(() => setStatusMessage(null), 5000);
   };
 
@@ -1604,13 +1599,11 @@ function ForensicsLabContent() {
                         <div className="p-2 rounded bg-[#050914] border border-[#142036] text-[11px]">
                           {extractResult.success ? (
                             <span className="text-emerald-400 font-bold">
-                              Recovered: {extractResult.recovered_message || extractResult.secret_text}
+                              Recovered: {String(extractResult.recovered_message || extractResult.secret_text || '')}
                             </span>
                           ) : (
                             <span className="text-rose-400">
-                              {typeof extractResult.status === 'string'
-                                ? extractResult.status
-                                : formatApiError(extractResult.status, 'Extraction failed')}
+                              {formatApiError(extractResult.status, 'Extraction failed')}
                             </span>
                           )}
                         </div>
@@ -2061,6 +2054,7 @@ function ForensicsLabContent() {
             residual_energy: comparisonData?.residual_energy_mod || originalMeta?.residual_variance || 24.5,
             residual_heatmap_b64: comparisonData?.heatmap_b64,
             diff_map_b64: comparisonData?.diff_map_b64,
+            statistical_tests: analysisResult?.statistical_tests || null,
             difference_analysis: comparisonData ? {
               has_paired_reference: true,
               changed_pixels: comparisonData.changed_pixels,
@@ -2096,6 +2090,10 @@ class ForensicsLabErrorBoundary extends React.Component {
     window.location.reload();
   };
 
+  handleReset = () => {
+    this.setState({ hasError: false, error: null });
+  };
+
   render() {
     if (this.state.hasError) {
       return (
@@ -2115,6 +2113,13 @@ class ForensicsLabErrorBoundary extends React.Component {
             </code>
           </div>
           <div className="pt-2 flex justify-center gap-3">
+            <button
+              type="button"
+              onClick={this.handleReset}
+              className="px-4 py-2 rounded-xl bg-[#142036] hover:bg-[#1E2E4E] text-cyan-300 font-bold text-xs border border-cyan-500/30 transition cursor-pointer"
+            >
+              Recover Workstation View
+            </button>
             <button
               type="button"
               onClick={this.handleReload}

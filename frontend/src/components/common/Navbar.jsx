@@ -15,24 +15,37 @@ export default function Navbar({
   onOpenVivaTour,
   onOpenCommandPalette,
 }) {
-  const [healthStatus, setHealthStatus] = useState({ online: false, model: '', db: '' });
+  const [healthStatus, setHealthStatus] = useState({
+    online: false,
+    model: '',
+    db: '',
+    isWarming: false,
+  });
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
+    const timer = setTimeout(() => {
+      if (isMounted) {
+        setHealthStatus((prev) => (!prev.online ? { ...prev, isWarming: true } : prev));
+      }
+    }, 2500);
+
     const fetchHealth = async () => {
       try {
         const data = await steganalysisApi.checkHealth();
         if (isMounted) {
+          clearTimeout(timer);
           setHealthStatus({
             online: data.status === 'healthy',
             model: data.model?.active_model || 'StegoNet-Lite',
             db: data.database?.type || 'SQLite',
+            isWarming: false,
           });
         }
       } catch (err) {
         if (isMounted) {
-          setHealthStatus({ online: false, model: '', db: '' });
+          setHealthStatus((prev) => ({ ...prev, online: false, isWarming: false }));
         }
       }
     };
@@ -41,6 +54,7 @@ export default function Navbar({
     const interval = setInterval(fetchHealth, 15000);
     return () => {
       isMounted = false;
+      clearTimeout(timer);
       clearInterval(interval);
     };
   }, []);
@@ -130,8 +144,13 @@ export default function Navbar({
           <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#151515] border border-[#292929] text-[11px] font-mono text-[#B3B3B3]">
             {healthStatus.online ? (
               <>
-                <span className="h-1.5 w-1.5 rounded-full bg-white"></span>
-                <span>PyTorch CPU</span>
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.6)]"></span>
+                <span className="text-[#E0E0E0]">{healthStatus.db === 'Neon PostgreSQL' ? 'Neon • PyTorch' : 'PyTorch CPU'}</span>
+              </>
+            ) : healthStatus.isWarming ? (
+              <>
+                <span className="h-1.5 w-1.5 rounded-full bg-amber-400 animate-pulse"></span>
+                <span className="text-amber-300">Waking Cloud...</span>
               </>
             ) : (
               <>

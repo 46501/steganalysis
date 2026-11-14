@@ -79,3 +79,4 @@ def test_assistant_validation_error_on_empty_message():
     """Checks that empty message payloads are rejected with 422 Unprocessable Entity."""
     response = client.post("/api/v1/assistant/chat", json={"message": "   "})
     assert response.status_code == 422
+

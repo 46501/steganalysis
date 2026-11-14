@@ -45,7 +45,7 @@ const STEPS = [
   { id: 5, key: 'results', title: 'Complete Analysis Results', short: '5. Results', icon: FileText },
 ];
 
-export default function ForensicsLab() {
+function ForensicsLabContent() {
   const { user } = useAuth();
   const { setActiveAnalysisContext } = useAssistant();
 
@@ -114,7 +114,7 @@ export default function ForensicsLab() {
     setActiveAnalysisContext({
       source: 'forensics_lab',
       step: currentStep,
-      step_name: STEPS[currentStep - 1]?.title,
+      step_name: STEPS[currentStep - 1]?.title || `Step ${currentStep}`,
       verdict: analysisResult?.verdict || null,
       confidence: analysisResult?.confidence || null,
       cover_probability: analysisResult?.cover_probability || null,
@@ -123,7 +123,7 @@ export default function ForensicsLab() {
       changed_pixels: comparisonData?.changed_pixels || 0,
       total_pixels: comparisonData?.total_pixels || null,
       change_pct: comparisonData?.change_pct || 0.0,
-      original_hash: originalHash,
+      original_hash: originalMeta?.sha256_hash || null,
       modified_hash: modifiedHash,
       dimensions: originalMeta ? `${originalMeta.width}x${originalMeta.height}` : null,
     });
@@ -131,7 +131,6 @@ export default function ForensicsLab() {
     currentStep,
     analysisResult,
     comparisonData,
-    originalHash,
     modifiedHash,
     originalMeta,
     setActiveAnalysisContext,
@@ -141,11 +140,15 @@ export default function ForensicsLab() {
     try {
       setInspectLoading(true);
       const res = await fetch('/samples/sample_cover.png');
+      if (!res.ok) {
+        throw new Error(`Failed to load preset sample cover (HTTP ${res.status})`);
+      }
       const blob = await res.blob();
       const file = new File([blob], 'sample_cover_5001.png', { type: 'image/png' });
       await handleImageUpload(file);
     } catch (e) {
       console.warn('Failed to load preset sample cover:', e);
+      showStatus('Sample cover could not be auto-loaded. Please upload an image manually.', false);
     } finally {
       setInspectLoading(false);
     }
@@ -396,6 +399,10 @@ export default function ForensicsLab() {
 
   const goToNext = () => {
     if (currentStep === 1) {
+      if (!originalImageB64) {
+        showStatus('Please upload or load a reference cover image in Step 1 first.', true);
+        return;
+      }
       setCompletedSteps((prev) => new Set([...prev, 1]));
       setCurrentStep(2);
     } else if (currentStep === 2) {
@@ -408,6 +415,8 @@ export default function ForensicsLab() {
       if (analysisResult) {
         setCompletedSteps((prev) => new Set([...prev, 4, 5]));
         setCurrentStep(5);
+      } else {
+        showStatus('Please execute StegoNet-Lite inference in Step 4 before viewing final results.', true);
       }
     }
   };
@@ -635,7 +644,24 @@ export default function ForensicsLab() {
         {/* ================================================================ */}
         {/* STEP 2: MODIFY BITS                                              */}
         {/* ================================================================ */}
-        {currentStep === 2 && (
+        {currentStep === 2 && !originalImageB64 && (
+          <div className="p-10 rounded-xl bg-[#050914] border border-[#142036] text-center font-mono space-y-4">
+            <AlertTriangle className="w-10 h-10 text-amber-400 mx-auto" />
+            <h3 className="text-sm font-bold text-white">No Reference Carrier Loaded</h3>
+            <p className="text-xs text-[#94A3B8] max-w-md mx-auto">
+              Step 2 requires a reference image to inspect and modify pixels. Please return to Step 1 and upload an image or load a sample cover.
+            </p>
+            <button
+              type="button"
+              onClick={() => setCurrentStep(1)}
+              className="px-4 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-black font-bold text-xs transition shadow-[0_0_12px_rgba(0,240,255,0.3)] cursor-pointer"
+            >
+              Go to Step 1: Upload Image
+            </button>
+          </div>
+        )}
+
+        {currentStep === 2 && originalImageB64 && (
           <div className="space-y-4">
             <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#142036] pb-3">
               <div>
@@ -871,7 +897,24 @@ export default function ForensicsLab() {
         {/* ================================================================ */}
         {/* STEP 3: ADD HIDDEN MESSAGE                                       */}
         {/* ================================================================ */}
-        {currentStep === 3 && (
+        {currentStep === 3 && !originalImageB64 && (
+          <div className="p-10 rounded-xl bg-[#050914] border border-[#142036] text-center font-mono space-y-4">
+            <Lock className="w-10 h-10 text-cyan-400 mx-auto" />
+            <h3 className="text-sm font-bold text-white">No Carrier Loaded for Embedding</h3>
+            <p className="text-xs text-[#94A3B8] max-w-md mx-auto">
+              Please upload or load a reference cover image in Step 1 before embedding a hidden message.
+            </p>
+            <button
+              type="button"
+              onClick={() => setCurrentStep(1)}
+              className="px-4 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-black font-bold text-xs transition shadow-[0_0_12px_rgba(0,240,255,0.3)] cursor-pointer"
+            >
+              Go to Step 1: Upload Image
+            </button>
+          </div>
+        )}
+
+        {currentStep === 3 && originalImageB64 && (
           <div className="space-y-4">
             <div className="border-b border-[#142036] pb-3">
               <h2 className="text-sm font-bold text-white font-mono uppercase tracking-wider flex items-center gap-2">
@@ -1026,7 +1069,24 @@ export default function ForensicsLab() {
         {/* ================================================================ */}
         {/* STEP 4: RUN STEGANALYSIS                                         */}
         {/* ================================================================ */}
-        {currentStep === 4 && (
+        {currentStep === 4 && !originalImageB64 && (
+          <div className="p-10 rounded-xl bg-[#050914] border border-[#142036] text-center font-mono space-y-4">
+            <Cpu className="w-10 h-10 text-cyan-400 mx-auto" />
+            <h3 className="text-sm font-bold text-white">No Carrier Loaded for Steganalysis</h3>
+            <p className="text-xs text-[#94A3B8] max-w-md mx-auto">
+              Please upload or load a reference cover image in Step 1 before running StegoNet-Lite inference.
+            </p>
+            <button
+              type="button"
+              onClick={() => setCurrentStep(1)}
+              className="px-4 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-black font-bold text-xs transition shadow-[0_0_12px_rgba(0,240,255,0.3)] cursor-pointer"
+            >
+              Go to Step 1: Upload Image
+            </button>
+          </div>
+        )}
+
+        {currentStep === 4 && originalImageB64 && (
           <div className="space-y-5">
             <div className="border-b border-[#142036] pb-3">
               <h2 className="text-sm font-bold text-white font-mono uppercase tracking-wider flex items-center gap-2">
@@ -1127,13 +1187,32 @@ export default function ForensicsLab() {
                 <button
                   type="button"
                   onClick={() => setReportModalOpen(true)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-black font-bold transition shadow-[0_0_12px_rgba(0,240,255,0.3)]"
+                  disabled={!analysisResult}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-black font-bold transition shadow-[0_0_12px_rgba(0,240,255,0.3)] disabled:opacity-30 disabled:cursor-not-allowed"
                 >
                   <Printer className="w-3.5 h-3.5" />
                   <span>Print Forensic Certificate</span>
                 </button>
               </div>
             </div>
+
+            {/* Empty State when no analysis has run */}
+            {!analysisResult && (
+              <div className="p-10 rounded-xl bg-[#050914] border border-[#142036] text-center font-mono space-y-4">
+                <Cpu className="w-10 h-10 text-cyan-400 mx-auto" />
+                <h3 className="text-sm font-bold text-white">No Steganalysis Evaluation Performed Yet</h3>
+                <p className="text-xs text-[#94A3B8] max-w-md mx-auto">
+                  Please execute StegoNet-Lite inference in Step 4 to generate the forensic classification, PSNR fidelity calculations, and differential evidence maps.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setCurrentStep(4)}
+                  className="px-4 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-black font-bold text-xs transition shadow-[0_0_12px_rgba(0,240,255,0.3)] cursor-pointer"
+                >
+                  Go to Step 4: Run Steganalysis
+                </button>
+              </div>
+            )}
 
             {/* Verdict Banner */}
             {analysisResult && (
@@ -1390,5 +1469,65 @@ export default function ForensicsLab() {
         />
       )}
     </div>
+  );
+}
+
+// --------------------------------------------------------------------------
+// Forensic Workstation Resilient Error Boundary
+// --------------------------------------------------------------------------
+class ForensicsLabErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    console.error('ForensicsLab Error Boundary caught error:', error, errorInfo);
+  }
+
+  handleReload = () => {
+    this.setState({ hasError: false, error: null });
+    window.location.reload();
+  };
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="p-8 rounded-2xl bg-[#070D1A] border border-red-500/40 text-center font-mono max-w-2xl mx-auto my-12 space-y-4 shadow-xl">
+          <div className="w-12 h-12 rounded-xl bg-red-950/80 border border-red-500/50 flex items-center justify-center text-red-400 mx-auto">
+            <AlertTriangle className="w-6 h-6 text-red-400" />
+          </div>
+          <h2 className="text-base font-bold text-white">Forensic Workstation Exception Caught</h2>
+          <p className="text-xs text-[#94A3B8] leading-relaxed">
+            The Forensic Lab caught a rendering exception. The application remains running.
+          </p>
+          <div className="p-3 rounded-lg bg-[#050914] border border-[#142036] text-[11px] text-red-300 text-left overflow-auto max-h-32">
+            <code>{this.state.error?.message || 'Unknown runtime error'}</code>
+          </div>
+          <div className="pt-2 flex justify-center gap-3">
+            <button
+              type="button"
+              onClick={this.handleReload}
+              className="px-4 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-black font-bold text-xs transition shadow-[0_0_12px_rgba(0,240,255,0.3)] cursor-pointer"
+            >
+              Reload Forensic Lab
+            </button>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+export default function ForensicsLab() {
+  return (
+    <ForensicsLabErrorBoundary>
+      <ForensicsLabContent />
+    </ForensicsLabErrorBoundary>
   );
 }

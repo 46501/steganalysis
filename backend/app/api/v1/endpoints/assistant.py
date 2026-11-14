@@ -25,3 +25,4 @@ async def chat_with_assistant(
     """
     response = await AssistantService.process_chat(req)
     return response
+

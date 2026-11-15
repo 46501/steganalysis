@@ -16,15 +16,21 @@ import {
   CornerDownLeft,
 } from 'lucide-react';
 import { useAssistant } from '../../context/AssistantContext';
+import { useAuth } from '../../context/AuthContext';
 
 /**
  * GlobalAIAssistant
  *
  * Fully functional floating chatbot widget fixed at bottom-right corner.
- * Accessible across all pages of the StegoShield AI application.
+ * Restricted strictly to authenticated application pages.
  * Connects directly to FastAPI `/api/v1/assistant/chat` with deep domain knowledge.
  */
 export default function GlobalAIAssistant() {
+  const { user } = useAuth();
+
+  // Defense-in-depth: Never render floating AI assistant for unauthenticated sessions
+  if (!user) return null;
+
   const {
     isOpen,
     setIsOpen,

@@ -30,7 +30,7 @@ export default function TopHeader({
   setActiveTab,
 }) {
   const navigate = useNavigate();
-  const { user, isGuest, logout, openAuthModal } = useAuth();
+  const { user, logout, openAuthModal } = useAuth();
   const [soundOn, setSoundOn] = useState(getSoundEnabled());
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const dropdownRef = useRef(null);

@@ -160,7 +160,7 @@ export default function UserProfile({ setActiveTab }) {
           </div>
           <h2 className="text-xl font-bold text-white">Investigator Profile Unavailable</h2>
           <p className="text-xs text-[#94A3B8] max-w-md mx-auto">
-            You are currently operating in Guest Mode. Sign in or register to access your personal forensic portfolio and telemetry history.
+            Authentication is required. Sign in or register to access your personal forensic portfolio and telemetry history.
           </p>
           <div className="flex items-center justify-center gap-3 pt-2">
             <button

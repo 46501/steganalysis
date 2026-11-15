@@ -9,7 +9,7 @@ import { useAuth } from '../../context/AuthContext';
  * - If unauthenticated and no explicit guest session, redirects to /login immediately with replace: true.
  */
 export default function ProtectedRoute({ children, requireUser = false }) {
-  const { user, isGuestSession, isLoading } = useAuth();
+  const { user, isLoading } = useAuth();
   const location = useLocation();
 
   if (isLoading) {
@@ -23,29 +23,15 @@ export default function ProtectedRoute({ children, requireUser = false }) {
     );
   }
 
-  // Strict User Account requirement (e.g. for /profile)
-  if (requireUser && !user) {
+  // Strict Authentication Requirement: All protected forensic routes require a verified user
+  if (!user) {
     return (
       <Navigate
         to="/login"
         replace
         state={{
           from: location,
-          message: 'Registered investigator account required to access profile telemetry.',
-        }}
-      />
-    );
-  }
-
-  // If neither authenticated nor in an explicit guest session, redirect to /login
-  if (!user && !isGuestSession) {
-    return (
-      <Navigate
-        to="/login"
-        replace
-        state={{
-          from: location,
-          message: 'Authentication required. Please sign in or initialize a session.',
+          message: 'Authentication required. Please sign in to access StegoShield AI.',
         }}
       />
     );

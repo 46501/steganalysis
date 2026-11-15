@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, Reques
 import numpy as np
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.auth import get_current_user_optional, check_rate_limit
+from app.core.auth import get_current_user, check_rate_limit
 from app.core.config import settings
 from app.core.database import get_db
 from app.models.user import User
@@ -27,7 +27,7 @@ async def analyze_image(
     file: UploadFile = File(...),
     reference_file: Optional[UploadFile] = File(None),
     model_name: Optional[str] = Form(None),
-    current_user: Optional[User] = Depends(get_current_user_optional),
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> AnalysisResultResponse:
     """
@@ -35,8 +35,9 @@ async def analyze_image(
     Optionally accepts an authentic user-supplied reference cover image for paired lossless differential verification.
     Returns class prediction ('Cover' vs 'Stego'), confidence scores,
     and high-pass spatial residual forensic explanation with visual artifacts.
+    Requires an authenticated user session.
     """
-    client_id = f"user:{current_user.id}" if current_user else f"ip:{request.client.host if request.client else 'unknown'}"
+    client_id = f"user:{current_user.id}"
     check_rate_limit(
         key=client_id,
         category="ml_compute",
@@ -96,14 +97,15 @@ async def compare_pair(
     request: Request,
     cover_file: UploadFile = File(...),
     stego_file: UploadFile = File(...),
-    current_user: Optional[User] = Depends(get_current_user_optional),
+    current_user: User = Depends(get_current_user),
 ) -> PairComparisonResponse:
     """
     Compares a matched cover-stego image pair, calculating exact pixel alterations,
     change rate, spatial residual energy delta, Hamming bit distance, and amplified ternary difference maps.
     Only declares alterations verified when directly measured across identical-dimension paired inputs.
+    Requires an authenticated user session.
     """
-    client_id = f"user:{current_user.id}" if current_user else f"ip:{request.client.host if request.client else 'unknown'}"
+    client_id = f"user:{current_user.id}"
     check_rate_limit(
         key=client_id,
         category="ml_compute",
@@ -218,8 +220,9 @@ async def compare_pair(
 async def extract_bitplane(
     file: UploadFile = File(...),
     plane: int = Query(0, ge=0, le=7),
+    current_user: User = Depends(get_current_user),
 ):
-    """Extracts a specific bit plane (0=LSB to 7=MSB) from an uploaded image."""
+    """Extracts a specific bit plane (0=LSB to 7=MSB) from an uploaded image. Requires authentication."""
     _, _, _, tensor, _ = await ImageService.process_upload(file)
     arr = tensor.squeeze().cpu().numpy().astype(np.uint8)
     b64_png = VisualForensicsService.generate_bitplane(arr, plane=plane)

@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from sqlalchemy import delete, desc, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.auth import get_current_user_optional
+from app.core.auth import get_current_user
 from app.core.database import get_db
 from app.models.scan import ScanRecord
 from app.models.user import User
@@ -20,20 +20,12 @@ async def get_scan_history(
     limit: int = Query(20, ge=1, le=100),
     offset: int = Query(0, ge=0),
     verdict: Optional[str] = Query(None, description="Filter by 'Inconclusive', 'Cover', or 'Stego'"),
-    current_user: Optional[User] = Depends(get_current_user_optional),
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> PaginatedHistoryResponse:
-    """Retrieves paginated scan history records isolated by user identity."""
-    query = select(ScanRecord)
-    count_query = select(func.count(ScanRecord.id))
-
-    # User isolation: Authenticated users view only their scans; guests view guest scans
-    if current_user:
-        query = query.where(ScanRecord.user_id == current_user.id)
-        count_query = count_query.where(ScanRecord.user_id == current_user.id)
-    else:
-        query = query.where(ScanRecord.user_id.is_(None))
-        count_query = count_query.where(ScanRecord.user_id.is_(None))
+    """Retrieves paginated scan history records isolated to the authenticated user."""
+    query = select(ScanRecord).where(ScanRecord.user_id == current_user.id)
+    count_query = select(func.count(ScanRecord.id)).where(ScanRecord.user_id == current_user.id)
 
     if verdict:
         v_lower = verdict.lower().strip()
@@ -67,11 +59,11 @@ async def get_scan_history(
 @router.get("/{record_id}", response_model=ScanHistoryItem)
 async def get_scan_record_by_id(
     record_id: int,
-    current_user: Optional[User] = Depends(get_current_user_optional),
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> ScanHistoryItem:
     """Retrieves a single scan history record by ID, enforcing ownership validation."""
-    stmt = select(ScanRecord).where(ScanRecord.id == record_id)
+    stmt = select(ScanRecord).where(ScanRecord.id == record_id, ScanRecord.user_id == current_user.id)
     result = await db.execute(stmt)
     record = result.scalar_one_or_none()
 
@@ -80,14 +72,6 @@ async def get_scan_record_by_id(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Scan record with ID {record_id} not found",
         )
-
-    # Ownership check: prevent cross-user IDOR access
-    if record.user_id is not None:
-        if not current_user or record.user_id != current_user.id:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Scan record with ID {record_id} not found",
-            )
 
     return ScanHistoryItem.model_validate(record)
 
@@ -95,11 +79,11 @@ async def get_scan_record_by_id(
 @router.get("/{record_id}/report")
 async def get_forensic_case_report(
     record_id: int,
-    current_user: Optional[User] = Depends(get_current_user_optional),
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     """Generates an official forensic examination case certificate for an owned recorded scan."""
-    stmt = select(ScanRecord).where(ScanRecord.id == record_id)
+    stmt = select(ScanRecord).where(ScanRecord.id == record_id, ScanRecord.user_id == current_user.id)
     result = await db.execute(stmt)
     record = result.scalar_one_or_none()
 
@@ -108,13 +92,6 @@ async def get_forensic_case_report(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Scan record with ID {record_id} not found",
         )
-
-    if record.user_id is not None:
-        if not current_user or record.user_id != current_user.id:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Scan record with ID {record_id} not found",
-            )
 
     case_id = f"STEGO-CASE-{record.id:06d}"
     return {
@@ -152,11 +129,11 @@ async def get_forensic_case_report(
 @router.get("/{record_id}/evidence-archive")
 async def export_evidence_archive_by_id(
     record_id: int,
-    current_user: Optional[User] = Depends(get_current_user_optional),
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     """Generates and streams an ISO/IEC 27037 compliant .zip digital evidence package for an owned recorded scan."""
-    stmt = select(ScanRecord).where(ScanRecord.id == record_id)
+    stmt = select(ScanRecord).where(ScanRecord.id == record_id, ScanRecord.user_id == current_user.id)
     result = await db.execute(stmt)
     record = result.scalar_one_or_none()
 
@@ -165,13 +142,6 @@ async def export_evidence_archive_by_id(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Scan record with ID {record_id} not found",
         )
-
-    if record.user_id is not None:
-        if not current_user or record.user_id != current_user.id:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Scan record with ID {record_id} not found",
-            )
 
     case_id = f"STEGO-CASE-{record.id:06d}"
     case_data = {
@@ -206,10 +176,12 @@ async def export_evidence_archive_by_id(
 @router.post("/evidence-archive")
 async def export_live_evidence_archive(
     req: EvidenceArchiveRequest,
+    current_user: User = Depends(get_current_user),
 ):
     """
     Generates and streams an ISO/IEC 27037 compliant .zip digital evidence package
     from live analysis results, packaging certificates, visual heatmaps, bitplane, and FFT spectra.
+    Requires an authenticated user session.
     """
     case_id = req.case_number or f"STEGO-CASE-{req.id or 1:06d}"
     case_data = {
@@ -255,11 +227,11 @@ async def export_live_evidence_archive(
 @router.delete("/{record_id}", status_code=status.HTTP_200_OK)
 async def delete_scan_record(
     record_id: int,
-    current_user: Optional[User] = Depends(get_current_user_optional),
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     """Deletes a specific scan record from the history, checking ownership."""
-    stmt = select(ScanRecord).where(ScanRecord.id == record_id)
+    stmt = select(ScanRecord).where(ScanRecord.id == record_id, ScanRecord.user_id == current_user.id)
     result = await db.execute(stmt)
     record = result.scalar_one_or_none()
 
@@ -269,19 +241,6 @@ async def delete_scan_record(
             detail=f"Scan record with ID {record_id} not found",
         )
 
-    if record.user_id is not None:
-        if not current_user or record.user_id != current_user.id:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Scan record with ID {record_id} not found",
-            )
-    else:
-        if current_user:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Cannot delete anonymous guest records from an authenticated account.",
-            )
-
     await db.delete(record)
     await db.commit()
     return {"message": f"Scan record {record_id} deleted successfully"}
@@ -289,16 +248,10 @@ async def delete_scan_record(
 
 @router.delete("", status_code=status.HTTP_200_OK)
 async def clear_all_history(
-    current_user: Optional[User] = Depends(get_current_user_optional),
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    """Clears scan records belonging to the current user or guest session."""
-    if current_user:
-        await db.execute(delete(ScanRecord).where(ScanRecord.user_id == current_user.id))
-        msg = "All personal scan records cleared successfully"
-    else:
-        await db.execute(delete(ScanRecord).where(ScanRecord.user_id.is_(None)))
-        msg = "All guest scan records cleared successfully"
-
+    """Clears scan records belonging to the authenticated user."""
+    await db.execute(delete(ScanRecord).where(ScanRecord.user_id == current_user.id))
     await db.commit()
-    return {"message": msg}
+    return {"message": "All personal scan records cleared successfully"}

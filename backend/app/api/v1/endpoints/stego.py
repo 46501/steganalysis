@@ -2,8 +2,10 @@
 Steganography Studio Endpoints: Embedding & Extracting Secret Messages.
 """
 
-from fastapi import APIRouter, File, Form, HTTPException, UploadFile, status
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
 from app.services.embedding_service import SteganographyStudioService
+from app.core.auth import get_current_user
+from app.models.user import User
 
 router = APIRouter()
 
@@ -13,10 +15,12 @@ async def embed_secret_message(
     file: UploadFile = File(...),
     secret_text: str = Form(...),
     algorithm: str = Form("lsb_replace"),
+    current_user: User = Depends(get_current_user),
 ):
     """
     Embeds an arbitrary secret text into a cover image using LSB replacement or ±1 matching.
     Returns the stego image encoded in base64, embedding metrics, and capacity statistics.
+    Requires an authenticated user session.
     """
     if not secret_text or len(secret_text.strip()) == 0:
         raise HTTPException(
@@ -54,10 +58,12 @@ async def embed_secret_message(
 @router.post("/extract", status_code=status.HTTP_200_OK)
 async def extract_secret_message(
     file: UploadFile = File(...),
+    current_user: User = Depends(get_current_user),
 ):
     """
     Extracts a concealed secret message from a stego image.
     Decodes the 32-bit header and recovers the original UTF-8 plaintext.
+    Requires an authenticated user session.
     """
     image_bytes = await file.read()
     if len(image_bytes) == 0:

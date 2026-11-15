@@ -22,7 +22,7 @@ import { formatApiError } from '../utils/errorUtils';
 export default function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, login, register, continueAsGuest, isGuestSession } = useAuth();
+  const { user, login, register } = useAuth();
 
   const [activeTab, setActiveTab] = useState('login'); // 'login' | 'register' | 'forgot'
   const [fullName, setFullName] = useState('');
@@ -119,12 +119,6 @@ export default function LoginPage() {
     } finally {
       setIsSubmitting(false);
     }
-  };
-
-  const handleContinueAsGuest = () => {
-    playCyberClick();
-    continueAsGuest();
-    navigate('/dashboard', { replace: true });
   };
 
   return (
@@ -446,21 +440,12 @@ export default function LoginPage() {
             </button>
           </form>
 
-          {/* Optional Guest Mode Access */}
-          <div className="mt-6 pt-5 border-t border-[#142036] flex items-center justify-between text-xs font-mono">
+          {/* Forensic Standard */}
+          <div className="mt-6 pt-5 border-t border-[#142036] flex items-center justify-center text-xs font-mono">
             <span className="text-[#94A3B8] flex items-center gap-1.5">
               <ShieldCheck className="w-3.5 h-3.5 text-cyan-400" />
-              <span>NIST SP 800-86</span>
+              <span>NIST SP 800-86 Compliant Forensic Environment</span>
             </span>
-
-            <button
-              type="button"
-              onClick={handleContinueAsGuest}
-              className="text-cyan-400 hover:text-cyan-300 font-semibold flex items-center gap-1 transition group"
-            >
-              <span>Continue as Guest Analyst</span>
-              <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition" />
-            </button>
           </div>
         </div>
       </div>

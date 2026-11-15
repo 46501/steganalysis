@@ -54,6 +54,22 @@ def verify_csrf_header(request: Request) -> None:
 
 
 @router.post(
+    "/guest",
+    status_code=status.HTTP_403_FORBIDDEN,
+    summary="Guest authentication is permanently disabled",
+)
+async def guest_session_disabled():
+    """
+    Explicit rejection of guest session creation.
+    Unauthenticated guest sessions are strictly prohibited across all forensic workspaces.
+    """
+    raise HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN,
+        detail="Guest sessions have been permanently disabled. A verified investigator account is required.",
+    )
+
+
+@router.post(
     "/register",
     response_model=TokenResponse,
     status_code=status.HTTP_201_CREATED,

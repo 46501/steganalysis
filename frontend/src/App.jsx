@@ -16,13 +16,12 @@ import VivaTourModal from './components/presentation/VivaTourModal';
 import CommandPalette from './components/common/CommandPalette';
 import AuthModal from './components/auth/AuthModal';
 import ForgotPasswordModal from './components/auth/ForgotPasswordModal';
-import GuestPromptModal from './components/auth/GuestPromptModal';
 import GlobalAIAssistant from './components/assistant/GlobalAIAssistant';
 
 function AppContent() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, isGuestSession, isLoading } = useAuth();
+  const { user, isLoading } = useAuth();
 
   const [injectedDetectorFile, setInjectedDetectorFile] = useState(null);
   const [isVivaTourOpen, setIsVivaTourOpen] = useState(false);
@@ -65,7 +64,7 @@ function AppContent() {
     );
   }
 
-  const hasAccess = Boolean(user || isGuestSession);
+  const hasAccess = Boolean(user);
 
   return (
     <>
@@ -164,10 +163,9 @@ function AppContent() {
       {/* Global Cyber Authentication Modals */}
       <AuthModal />
       <ForgotPasswordModal />
-      <GuestPromptModal />
 
-      {/* Global Floating AI Assistant (Accessible project-wide) */}
-      <GlobalAIAssistant />
+      {/* Global Floating AI Assistant (Accessible only to authenticated users) */}
+      {user && <GlobalAIAssistant />}
     </>
   );
 }

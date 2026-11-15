@@ -5,7 +5,7 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, File, Request, UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.auth import get_current_user_optional, check_rate_limit
+from app.core.auth import get_current_user, check_rate_limit
 from app.core.config import settings
 from app.core.database import get_db
 from app.models.user import User
@@ -20,11 +20,11 @@ router = APIRouter()
 async def analyze_batch(
     request: Request,
     files: List[UploadFile] = File(...),
-    current_user: Optional[User] = Depends(get_current_user_optional),
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> BatchAnalysisResponse:
-    """Processes multiple images in batch mode."""
-    client_id = f"user:{current_user.id}" if current_user else f"ip:{request.client.host if request.client else 'unknown'}"
+    """Processes multiple images in batch mode. Requires an authenticated user session."""
+    client_id = f"user:{current_user.id}"
     check_rate_limit(
         key=client_id,
         category="ml_compute",

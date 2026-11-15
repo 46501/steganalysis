@@ -375,20 +375,12 @@ export default function AuthModal() {
           </button>
         </form>
 
-        {/* Modal Footer / Guest Mode fallback */}
-        <div className="p-4 bg-[#050914] border-t border-[#142036] flex items-center justify-between text-xs text-[#94A3B8]">
+        {/* Modal Footer / Forensic Standard */}
+        <div className="p-4 bg-[#050914] border-t border-[#142036] flex items-center justify-center text-xs text-[#94A3B8]">
           <div className="flex items-center gap-1.5 text-[11px] text-[#64748B]">
             <ShieldCheck className="w-3.5 h-3.5 text-cyan-400" />
-            <span>NIST SP 800-86 Compliant</span>
+            <span>NIST SP 800-86 Compliant Forensic Environment</span>
           </div>
-
-          <button
-            type="button"
-            onClick={closeAuthModal}
-            className="text-xs text-cyan-400 hover:text-cyan-300 font-medium transition"
-          >
-            Continue as Guest →
-          </button>
         </div>
       </div>
     </div>

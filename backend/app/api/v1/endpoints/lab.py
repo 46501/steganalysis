@@ -13,7 +13,7 @@ from fastapi.responses import Response
 from sqlalchemy import select, desc
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.auth import get_current_user_optional
+from app.core.auth import get_current_user
 from app.core.database import get_db
 from app.models.experiment import ExperimentRecord
 from app.models.user import User
@@ -46,7 +46,7 @@ from app.services.lab_service import ForensicsLabService
 from app.ml.preprocessor import SRNetPreprocessor
 from app.ml.inference import engine
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(get_current_user)])
 
 
 # -----------------------------------------------------------------------------
@@ -452,12 +452,12 @@ async def run_lab_steganalysis(image_b64: str = Form(...), model_name: str = For
 @router.post("/experiments", response_model=ExperimentResponse, status_code=status.HTTP_201_CREATED)
 async def save_experiment(
     req: ExperimentCreateRequest,
-    current_user: Optional[User] = Depends(get_current_user_optional),
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    """Saves a laboratory experiment record associated with authenticated user or guest."""
+    """Saves a laboratory experiment record associated with authenticated user."""
     record = ExperimentRecord(
-        user_id=current_user.id if current_user else None,
+        user_id=current_user.id,
         experiment_name=req.experiment_name,
         experiment_type=req.experiment_type,
         original_filename=req.original_filename,
@@ -499,15 +499,11 @@ async def save_experiment(
 @router.get("/experiments", response_model=List[ExperimentListItem])
 async def list_experiments(
     limit: int = 50,
-    current_user: Optional[User] = Depends(get_current_user_optional),
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     """Lists saved laboratory experiments isolated by authenticated user."""
-    query = select(ExperimentRecord)
-    if current_user:
-        query = query.where(ExperimentRecord.user_id == current_user.id)
-    else:
-        query = query.where(ExperimentRecord.user_id.is_(None))
+    query = select(ExperimentRecord).where(ExperimentRecord.user_id == current_user.id)
 
     stmt = query.order_by(desc(ExperimentRecord.created_at)).limit(limit)
     res = await db.execute(stmt)
@@ -549,20 +545,16 @@ async def list_experiments(
 @router.get("/experiments/{exp_id}", response_model=ExperimentResponse)
 async def get_experiment_detail(
     exp_id: int,
-    current_user: Optional[User] = Depends(get_current_user_optional),
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     """Loads a full experiment record, enforcing user ownership."""
-    stmt = select(ExperimentRecord).where(ExperimentRecord.id == exp_id)
+    stmt = select(ExperimentRecord).where(ExperimentRecord.id == exp_id, ExperimentRecord.user_id == current_user.id)
     res = await db.execute(stmt)
     record = res.scalar_one_or_none()
 
     if not record:
         raise HTTPException(status_code=404, detail="Experiment record not found.")
-
-    if record.user_id is not None:
-        if not current_user or record.user_id != current_user.id:
-            raise HTTPException(status_code=404, detail="Experiment record not found.")
 
     return ExperimentResponse(
         id=record.id,
@@ -586,26 +578,16 @@ async def get_experiment_detail(
 @router.delete("/experiments/{exp_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_experiment(
     exp_id: int,
-    current_user: Optional[User] = Depends(get_current_user_optional),
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     """Explicitly deletes a laboratory experiment record, enforcing user ownership."""
-    stmt = select(ExperimentRecord).where(ExperimentRecord.id == exp_id)
+    stmt = select(ExperimentRecord).where(ExperimentRecord.id == exp_id, ExperimentRecord.user_id == current_user.id)
     res = await db.execute(stmt)
     record = res.scalar_one_or_none()
 
     if not record:
         raise HTTPException(status_code=404, detail="Experiment record not found.")
-
-    if record.user_id is not None:
-        if not current_user or record.user_id != current_user.id:
-            raise HTTPException(status_code=404, detail="Experiment record not found.")
-    else:
-        if current_user:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Cannot delete anonymous guest experiments from an authenticated account.",
-            )
 
     await db.delete(record)
     await db.commit()
@@ -615,20 +597,16 @@ async def delete_experiment(
 @router.get("/experiments/{exp_id}/download")
 async def download_experiment_modified_image(
     exp_id: int,
-    current_user: Optional[User] = Depends(get_current_user_optional),
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     """Downloads the generated modified PNG image for a saved experiment, checking ownership."""
-    stmt = select(ExperimentRecord).where(ExperimentRecord.id == exp_id)
+    stmt = select(ExperimentRecord).where(ExperimentRecord.id == exp_id, ExperimentRecord.user_id == current_user.id)
     res = await db.execute(stmt)
     record = res.scalar_one_or_none()
 
     if not record or not record.modified_image_b64:
         raise HTTPException(status_code=404, detail="Modified image not available.")
-
-    if record.user_id is not None:
-        if not current_user or record.user_id != current_user.id:
-            raise HTTPException(status_code=404, detail="Modified image not available.")
 
     raw_bytes = ForensicsLabService.b64_to_bytes(record.modified_image_b64)
     filename = f"lab_modified_{record.modified_file_hash[:8]}.png"

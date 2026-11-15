@@ -33,6 +33,6 @@
   "scientific_findings": {
     "convergence_status": "Non-converged demonstration baseline (3 epochs on 100 sample subset)",
     "physics_explanation": "S-UNIWARD embeds ±1 ternary perturbations into complex textures; standard spatial downsampling / average pooling averages out adjacent opposing ±1 steps (sum ~ 0).",
-    "courtroom_rigor_recommendation": "Use Authentic Paired Reference Verification for deterministic 99.9% proof, or multi-modal statistical proofs (Chi-Square, SPA, RS) alongside full GPU-trained SRNet."
+    "scientific_guidance": "Paired reference comparison provides empirical differential modification evidence (exact altered pixels, percentage, PSNR, ternary symmetry) without artificial probability inflation. Statistical attacks (Chi-Square, SPA, RS) specifically target spatial LSB replacement and do not detect spatial ternary S-UNIWARD. Single-image S-UNIWARD detection requires high-capacity architectures (such as SRNet) with extensive GPU training across 10,000 BOSSbase pairs."
   }
 }

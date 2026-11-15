@@ -1,10 +1,15 @@
 """
 StegoShield AI — Statistical Steganalysis Verification Suite.
 
-Implements classic mathematical and statistical detectors for deterministic proof:
+Implements classic mathematical and structural detectors for spatial LSB replacement:
 1. Chi-Square (χ²) Attack (Westfeld & Pfitzmann): Analyzes Pairs of Values (PoVs).
 2. Sample Pair Analysis (SPA) (Dumitrescu, Wu, Wang): Estimates LSB replacement rate using cross-group multisets.
 3. RS (Regular/Singular) Steganalysis (Fridrich, Goljan, Du): Measures embedding capacity via invertible mask flips.
+
+Scientific Limitations & Domain of Validity:
+- All three tests specifically target spatial LSB REPLACEMENT steganography by evaluating Pairs of Values (PoVs) (2k, 2k+1) parity symmetry.
+- These tests are fundamentally CORRELATED (not statistically independent) because they observe the same underlying PoV parity distortion.
+- They CANNOT detect content-adaptive spatial ternary ±1 embedding (such as S-UNIWARD, WOW, or HILL) where pixel values are incremented or decremented rather than replaced. Negative results do not rule out ternary embedding.
 """
 
 import math
@@ -206,7 +211,11 @@ class StatisticalSteganalysis:
 
     @classmethod
     def run_all_tests(cls, image_array: np.ndarray) -> Dict[str, Any]:
-        """Runs the complete statistical test suite and synthesizes an aggregate mathematical verdict."""
+        """
+        Runs the LSB replacement diagnostic suite.
+        Note: Chi-Square, SPA, and RS evaluate PoV parity symmetry and are non-independent.
+        They detect spatial LSB replacement but do not detect spatial ternary ±1 embedding (e.g. S-UNIWARD).
+        """
         chi = cls.chi_square_attack(image_array)
         spa = cls.sample_pair_analysis(image_array)
         rs = cls.rs_steganalysis(image_array)
@@ -218,18 +227,23 @@ class StatisticalSteganalysis:
         ])
 
         if stego_indicators >= 2:
-            verdict = "Stego Indicated"
-            confidence = round(0.70 + 0.10 * stego_indicators, 2)
+            verdict = "LSB Replacement Detected"
+            confidence = 0.85
         elif stego_indicators == 1:
-            verdict = "Inconclusive / Trace"
-            confidence = 0.55
+            verdict = "Trace LSB Anomaly"
+            confidence = 0.50
         else:
-            verdict = "Cover / Clean"
-            confidence = 0.88
+            verdict = "No LSB Replacement Signatures"
+            confidence = 0.85
 
         return {
             "aggregate_verdict": verdict,
             "aggregate_confidence": confidence,
+            "suite_domain": "Spatial LSB Replacement Diagnostics",
+            "independence_disclosure": (
+                "Chi-Square, SPA, and RS observe shared Pairs-of-Values (PoV) parity characteristics "
+                "and are correlated (non-independent). Ineffective against ternary ±1 S-UNIWARD embedding."
+            ),
             "tests_passed": 3 - stego_indicators,
             "tests_flagged": stego_indicators,
             "chi_square": chi,

@@ -185,54 +185,74 @@ class SteganalysisService:
             changed_px = difference_analysis.get("changed_pixels", 0)
             max_diff = difference_analysis.get("max_abs_diff", 0)
             psnr_str = difference_analysis.get("psnr_label", "N/A")
+            pattern_cls = difference_analysis.get("pattern_classification", "macro_alteration_or_recompression")
+            sym_ratio = difference_analysis.get("symmetry_ratio", 1.0)
 
-            if changed_px == 0:
-                # Authentic cover proved bit-for-bit identical
+            if pattern_cls == "identical_carrier" or changed_px == 0:
+                # Reference proved bit-for-bit identical
                 final_verdict = "Cover Indicated"
-                final_verdict_category = "PRISTINE COVER VERIFIED (AUTHENTIC REFERENCE)"
-                final_interpretation_label = "PRISTINE COVER VERIFIED (AUTHENTIC REFERENCE)"
+                final_verdict_category = "IDENTICAL TO REFERENCE (ZERO MODIFICATIONS DETECTED)"
+                final_interpretation_label = "IDENTICAL TO REFERENCE (ZERO MODIFICATIONS DETECTED)"
                 final_is_conclusive = True
-                final_confidence = 0.999
+                final_confidence = 1.0
                 final_cover_prob = 1.0
                 final_stego_prob = 0.0
-                final_score_type = "Lossless Paired Differential Proof"
+                final_score_type = "Lossless Paired Differential Evidence"
                 forensic_explanation = (
-                    f"Authentic Paired Reference Verification ({reference_filename or 'Cover Reference'}): "
-                    "Target carrier is bit-for-bit identical to authentic cover reference (0 altered pixels, "
-                    "Hamming distance = 0, PSNR = ∞). Direct empirical proof of pristine cover status."
+                    f"Authentic Paired Reference Comparison ({reference_filename or 'Cover Reference'}): "
+                    "Target carrier is bit-for-bit identical to reference baseline (0 altered pixels, "
+                    "Hamming distance = 0, PSNR = ∞). Empirical proof of zero differential modification."
                 )
-            elif max_diff == 1:
-                # Classic ternary +/-1 steganographic embedding directly measured
-                final_verdict = "Stego Indicated"
-                final_verdict_category = "STEGO VERIFIED (TERNARY EMBEDDING DETECTED)"
-                final_interpretation_label = "STEGO VERIFIED (TERNARY EMBEDDING DETECTED)"
+            elif pattern_cls == "global_directional_shift":
+                # Unidirectional modification (e.g. brightness shift) inconsistent with steganography
+                final_verdict = "Modification Detected (Non-Stego Edit)"
+                final_verdict_category = "DIFFERENTIAL EVIDENCE — GLOBAL LUMINANCE SHIFT (INCONSISTENT WITH STEGANOGRAPHY)"
+                final_interpretation_label = "GLOBAL LUMINANCE SHIFT (NON-STEGO EDIT)"
                 final_is_conclusive = True
-                final_confidence = 0.999
-                final_cover_prob = 0.0
-                final_stego_prob = 1.0
-                final_score_type = "Lossless Paired Differential Proof"
+                final_confidence = 0.95
+                final_cover_prob = 0.90
+                final_stego_prob = 0.10
+                final_score_type = "Empirical Differential Modification Evidence"
                 forensic_explanation = (
-                    f"Authentic Paired Reference Verification ({reference_filename or 'Cover Reference'}): "
-                    f"Directly verified {changed_px:,} pixel alterations ({difference_analysis['changed_pixel_percent']}%, "
-                    f"{difference_analysis['total_modified_bits']:,} bits altered). "
-                    f"Perturbations are strictly ternary ±1 with balance ratio {difference_analysis.get('ternary_balance_ratio', 1.0):.2f} "
-                    f"and PSNR = {psnr_str}. "
-                    f"Algorithmic candidate: {algorithm_attribution.get('candidate_technique', 'Spatial Steganography (S-UNIWARD)')}."
+                    f"Authentic Paired Reference Comparison ({reference_filename or 'Cover Reference'}): "
+                    f"Detected {changed_px:,} altered pixels ({difference_analysis['changed_pixel_percent']}%), "
+                    f"but modifications are strictly unidirectional ({difference_analysis.get('plus_one_changes', 0):,} +1 "
+                    f"vs {difference_analysis.get('minus_one_changes', 0):,} -1, symmetry ratio {sym_ratio:.2f}). "
+                    "This demonstrates a global brightness, exposure, or contrast edit. It is empirically inconsistent with "
+                    "balanced steganographic embedding."
+                )
+            elif pattern_cls == "ternary_steganography_profile":
+                # Symmetric ternary +/-1 steganographic embedding pattern directly measured
+                final_verdict = "Modification Detected"
+                final_verdict_category = "DIFFERENTIAL EVIDENCE — TERNARY PERTURBATIONS DETECTED (CONSISTENT WITH STEGANOGRAPHY)"
+                final_interpretation_label = "TERNARY PERTURBATIONS DETECTED (CONSISTENT WITH STEGANOGRAPHY)"
+                final_is_conclusive = True
+                final_confidence = 0.95
+                final_cover_prob = 0.05
+                final_stego_prob = 0.95
+                final_score_type = "Empirical Differential Modification Evidence"
+                forensic_explanation = (
+                    f"Authentic Paired Reference Comparison ({reference_filename or 'Cover Reference'}): "
+                    f"Directly measured {changed_px:,} altered pixels ({difference_analysis['changed_pixel_percent']}%, "
+                    f"{difference_analysis['total_modified_bits']:,} bits altered, PSNR = {psnr_str}). "
+                    f"Perturbations are strictly ternary ±1 with symmetric balance ratio {sym_ratio:.2f}. "
+                    f"This perturbation profile is consistent with spatial ternary steganography (e.g. S-UNIWARD). "
+                    f"Attributed candidate: {algorithm_attribution.get('candidate_technique', 'Spatial Steganography (S-UNIWARD)')}."
                 )
             else:
                 # Large alterations indicate non-stego modification (editing, recompression, or wrong reference)
-                final_verdict = "Inconclusive"
-                final_verdict_category = "REFERENCE MISMATCH / EDITING DETECTED"
-                final_interpretation_label = "REFERENCE MISMATCH / EDITING"
+                final_verdict = "Inconclusive / Alteration Detected"
+                final_verdict_category = "DIFFERENTIAL EVIDENCE — MACRO ALTERATIONS / RECOMPRESSION / MISMATCH"
+                final_interpretation_label = "MACRO ALTERATIONS / RECOMPRESSION"
                 final_is_conclusive = False
                 final_confidence = 0.50
                 final_cover_prob = 0.50
                 final_stego_prob = 0.50
-                final_score_type = "Paired Reference Comparison"
+                final_score_type = "Empirical Differential Modification Evidence"
                 forensic_explanation = (
                     f"Authentic Paired Reference Comparison ({reference_filename or 'Reference'}): "
                     f"Detected {changed_px:,} altered pixels, but maximum intensity difference is {max_diff} (> 1). "
-                    "Large differences indicate natural image editing, JPEG recompression, or an incorrect reference cover "
+                    "Large differences indicate lossy compression (such as JPEG recompression), spatial filtering, or an incorrect reference cover "
                     "rather than subtle steganographic embedding."
                 )
         else:

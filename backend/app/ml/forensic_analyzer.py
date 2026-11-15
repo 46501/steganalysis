@@ -168,6 +168,41 @@ class ForensicAnalyzer:
             psnr_db = round(psnr_val, 2)
             psnr_label = f"{psnr_db} dB"
 
+        # Determine scientific pattern classification of paired difference
+        min_c = min(plus_one_changes, minus_one_changes)
+        max_c = max(plus_one_changes, minus_one_changes)
+        symmetry_ratio = round(float(min_c / max_c), 4) if max_c > 0 else (1.0 if plus_one_changes == 0 else 0.0)
+
+        if changed_pixels == 0:
+            pattern_classification = "identical_carrier"
+            pattern_label = "Identical Image (Zero Modifications)"
+            pattern_description = "Carrier is bit-for-bit identical to reference baseline (Hamming distance = 0, PSNR = ∞)."
+        elif max_abs_diff > 1:
+            pattern_classification = "macro_alteration_or_recompression"
+            pattern_label = "Macro Alteration / Recompression / Mismatch"
+            pattern_description = (
+                f"Maximum intensity delta is {max_abs_diff} (> 1). Characteristic of lossy JPEG compression, "
+                "spatial filtering, or comparing different images rather than subtle steganographic embedding."
+            )
+        else:
+            # max_abs_diff == 1
+            if symmetry_ratio < 0.20 or min_c == 0:
+                pattern_classification = "global_directional_shift"
+                pattern_label = "Global Luminance Shift (Non-Stego Edit)"
+                pattern_description = (
+                    f"Modifications are strictly unidirectional ({plus_one_changes:,} +1 vs {minus_one_changes:,} -1, "
+                    f"symmetry ratio {symmetry_ratio:.2f}). This indicates an ordinary global brightness, "
+                    "exposure, or contrast adjustment, inconsistent with balanced steganographic embedding."
+                )
+            else:
+                pattern_classification = "ternary_steganography_profile"
+                pattern_label = "Ternary Profile (Consistent with Stego)"
+                pattern_description = (
+                    f"Perturbations are strictly ternary ±1 with symmetric balance "
+                    f"({plus_one_changes:,} +1 vs {minus_one_changes:,} -1, symmetry ratio {symmetry_ratio:.2f}, "
+                    f"modifying {changed_pixel_percent}% of pixels). Consistent with spatial ternary steganography (e.g. S-UNIWARD)."
+                )
+
         return {
             "has_paired_reference": True,
             "total_pixels": total_pixels,
@@ -183,6 +218,10 @@ class ForensicAnalyzer:
                 round(plus_one_changes / float(minus_one_changes), 4)
                 if minus_one_changes > 0 else (1.0 if plus_one_changes == 0 else float("inf"))
             ),
+            "symmetry_ratio": symmetry_ratio,
+            "pattern_classification": pattern_classification,
+            "pattern_label": pattern_label,
+            "pattern_description": pattern_description,
             "max_abs_diff": max_abs_diff,
             "mean_abs_diff": mean_abs_diff,
             "mse": mse,
@@ -832,9 +871,47 @@ class ForensicAnalyzer:
                     "limitations": "Direct paired comparison confirms bit-for-bit identity.",
                 }
 
+            # Check for Macro Alterations or Compression Artifacts
+            max_abs_diff = diff_analysis.get("max_abs_diff", 0)
+            if max_abs_diff > 1 or diff_analysis.get("pattern_classification") == "macro_alteration_or_recompression":
+                candidate = "Macro Alteration / Lossy Recompression / Reference Mismatch"
+                supporting.append(f"Detected {changed_px:,} altered pixels, with maximum intensity delta = {max_abs_diff}.")
+                contradicting.append(
+                    f"Intensity delta exceeds ±1 (max delta = {max_abs_diff}). Characteristic of JPEG block artifacts, "
+                    "spatial filtering, or mismatched image comparison rather than steganographic embedding."
+                )
+                validation_status = "Non-Steganographic Alteration"
+                return {
+                    "candidate_technique": candidate,
+                    "validation_status": validation_status,
+                    "supporting_observations": supporting,
+                    "contradicting_observations": contradicting,
+                    "limitations": "Macro alterations obscure any subtle steganographic signals if present.",
+                }
+
+            # Check for Global Unidirectional Shifts (e.g. Brightness or Exposure Adjustments)
+            min_c = min(plus_1, minus_1)
+            max_c = max(plus_1, minus_1)
+            sym_ratio = (min_c / float(max_c)) if max_c > 0 else 0.0
+            if diff_analysis.get("pattern_classification") == "global_directional_shift" or sym_ratio < 0.20 or min_c == 0:
+                candidate = "Global Luminance Shift (Non-Steganographic Image Edit)"
+                supporting.append(f"Altered pixels are strictly unidirectional ({plus_1:,} +1 vs {minus_1:,} -1, ratio {sym_ratio:.2f}).")
+                contradicting.append(
+                    "Ordinary brightness or exposure adjustments shift pixels unidirectionally across large regions. "
+                    "Steganographic embedding produces approximately balanced (symmetric) +1 and -1 perturbations."
+                )
+                validation_status = "Empirically Inconsistent with Steganography"
+                return {
+                    "candidate_technique": candidate,
+                    "validation_status": validation_status,
+                    "supporting_observations": supporting,
+                    "contradicting_observations": contradicting,
+                    "limitations": "Unidirectional ±1 shifts represent global image edits, not data concealment.",
+                }
+
             # Check for Ternary ±1 modifications
             is_ternary = (plus_1 + minus_1) > 0 and (other / float(changed_px) < 0.005)
-            is_balanced = 0.85 <= balance <= 1.15 if minus_1 > 0 else False
+            is_balanced = 0.50 <= balance <= 2.0 if minus_1 > 0 else False
 
             # Check texture correlation
             is_adaptive_texture = False
@@ -847,12 +924,12 @@ class ForensicAnalyzer:
                 supporting.append(f"Ternary balance ratio is {balance:.3f}, matching optimal symmetric distortion coding.")
                 supporting.append("Perturbations avoid smooth surfaces and concentrate along high-frequency texture edges.")
                 validation_status = "Consistent Pattern Match (Empirical Paired Verification)"
-            elif is_ternary and not is_adaptive_texture:
+            elif is_ternary and is_balanced:
                 candidate = "LSB Matching (±1 Embedding)"
-                supporting.append("Modifications are predominantly ±1 without texture-adaptive concentration.")
+                supporting.append(f"Modifications are balanced ternary ±1 ({plus_1:,} +1 vs {minus_1:,} -1).")
                 contradicting.append("Modifications do not strictly avoid smooth regions as required by S-UNIWARD.")
                 validation_status = "Candidate Pattern Match"
-            elif other > 0 and plus_1 == 0 and minus_1 == 0:
+            elif other > 0:
                 candidate = "Arbitrary Spatial Modification / Replacement"
                 supporting.append(f"Modifications span arbitrary delta values (max abs diff = {diff_analysis.get('max_abs_diff')}).")
                 validation_status = "Observed Empirical Modification"

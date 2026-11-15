@@ -535,11 +535,11 @@ export default function Detector({ initialFile = null, onNavigateTab = null }) {
                 </h4>
               </div>
               <span className="text-[10px] font-mono text-cyan-300 px-2 py-0.5 rounded bg-[#070D1A] border border-cyan-500/30 font-bold">
-                Deterministic 99.9% Proof
+                Empirical Differential Evidence
               </span>
             </div>
             <p className="text-[11px] text-[#94A3B8] leading-relaxed font-sans">
-              Upload the original, pristine cover image alongside the suspected carrier. StegoShield AI performs lossless bit-for-bit differential subtraction to deterministically isolate ±1 ternary perturbations without model uncertainty.
+              Upload the original, pristine cover image alongside the suspected carrier. StegoShield AI performs lossless bit-for-bit differential comparison to directly measure altered pixels, ternary perturbation symmetry, and PSNR, distinguishing steganography from ordinary edits and compression.
             </p>
 
             <input
@@ -795,17 +795,24 @@ export default function Detector({ initialFile = null, onNavigateTab = null }) {
                     </div>
                   </div>
 
-                  {/* Verified Ground-Truth Paired Reference Card (Deterministic 99.9% Proof) */}
+                  {/* Empirical Paired Reference Differential Evidence Card */}
                   {result.difference_analysis?.has_paired_reference && (
                     <div className="p-4 rounded-xl bg-[#050914] border border-cyan-500/50 text-xs font-mono space-y-2.5 shadow-[0_0_16px_rgba(0,240,255,0.12)]">
-                      <div className="flex items-center justify-between pb-1.5 border-b border-[#1B2B48]">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-1.5 border-b border-[#1B2B48]">
                         <span className="text-cyan-300 font-bold flex items-center gap-1.5">
-                          <CheckCircle2 className="w-4 h-4 text-cyan-400" />
-                          Deterministic Paired Reference Verification
+                          <CheckCircle2 className="w-4 h-4 text-cyan-400 shrink-0" />
+                          Empirical Differential Modification Evidence
                         </span>
-                        <span className="text-[10px] px-2 py-0.5 rounded bg-cyan-950 text-cyan-300 border border-cyan-500/40 font-bold">
-                          100% Bit-Accurate ({result.difference_analysis.reference_filename || 'Cover Baseline'})
-                        </span>
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          {result.difference_analysis.pattern_label && (
+                            <span className="text-[10px] px-2 py-0.5 rounded bg-[#0E1A33] text-cyan-300 border border-cyan-500/30 font-semibold">
+                              {result.difference_analysis.pattern_label}
+                            </span>
+                          )}
+                          <span className="text-[10px] px-2 py-0.5 rounded bg-cyan-950 text-cyan-300 border border-cyan-500/40 font-bold">
+                            Bit-Accurate ({result.difference_analysis.reference_filename || 'Cover Baseline'})
+                          </span>
+                        </div>
                       </div>
                       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[10px]">
                         <div className="p-2 rounded bg-[#0A1224] border border-[#1B2B48]">
@@ -815,9 +822,14 @@ export default function Detector({ initialFile = null, onNavigateTab = null }) {
                           </span>
                         </div>
                         <div className="p-2 rounded bg-[#0A1224] border border-[#1B2B48]">
-                          <span className="text-[#64748B] block">Ternary Balance</span>
+                          <span className="text-[#64748B] block">Ternary Symmetry</span>
                           <span className="font-bold text-white text-xs mt-0.5 block">
                             +{result.difference_analysis.plus_one_changes?.toLocaleString()} / -{result.difference_analysis.minus_one_changes?.toLocaleString()}
+                            {result.difference_analysis.symmetry_ratio !== undefined && (
+                              <span className="text-[9px] text-[#94A3B8] ml-1 font-normal">
+                                (r={result.difference_analysis.symmetry_ratio})
+                              </span>
+                            )}
                           </span>
                         </div>
                         <div className="p-2 rounded bg-[#0A1224] border border-[#1B2B48]">
@@ -833,6 +845,11 @@ export default function Detector({ initialFile = null, onNavigateTab = null }) {
                           </span>
                         </div>
                       </div>
+                      {result.difference_analysis.pattern_description && (
+                        <p className="text-[10px] text-[#94A3B8] bg-[#070D1A] p-2 rounded border border-[#1B2B48] leading-relaxed">
+                          {result.difference_analysis.pattern_description}
+                        </p>
+                      )}
                     </div>
                   )}
 

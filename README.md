@@ -5,7 +5,7 @@
 [![React](https://img.shields.io/badge/React-18.0+-61DAFB?logo=react&logoColor=black)](https://react.dev/)
 [![Vite](https://img.shields.io/badge/Vite-5.0+-646CFF?logo=vite&logoColor=white)](https://vitejs.dev/)
 [![TailwindCSS](https://img.shields.io/badge/TailwindCSS-3.4+-38B2AC?logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
-[![Tests](https://img.shields.io/badge/Tests-19%20Passing-brightgreen)](#-automated-testing)
+[![Tests](https://img.shields.io/badge/Tests-34%20Passing-brightgreen)](#-automated-testing)
 
 An enterprise-grade, full-stack deep learning steganalysis system designed to detect content-adaptive digital image steganography (**S-UNIWARD @ 0.4 bpp**) across the standard **BOSSbase 1.01** benchmark.
 
@@ -106,14 +106,50 @@ Open your browser to: **`http://localhost:5173`**
 
 ## 🧪 Automated Testing
 
-The project contains an automated test suite verifying model forward passes, residual energy computations, database migrations, and end-to-end API pipelines.
+The project contains an automated test suite verifying model forward passes, residual energy computations, database migrations, model training & calibration, paired-reference differential discrimination, and end-to-end API pipelines.
 
 To execute the test suite:
 ```powershell
 $env:PYTHONPATH="D:\Stego\backend"
-pytest D:\Stego\backend\tests -v
+pytest backend/tests/test_model_training_and_calibration.py backend/tests/test_scientific_detector_confidence.py backend/tests/test_forensics_lab.py backend/tests/test_inference.py -v
 ```
-**Outcome:** `19 passed in ~30s (100% pass rate)`.
+**Outcome:** `34 passed in ~24s (100% pass rate)`.
+
+---
+
+## 🔬 Phase 2: Trained StegoNet-Lite Baseline & Independent Evaluation
+
+### 1. Training Pipeline
+- **Dataset**: BOSSbase 1.01 S-UNIWARD 0.4 bpp (10,000 pairs, 0% leakage).
+- **Training Command**:
+  ```powershell
+  python backend/training/train_stegonet_lite.py --num_train_pairs 300 --num_val_pairs 100 --epochs 5 --batch_size 8 --lr 0.001 --patience 3
+  ```
+- **Hardware Profile**: 4 physical CPU cores / 8 logical threads, 16 GB RAM, PyTorch 2.12.0+cpu.
+- **Training Duration**: 312.63 seconds (~5.2 minutes).
+- **Optimization**: AdamW + Cosine Annealing learning rate scheduling, pair-preserving mini-batching, and early stopping on validation loss.
+- **Checkpoint Location**: `backend/app/ml/weights/stegonet_lite_best.pt` (310,210 parameters).
+
+### 2. Independent Evaluation on Held-Out Test Set (IDs 5001–5100, 200 Images)
+- **Evaluation Command**:
+  ```powershell
+  python backend/app/ml/evaluate_model.py
+  ```
+- **Empirical Test Metrics**:
+  - **Accuracy**: $0.5000$ ($50.0\%$) [95% CI: $0.4300, 0.5650$]
+  - **ROC-AUC**: $0.5017$ [95% CI: $0.4255, 0.5826$]
+  - **Precision / Recall (Stego)**: Precision = $0.5000$, Recall = $0.1000$, F1 = $0.1667$
+  - **False Positive Rate (FPR)**: $0.1000$ | **False Negative Rate (FNR)**: $0.9000$
+  - **Brier Score**: $0.2501$ (matches uninformative prior of $0.2500$)
+  - **Expected Calibration Error (ECE)**: $0.0067$ (probabilities clustered near $0.5067$)
+  - **Confusion Matrix**: $\text{TN}=90, \text{FP}=10, \text{FN}=90, \text{TP}=10$
+
+### 3. Baseline Comparisons (Evaluated on Exactly the Same 200 Test Images)
+- **Random Guess / Majority Baseline**: Accuracy = $0.5000$, ROC-AUC = $0.5000$, Brier = $0.2500$.
+- **High-Pass Residual Baseline ($\sigma_r^2$)**: ROC-AUC = $0.5029$.
+
+### 4. Known Scientific Limitations & Application Guardrail
+In single-image spatial steganography, standard strided residual downsampling averages out subtle $\pm 1$ perturbations ($\sum \Delta \approx 0$). Without full GPU cluster training on all 10,000 BOSSbase pairs and unpooled SRM layers (as in SRNet), single-image neural detection remains inconclusive. The detector strictly enforces the **`INCONCLUSIVE — LOW CONFIDENCE`** guardrail, with authentic paired-reference analysis serving as the bit-accurate method for differential proof.
 
 ---
 

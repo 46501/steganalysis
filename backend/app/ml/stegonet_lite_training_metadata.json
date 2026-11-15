@@ -1,0 +1,106 @@
+{
+  "model_name": "StegoNet-Lite",
+  "checkpoint_file": "backend/app/ml/weights/stegonet_lite_best.pt",
+  "dataset_name": "BOSSbase 1.01 S-UNIWARD 0.4 bpp",
+  "dataset_splits": {
+    "train_pairs": 300,
+    "train_images": 600,
+    "train_id_range": [
+      1,
+      4000
+    ],
+    "val_pairs": 100,
+    "val_images": 200,
+    "val_id_range": [
+      4001,
+      5000
+    ],
+    "test_status": "Strictly held-out; not accessed during training"
+  },
+  "training_configuration": {
+    "epochs_configured": 5,
+    "epochs_completed": 5,
+    "batch_size_pairs": 8,
+    "batch_size_images": 16,
+    "optimizer": "AdamW",
+    "initial_lr": 0.001,
+    "weight_decay": 0.0001,
+    "scheduler": "CosineAnnealingLR",
+    "patience": 3,
+    "seed": 42,
+    "device": "cpu",
+    "duration_seconds": 312.63
+  },
+  "best_epoch": 2,
+  "best_validation_metrics": {
+    "loss": 0.6932,
+    "accuracy": 0.495,
+    "precision": 0.4961,
+    "recall": 0.64,
+    "f1": 0.559,
+    "roc_auc": 0.5005,
+    "confusion_matrix": {
+      "tn": 35,
+      "fp": 65,
+      "fn": 36,
+      "tp": 64
+    },
+    "total_samples": 200
+  },
+  "training_history": [
+    {
+      "epoch": 1,
+      "train_loss": 0.6974,
+      "train_acc": 0.5,
+      "val_loss": 0.6936,
+      "val_acc": 0.5,
+      "val_f1": 0.0566,
+      "val_roc_auc": 0.5001,
+      "lr": 0.000905
+    },
+    {
+      "epoch": 2,
+      "train_loss": 0.6933,
+      "train_acc": 0.5,
+      "val_loss": 0.6932,
+      "val_acc": 0.495,
+      "val_f1": 0.559,
+      "val_roc_auc": 0.5005,
+      "lr": 0.000658
+    },
+    {
+      "epoch": 3,
+      "train_loss": 0.6932,
+      "train_acc": 0.5033,
+      "val_loss": 0.6932,
+      "val_acc": 0.495,
+      "val_f1": 0.192,
+      "val_roc_auc": 0.4998,
+      "lr": 0.000352
+    },
+    {
+      "epoch": 4,
+      "train_loss": 0.6932,
+      "train_acc": 0.5,
+      "val_loss": 0.6932,
+      "val_acc": 0.5,
+      "val_f1": 0.6269,
+      "val_roc_auc": 0.4989,
+      "lr": 0.000105
+    },
+    {
+      "epoch": 5,
+      "train_loss": 0.6932,
+      "train_acc": 0.5017,
+      "val_loss": 0.6932,
+      "val_acc": 0.505,
+      "val_f1": 0.4211,
+      "val_roc_auc": 0.4982,
+      "lr": 1e-05
+    }
+  ],
+  "hardware_profile": {
+    "device": "cpu",
+    "cpu_threads": 8
+  }
+}

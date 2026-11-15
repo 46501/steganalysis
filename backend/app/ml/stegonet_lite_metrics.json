@@ -1,38 +1,201 @@
 {
   "model_name": "StegoNet-Lite",
-  "checkpoint_file": "backend/app/ml/weights/stegonet_lite_demo.pt",
+  "checkpoint_evaluated": "D:/Stego/backend/app/ml/weights/stegonet_lite_best.pt",
   "dataset": "BOSSbase 1.01 S-UNIWARD 0.4 bpp",
-  "evaluation_date": "2026-11-15T11:20:00Z",
   "test_split": {
     "total_samples": 200,
     "cover_samples": 100,
     "stego_samples": 100,
-    "image_dimensions": "512x512",
+    "test_id_range": [
+      5001,
+      5100
+    ],
+    "crop_dimensions": "256x256",
     "embedding_rate": "0.4 bpp",
-    "stego_algorithm": "S-UNIWARD"
+    "stego_algorithm": "S-UNIWARD",
+    "test_status": "Strictly held-out independent evaluation set (evaluated once)"
   },
   "empirical_metrics": {
-    "accuracy": 0.5000,
-    "precision": 0.5000,
-    "recall": 1.0000,
-    "f1_score": 0.6667,
-    "loss": 0.6940,
-    "roc_auc": 0.4995,
+    "accuracy": 0.5,
+    "accuracy_95ci": [
+      0.43,
+      0.565
+    ],
+    "precision": 0.5,
+    "recall": 0.1,
+    "f1_score": 0.1667,
+    "f1_score_95ci": [
+      0.0762,
+      0.2542
+    ],
+    "roc_auc": 0.5017,
+    "roc_auc_95ci": [
+      0.4255,
+      0.5826
+    ],
+    "false_positive_rate": 0.1,
+    "false_negative_rate": 0.9,
     "confusion_matrix": {
-      "true_positive": 100,
-      "true_negative": 0,
-      "false_positive": 100,
-      "false_negative": 0
+      "true_positive": 10,
+      "true_negative": 90,
+      "false_positive": 10,
+      "false_negative": 90
+    },
+    "class_wise_metrics": {
+      "cover_class": {
+        "precision": 0.5,
+        "recall": 0.9,
+        "f1_score": 0.6429,
+        "support": 100
+      },
+      "stego_class": {
+        "precision": 0.5,
+        "recall": 0.1,
+        "f1_score": 0.1667,
+        "support": 100
+      }
+    },
+    "calibration": {
+      "brier_score": 0.2501,
+      "expected_calibration_error": 0.0067,
+      "reliability_diagram_bins": [
+        {
+          "bin_index": 0,
+          "range": [
+            0.5,
+            0.55
+          ],
+          "sample_count": 200,
+          "average_confidence": 0.5067,
+          "empirical_accuracy": 0.5,
+          "calibration_gap": 0.0067
+        },
+        {
+          "bin_index": 1,
+          "range": [
+            0.55,
+            0.6
+          ],
+          "sample_count": 0,
+          "average_confidence": 0.575,
+          "empirical_accuracy": 0.0,
+          "calibration_gap": 0.0
+        },
+        {
+          "bin_index": 2,
+          "range": [
+            0.6,
+            0.65
+          ],
+          "sample_count": 0,
+          "average_confidence": 0.625,
+          "empirical_accuracy": 0.0,
+          "calibration_gap": 0.0
+        },
+        {
+          "bin_index": 3,
+          "range": [
+            0.65,
+            0.7
+          ],
+          "sample_count": 0,
+          "average_confidence": 0.675,
+          "empirical_accuracy": 0.0,
+          "calibration_gap": 0.0
+        },
+        {
+          "bin_index": 4,
+          "range": [
+            0.7,
+            0.75
+          ],
+          "sample_count": 0,
+          "average_confidence": 0.725,
+          "empirical_accuracy": 0.0,
+          "calibration_gap": 0.0
+        },
+        {
+          "bin_index": 5,
+          "range": [
+            0.75,
+            0.8
+          ],
+          "sample_count": 0,
+          "average_confidence": 0.775,
+          "empirical_accuracy": 0.0,
+          "calibration_gap": 0.0
+        },
+        {
+          "bin_index": 6,
+          "range": [
+            0.8,
+            0.85
+          ],
+          "sample_count": 0,
+          "average_confidence": 0.825,
+          "empirical_accuracy": 0.0,
+          "calibration_gap": 0.0
+        },
+        {
+          "bin_index": 7,
+          "range": [
+            0.85,
+            0.9
+          ],
+          "sample_count": 0,
+          "average_confidence": 0.875,
+          "empirical_accuracy": 0.0,
+          "calibration_gap": 0.0
+        },
+        {
+          "bin_index": 8,
+          "range": [
+            0.9,
+            0.95
+          ],
+          "sample_count": 0,
+          "average_confidence": 0.925,
+          "empirical_accuracy": 0.0,
+          "calibration_gap": 0.0
+        },
+        {
+          "bin_index": 9,
+          "range": [
+            0.95,
+            1.0
+          ],
+          "sample_count": 0,
+          "average_confidence": 0.975,
+          "empirical_accuracy": 0.0,
+          "calibration_gap": 0.0
+        }
+      ]
     },
     "prediction_probabilities": {
-      "stego_min": 0.5199,
-      "stego_max": 0.5205,
-      "stego_mean": 0.5203
+      "stego_min": 0.4771,
+      "stego_max": 0.505,
+      "stego_mean": 0.4938
+    }
+  },
+  "baseline_comparisons": {
+    "majority_random_baseline": {
+      "name": "Random Chance / Majority Class Baseline",
+      "description": "Uninformed predictor assigning constant p=0.5 or majority class",
+      "accuracy": 0.5,
+      "roc_auc": 0.5,
+      "brier_score": 0.25
+    },
+    "laplacian_residual_baseline": {
+      "name": "Spatial High-Pass Residual Energy Baseline (Laplacian sigma_r^2)",
+      "description": "Direct thresholding on high-pass Laplacian residual variance",
+      "roc_auc": 0.5029,
+      "mean_residual_cover": 0.01,
+      "mean_residual_stego": 0.01
     }
   },
   "scientific_findings": {
-    "convergence_status": "Non-converged demonstration baseline (3 epochs on 100 sample subset)",
-    "physics_explanation": "S-UNIWARD embeds ±1 ternary perturbations into complex textures; standard spatial downsampling / average pooling averages out adjacent opposing ±1 steps (sum ~ 0).",
-    "scientific_guidance": "Paired reference comparison provides empirical differential modification evidence (exact altered pixels, percentage, PSNR, ternary symmetry) without artificial probability inflation. Statistical attacks (Chi-Square, SPA, RS) specifically target spatial LSB replacement and do not detect spatial ternary S-UNIWARD. Single-image S-UNIWARD detection requires high-capacity architectures (such as SRNet) with extensive GPU training across 10,000 BOSSbase pairs."
+    "has_meaningful_discrimination": false,
+    "convergence_verdict": "Validation and test results show that a lightweight 4-stage residual model trained on CPU subset yields ROC-AUC = 0.5017 and Accuracy = 0.5000. Without GPU cluster training on the full 10,000 BOSSbase pairs, the model does not achieve reliable single-image discrimination on 0.4 bpp S-UNIWARD.",
+    "application_guardrail": "Because single-image discrimination remains inconclusive (decision margin is narrow), the detector strictly preserves the INCONCLUSIVE \u2014 LOW CONFIDENCE behavior, preventing uncalibrated predictions from misleading the user. Authentic paired reference comparison remains the reliable forensic method for differential proof."
   }
 }

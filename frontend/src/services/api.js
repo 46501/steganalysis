@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { formatApiError } from '../utils/errorUtils';
 
 /**
  * Resolves the backend API base URL with full normalization.
@@ -124,6 +125,10 @@ apiClient.interceptors.response.use(
       }
     }
 
+    if (error && error.response) {
+      error.message = formatApiError(error, error.message || 'API request failed');
+    }
+
     return Promise.reject(error);
   }
 );
@@ -134,11 +139,14 @@ export const steganalysisApi = {
     return response.data;
   },
 
-  analyzeImage: async (file, modelName = null) => {
+  analyzeImage: async (file, modelName = null, referenceFile = null) => {
     const formData = new FormData();
     formData.append('file', file);
     if (modelName) {
       formData.append('model_name', modelName);
+    }
+    if (referenceFile) {
+      formData.append('reference_file', referenceFile);
     }
     const response = await apiClient.post('/analyze', formData);
     return response.data;

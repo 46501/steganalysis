@@ -172,6 +172,32 @@ class SteganalysisInferenceEngine:
             top = (h - 256) // 2
             model_input = model_input[:, :, top : top + 256, left : left + 256]
 
+        # Phase 1 Guardrail: Disable untrained SRNet inference as a source of classification
+        if target_model == "srnet" and not self.is_trained_weights:
+            return {
+                "verdict": "Inconclusive",
+                "verdict_category": "RESEARCH BLUEPRINT — STANDALONE INFERENCE DISABLED",
+                "interpretation_label": "RESEARCH BLUEPRINT (GPU TRAINING PENDING)",
+                "cover_probability": 0.5,
+                "stego_probability": 0.5,
+                "confidence": 0.0,
+                "decision_margin": 0.0,
+                "is_conclusive": False,
+                "score_type": "Untrained Research Architecture",
+                "is_trained_weights": False,
+                "device": str(self.device),
+                "model_name": "SRNet (Research Architecture Blueprint)",
+                "model_status": "Research Architecture — GPU Training Pending",
+                "residual_energy": residual_energy,
+                "forensic_explanation": (
+                    "SRNet (Boroumand et al. 2018) is a 12-layer deep residual research architecture "
+                    "requiring GPU cluster training (~360 GPU hours across 10,000 BOSSbase pairs). "
+                    "Untrained standalone inference is disabled to prevent misleading random-chance classifications. "
+                    "For empirical analysis, use StegoNet-Lite with Multi-Modal Statistical Verification, "
+                    "or upload an authentic reference cover for lossless differential verification."
+                ),
+            }
+
         try:
             log_probs = self.model(model_input)
             probs = torch.exp(log_probs).squeeze(0)

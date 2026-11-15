@@ -25,12 +25,14 @@ router = APIRouter()
 async def analyze_image(
     request: Request,
     file: UploadFile = File(...),
+    reference_file: Optional[UploadFile] = File(None),
     model_name: Optional[str] = Form(None),
     current_user: Optional[User] = Depends(get_current_user_optional),
     db: AsyncSession = Depends(get_db),
 ) -> AnalysisResultResponse:
     """
     Analyzes an uploaded digital image for hidden steganographic payloads.
+    Optionally accepts an authentic user-supplied reference cover image for paired lossless differential verification.
     Returns class prediction ('Cover' vs 'Stego'), confidence scores,
     and high-pass spatial residual forensic explanation with visual artifacts.
     """
@@ -53,6 +55,18 @@ async def analyze_image(
             detail=f"Uploaded image is corrupt or unreadable: {str(e)}",
         )
 
+    ref_tensor = None
+    ref_filename = None
+    if reference_file is not None and getattr(reference_file, 'filename', None):
+        try:
+            ref_filename, ref_hash, ref_content, ref_tensor, ref_metadata = await ImageService.process_upload(reference_file)
+        except Exception as e:
+            logger.warning(f"Reference image upload processing failed: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Uploaded authentic reference cover is corrupt or unreadable: {str(e)}",
+            )
+
     try:
         result = await SteganalysisService.analyze_tensor(
             filename=filename,
@@ -61,6 +75,8 @@ async def analyze_image(
             tensor=tensor,
             metadata=metadata,
             model_name=model_name,
+            reference_tensor=ref_tensor,
+            reference_filename=ref_filename,
             db=db,
             user_id=current_user.id if current_user else None,
         )

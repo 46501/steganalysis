@@ -1,0 +1,38 @@
+{
+  "model_name": "StegoNet-Lite",
+  "checkpoint_file": "backend/app/ml/weights/stegonet_lite_demo.pt",
+  "dataset": "BOSSbase 1.01 S-UNIWARD 0.4 bpp",
+  "evaluation_date": "2026-11-15T11:20:00Z",
+  "test_split": {
+    "total_samples": 200,
+    "cover_samples": 100,
+    "stego_samples": 100,
+    "image_dimensions": "512x512",
+    "embedding_rate": "0.4 bpp",
+    "stego_algorithm": "S-UNIWARD"
+  },
+  "empirical_metrics": {
+    "accuracy": 0.5000,
+    "precision": 0.5000,
+    "recall": 1.0000,
+    "f1_score": 0.6667,
+    "loss": 0.6940,
+    "roc_auc": 0.4995,
+    "confusion_matrix": {
+      "true_positive": 100,
+      "true_negative": 0,
+      "false_positive": 100,
+      "false_negative": 0
+    },
+    "prediction_probabilities": {
+      "stego_min": 0.5199,
+      "stego_max": 0.5205,
+      "stego_mean": 0.5203
+    }
+  },
+  "scientific_findings": {
+    "convergence_status": "Non-converged demonstration baseline (3 epochs on 100 sample subset)",
+    "physics_explanation": "S-UNIWARD embeds ±1 ternary perturbations into complex textures; standard spatial downsampling / average pooling averages out adjacent opposing ±1 steps (sum ~ 0).",
+    "courtroom_rigor_recommendation": "Use Authentic Paired Reference Verification for deterministic 99.9% proof, or multi-modal statistical proofs (Chi-Square, SPA, RS) alongside full GPU-trained SRNet."
+  }
+}

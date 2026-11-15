@@ -32,6 +32,8 @@ class SteganalysisService:
         tensor,
         metadata: dict,
         model_name: Optional[str] = None,
+        reference_tensor: Optional[torch.Tensor] = None,
+        reference_filename: Optional[str] = None,
         db: Optional[AsyncSession] = None,
         user_id: Optional[int] = None,
     ) -> AnalysisResultResponse:
@@ -90,44 +92,49 @@ class SteganalysisService:
         except Exception as e:
             logger.warning(f"Visual forensics / statistical metric calculation skipped: {e}")
 
-        # 3. Check for Verified Benchmark Sample Pair Reference
+        # 3. Authentic User-Provided Paired Reference Verification (Phase 4)
+        # Note: Never retrieve a cover using filename heuristics alone. Only verify when user provides authentic original.
         diff_map_b64 = None
         diff_stats = None
         difference_analysis = None
         c_arr = None
 
-        # Dynamically match 4-5 digit ID in filename across BOSSbase benchmark sets
-        match = re.search(r"(\d{4,5})", filename)
-        if match:
-            num = match.group(1)
-            candidate_paths = [
-                Path(f"D:/Stego/dataset/processed/S-UNIWARD_0.4bpp/test/cover/{num}.pgm"),
-                Path(f"D:/Stego/dataset/processed/S-UNIWARD_0.4bpp/train/cover/{num}.pgm"),
-                Path(f"D:/Stego/dataset/raw/BOSSbase_1.01/{num}.pgm"),
-            ]
-            for c_path in candidate_paths:
-                if c_path.is_file():
-                    try:
-                        with Image.open(c_path) as c_im:
-                            cand_arr = np.array(c_im.convert("L"), dtype=np.uint8)
-                        if arr.shape == cand_arr.shape:
-                            c_arr = cand_arr
-                            difference_analysis = ForensicAnalyzer.analyze_image_difference(c_arr, arr)
-                            diff_map_b64, ternary_counts = ForensicAnalyzer.generate_ternary_diff_map(c_arr, arr)
-                            diff_stats = {
-                                "total_pixels": difference_analysis["total_pixels"],
-                                "modified_pixels": difference_analysis["changed_pixels"],
-                                "change_rate_percent": difference_analysis["changed_pixel_percent"],
-                                "plus_one_count": difference_analysis["plus_one_changes"],
-                                "minus_one_count": difference_analysis["minus_one_changes"],
-                                "unmodified_count": difference_analysis["unchanged_pixels"],
-                                "net_perturbation_bias": difference_analysis["plus_one_changes"] - difference_analysis["minus_one_changes"],
-                            }
-                            break
-                    except Exception as e:
-                        logger.warning(f"Benchmark pair comparison skipped for {c_path}: {e}")
+        if reference_tensor is not None:
+            try:
+                raw_ref = reference_tensor.squeeze().cpu().numpy().astype(np.uint8)
+                if raw_ref.ndim > 2:
+                    raw_ref = raw_ref[0]
+                elif raw_ref.ndim == 1:
+                    side = int(np.sqrt(len(raw_ref)))
+                    raw_ref = raw_ref[: side * side].reshape((side, side))
 
-        # 4. Advanced Visual & Statistical Forensic Suite
+                if raw_ref.shape != arr.shape:
+                    logger.warning(
+                        f"Reference cover dimensions {raw_ref.shape[::-1]} do not match target image {arr.shape[::-1]}. "
+                        "Paired reference comparison skipped due to spatial dimension mismatch."
+                    )
+                else:
+                    c_arr = raw_ref
+                    difference_analysis = ForensicAnalyzer.analyze_image_difference(c_arr, arr)
+                    diff_map_b64, ternary_counts = ForensicAnalyzer.generate_ternary_diff_map(c_arr, arr)
+                    diff_stats = {
+                        "total_pixels": difference_analysis["total_pixels"],
+                        "modified_pixels": difference_analysis["changed_pixels"],
+                        "change_rate_percent": difference_analysis["changed_pixel_percent"],
+                        "plus_one_count": difference_analysis["plus_one_changes"],
+                        "minus_one_count": difference_analysis["minus_one_changes"],
+                        "unmodified_count": difference_analysis["unchanged_pixels"],
+                        "net_perturbation_bias": difference_analysis["plus_one_changes"] - difference_analysis["minus_one_changes"],
+                        "max_abs_diff": difference_analysis.get("max_abs_diff", 0),
+                        "psnr": difference_analysis.get("psnr", None),
+                        "psnr_label": difference_analysis.get("psnr_label", "N/A"),
+                        "reference_filename": reference_filename or "Authentic Cover Reference",
+                        "has_paired_reference": True,
+                    }
+            except Exception as e:
+                logger.warning(f"Paired reference differential analysis failed: {e}")
+
+        # 4. Advanced Visual & Statistical Forensic Suite (Phase 3)
         spatial_sectors_4x4 = None
         texture_analysis = None
         advanced_statistical_suite = None
@@ -159,28 +166,85 @@ class SteganalysisService:
         except Exception as e:
             logger.warning(f"Advanced forensic suite analysis skipped: {e}")
 
-        # Scientific Explanation Enrichment
+        # 5. Scientific Verdict & Evidence Synthesis (Phases 3, 4, 5)
+        # Rule: Do not invent fake neural probabilities from arbitrary statistics.
+        # Rule: Report uncertainty honestly when single-image evidence is insufficient.
+        # Rule: Use calibrated certainty only when authentic paired reference proves ground truth.
+
+        final_verdict = prediction.get("verdict", "Inconclusive")
+        final_verdict_category = prediction.get("verdict_category", "INCONCLUSIVE — LOW CONFIDENCE")
+        final_interpretation_label = prediction.get("interpretation_label", final_verdict_category)
+        final_is_conclusive = prediction.get("is_conclusive", False)
+        final_confidence = prediction.get("confidence", 0.5)
+        final_cover_prob = prediction.get("cover_probability", 0.5)
+        final_stego_prob = prediction.get("stego_probability", 0.5)
+        final_score_type = prediction.get("score_type", "Uncalibrated Model Score")
         forensic_explanation = prediction.get("forensic_explanation", "")
-        if c_arr is not None and difference_analysis and difference_analysis["changed_pixels"] > 0:
-            if "Paired Reference Comparison" not in forensic_explanation:
-                forensic_explanation += (
-                    f" Paired Reference Comparison: Verified {difference_analysis['changed_pixels']:,} pixel alterations "
-                    f"({difference_analysis['changed_pixel_percent']}%, {difference_analysis['total_modified_bits']:,} bits changed). "
-                    f"Ternary ±1 ratio: {difference_analysis['ternary_balance_ratio']:.2f}. "
-                    f"Candidate: {algorithm_attribution['candidate_technique']}."
+
+        if c_arr is not None and difference_analysis:
+            changed_px = difference_analysis.get("changed_pixels", 0)
+            max_diff = difference_analysis.get("max_abs_diff", 0)
+            psnr_str = difference_analysis.get("psnr_label", "N/A")
+
+            if changed_px == 0:
+                # Authentic cover proved bit-for-bit identical
+                final_verdict = "Cover Indicated"
+                final_verdict_category = "PRISTINE COVER VERIFIED (AUTHENTIC REFERENCE)"
+                final_interpretation_label = "PRISTINE COVER VERIFIED (AUTHENTIC REFERENCE)"
+                final_is_conclusive = True
+                final_confidence = 0.999
+                final_cover_prob = 1.0
+                final_stego_prob = 0.0
+                final_score_type = "Lossless Paired Differential Proof"
+                forensic_explanation = (
+                    f"Authentic Paired Reference Verification ({reference_filename or 'Cover Reference'}): "
+                    "Target carrier is bit-for-bit identical to authentic cover reference (0 altered pixels, "
+                    "Hamming distance = 0, PSNR = ∞). Direct empirical proof of pristine cover status."
                 )
-        elif c_arr is not None and difference_analysis and difference_analysis["changed_pixels"] == 0:
-            if "Paired Reference Comparison" not in forensic_explanation:
-                forensic_explanation += (
-                    " Paired Reference Comparison: Verified pristine cover carrier (0 pixels altered, Hamming distance = 0)."
+            elif max_diff == 1:
+                # Classic ternary +/-1 steganographic embedding directly measured
+                final_verdict = "Stego Indicated"
+                final_verdict_category = "STEGO VERIFIED (TERNARY EMBEDDING DETECTED)"
+                final_interpretation_label = "STEGO VERIFIED (TERNARY EMBEDDING DETECTED)"
+                final_is_conclusive = True
+                final_confidence = 0.999
+                final_cover_prob = 0.0
+                final_stego_prob = 1.0
+                final_score_type = "Lossless Paired Differential Proof"
+                forensic_explanation = (
+                    f"Authentic Paired Reference Verification ({reference_filename or 'Cover Reference'}): "
+                    f"Directly verified {changed_px:,} pixel alterations ({difference_analysis['changed_pixel_percent']}%, "
+                    f"{difference_analysis['total_modified_bits']:,} bits altered). "
+                    f"Perturbations are strictly ternary ±1 with balance ratio {difference_analysis.get('ternary_balance_ratio', 1.0):.2f} "
+                    f"and PSNR = {psnr_str}. "
+                    f"Algorithmic candidate: {algorithm_attribution.get('candidate_technique', 'Spatial Steganography (S-UNIWARD)')}."
+                )
+            else:
+                # Large alterations indicate non-stego modification (editing, recompression, or wrong reference)
+                final_verdict = "Inconclusive"
+                final_verdict_category = "REFERENCE MISMATCH / EDITING DETECTED"
+                final_interpretation_label = "REFERENCE MISMATCH / EDITING"
+                final_is_conclusive = False
+                final_confidence = 0.50
+                final_cover_prob = 0.50
+                final_stego_prob = 0.50
+                final_score_type = "Paired Reference Comparison"
+                forensic_explanation = (
+                    f"Authentic Paired Reference Comparison ({reference_filename or 'Reference'}): "
+                    f"Detected {changed_px:,} altered pixels, but maximum intensity difference is {max_diff} (> 1). "
+                    "Large differences indicate natural image editing, JPEG recompression, or an incorrect reference cover "
+                    "rather than subtle steganographic embedding."
                 )
         else:
-            if "Single image analysis: No reference cover image supplied" not in forensic_explanation and "cannot reliably distinguish" not in forensic_explanation:
+            # Single Image Blind Analysis (Phase 3 & Phase 5)
+            # Retain honest uncertainty reporting when decision margin is low.
+            if "Single image analysis: No authentic reference cover supplied" not in forensic_explanation:
                 forensic_explanation += (
-                    " Single image analysis: No reference cover image supplied. Exact pixel modifications cannot be verified without a matched reference."
+                    " Single image blind analysis: No authentic reference cover supplied. Exact pixel alterations cannot be directly measured. "
+                    "Independent statistical attacks (Chi-Square, SPA, RS) and high-pass residual energy are reported below as auxiliary diagnostics."
                 )
 
-        # 5. Database Persistence with Safe Rollback
+        # 6. Database Persistence with Safe Rollback
         scan_record = None
         if db is not None:
             try:
@@ -192,10 +256,10 @@ class SteganalysisService:
                     image_format=str(metadata.get("format", "PNG"))[:16],
                     width=metadata.get("original_width"),
                     height=metadata.get("original_height"),
-                    verdict=prediction["verdict"],
-                    cover_probability=prediction["cover_probability"],
-                    stego_probability=prediction["stego_probability"],
-                    confidence=prediction["confidence"],
+                    verdict=final_verdict,
+                    cover_probability=final_cover_prob,
+                    stego_probability=final_stego_prob,
+                    confidence=final_confidence,
                     execution_time_ms=duration_ms,
                     device_used=str(prediction.get("device", "cpu"))[:32],
                     is_trained_weights=prediction.get("is_trained_weights", False),
@@ -219,21 +283,21 @@ class SteganalysisService:
             filename=filename,
             file_hash=file_hash,
             file_size_bytes=file_size,
-            verdict=prediction["verdict"],
-            verdict_category=prediction.get("verdict_category", "INCONCLUSIVE — LOW CONFIDENCE"),
-            interpretation_label=prediction.get("interpretation_label", prediction.get("verdict_category")),
-            cover_probability=prediction["cover_probability"],
-            stego_probability=prediction["stego_probability"],
-            confidence=prediction["confidence"],
-            decision_margin=prediction.get("decision_margin"),
-            is_conclusive=prediction.get("is_conclusive", False),
-            score_type=prediction.get("score_type", "Uncalibrated Model Score"),
+            verdict=final_verdict,
+            verdict_category=final_verdict_category,
+            interpretation_label=final_interpretation_label,
+            cover_probability=final_cover_prob,
+            stego_probability=final_stego_prob,
+            confidence=final_confidence,
+            decision_margin=prediction.get("decision_margin") if c_arr is None else abs(final_stego_prob - final_cover_prob),
+            is_conclusive=final_is_conclusive,
+            score_type=final_score_type,
             execution_time_ms=round(duration_ms, 2),
-            device=prediction["device"],
-            is_trained_weights=prediction["is_trained_weights"],
-            model_name=prediction["model_name"],
+            device=prediction.get("device", "cpu"),
+            is_trained_weights=prediction.get("is_trained_weights", False),
+            model_name=prediction.get("model_name", "StegoNet-Lite"),
             model_status=prediction.get("model_status", "Experimental Baseline"),
-            residual_energy=prediction["residual_energy"],
+            residual_energy=prediction.get("residual_energy", 0.0),
             forensic_explanation=forensic_explanation,
             residual_heatmap_b64=residual_heatmap_b64,
             bitplane_0_b64=bitplane_0_b64,
@@ -252,5 +316,10 @@ class SteganalysisService:
             algorithm_attribution=algorithm_attribution,
             evidence_summary=evidence_summary,
             created_at=scan_record.created_at if scan_record else None,
-            metadata=ImageMetadata(**metadata) if metadata else None,
+            metadata=ImageMetadata(
+                original_width=metadata.get("original_width", 512),
+                original_height=metadata.get("original_height", 512),
+                format=metadata.get("format", "PNG"),
+                mode=metadata.get("mode", "L"),
+            ),
         )

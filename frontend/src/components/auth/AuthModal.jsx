@@ -353,7 +353,7 @@ export default function AuthModal() {
                   onChange={(e) => setRememberMe(e.target.checked)}
                   className="w-4 h-4 rounded bg-[#0B1222] border-[#1E2E4E] text-cyan-500 focus:ring-cyan-500/30 focus:ring-offset-0 transition"
                 />
-                <span>Remember me on this workstation (30 days)</span>
+                <span>Remember me on this workstation</span>
               </label>
             </div>
           )}

@@ -416,7 +416,7 @@ export default function LoginPage() {
                   className="rounded border-[#1E2E4E] bg-[#050914] text-cyan-500 focus:ring-0 focus:ring-offset-0 cursor-pointer"
                 />
                 <label htmlFor="login-remember-me" className="text-xs text-[#94A3B8] cursor-pointer">
-                  Remember me on this workstation (30 days)
+                  Remember me on this workstation
                 </label>
               </div>
             )}
@@ -462,13 +462,6 @@ export default function LoginPage() {
               <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition" />
             </button>
           </div>
-        </div>
-
-        {/* Forensic Standards Badges */}
-        <div className="mt-6 flex items-center justify-center gap-4 text-[10px] font-mono text-gray-500">
-          <span>• ISO/IEC 27037 Standard</span>
-          <span>• SHA-256 Audit Trail</span>
-          <span>• Session Isolation</span>
         </div>
       </div>
     </div>

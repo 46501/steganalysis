@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="dark">
+  <meta name="theme-color" content="#080b11">
+  <title>StegoVault — Cybersecurity Steganography Platform</title>
+  <link rel="icon" type="image/svg+xml" href="stegovault-favicon.svg">
+  <link rel="icon" type="image/png" sizes="64x64" href="stegovault-favicon.png">
+  <link rel="stylesheet" href="auth.css">
+  <style>
+    body {
+      margin: 0;
+      background: #080b11;
+      color: #f8fafc;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      text-align: center;
+      padding: 24px;
+      box-sizing: border-box;
+    }
+    .landing-card {
+      max-width: 600px;
+      background: #0e1422;
+      border: 1px solid #1e293b;
+      border-radius: 14px;
+      padding: 40px 32px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7);
+    }
+    .landing-logo {
+      width: 140px;
+      height: 140px;
+      object-fit: contain;
+      filter: drop-shadow(0 0 24px rgba(6, 182, 212, 0.5));
+      margin-bottom: 20px;
+    }
+    h1 {
+      font-size: 2.2rem;
+      font-weight: 800;
+      margin: 0 0 12px;
+      background: linear-gradient(135deg, #ffffff 40%, #06b6d4 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    p {
+      color: #94a3b8;
+      font-size: 1rem;
+      line-height: 1.6;
+      margin: 0 0 28px;
+    }
+    .btn {
+      display: inline-block;
+      padding: 12px 28px;
+      background: linear-gradient(135deg, #06b6d4, #0891b2);
+      color: #080b11;
+      font-weight: 700;
+      text-decoration: none;
+      border-radius: 8px;
+      transition: opacity 0.2s;
+    }
+    .btn:hover {
+      opacity: 0.9;
+    }
+  </style>
+</head>
+<body>
+  <div class="landing-card">
+    <img src="stegovault-logo.png" alt="StegoVault" class="landing-logo">
+    <h1>StegoVault</h1>
+    <p>Zero-Leakage Steganography &amp; Forensic Analysis Platform. Payloads sealed with authenticated AES-256-GCM under Argon2id KDF.</p>
+    <a href="https://github.com/46501/steganalysis" class="btn">View on GitHub &rarr;</a>
+  </div>
+</body>
+</html>

@@ -185,7 +185,7 @@ UI_STAGE_DELAY = _env_float("STEGOVAULT_UI_STAGE_DELAY", 0.45)
 UI_TRANSITION_DELAY = _env_float("STEGOVAULT_UI_TRANSITION_DELAY", 0.55)
 # Pinned upstream repo — no env override (an attacker-controlled repo URL would
 # turn auto-update into remote code execution).
-GITHUB_REPO = "Nour833/StegoVault"
+GITHUB_REPO = "46501/steganalysis"
 GITHUB_RELEASES_LATEST_URL = f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest"
 
 

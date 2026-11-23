@@ -8,11 +8,11 @@
 
 [![PyPI](https://img.shields.io/pypi/v/stegovault?style=flat-square&color=06b6d4&labelColor=131927)](https://pypi.org/project/stegovault/)
 [![Python](https://img.shields.io/pypi/pyversions/stegovault?style=flat-square&labelColor=131927)](https://pypi.org/project/stegovault/)
-[![CI](https://img.shields.io/github/actions/workflow/status/Nour833/StegoVault/ci.yml?branch=main&style=flat-square&label=CI&labelColor=131927)](https://github.com/Nour833/StegoVault/actions/workflows/ci.yml)
+[![CI](https://img.shields.io/github/actions/workflow/status/46501/steganalysis/ci.yml?branch=main&style=flat-square&label=CI&labelColor=131927)](https://github.com/46501/steganalysis/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-10b981?style=flat-square&labelColor=131927)](LICENSE)
-[![Downloads](https://img.shields.io/github/downloads/Nour833/StegoVault/total?style=flat-square&label=downloads&labelColor=131927)](https://github.com/Nour833/StegoVault/releases)
+[![Downloads](https://img.shields.io/github/downloads/46501/steganalysis/total?style=flat-square&label=downloads&labelColor=131927)](https://github.com/46501/steganalysis/releases)
 
-<img src="https://raw.githubusercontent.com/Nour833/StegoVault/main/docs/media/web-demo.gif" alt="Screen recording of the StegoVault web UI: choosing a photo and a secret file, entering a passphrase, embedding, extracting the payload again, and running the detectors" width="860">
+<img src="https://raw.githubusercontent.com/46501/steganalysis/main/docs/media/web-demo.gif" alt="Screen recording of the StegoVault web UI: choosing a photo and a secret file, entering a passphrase, embedding, extracting the payload again, and running the detectors" width="860">
 
 <sub>A real recording of the local web UI (<code>stegovault web</code>): hide a file, extract it, run the detectors.</sub>
 
@@ -33,10 +33,10 @@
 | You are on | Do this |
 |---|---|
 | **Any OS, Python 3.10+** | `pipx install stegovault` (add the browser UI with `pipx install "stegovault[web]"`) |
-| **Debian, Ubuntu, Kali** | Download the `.deb` from [Releases](https://github.com/Nour833/StegoVault/releases), then `sudo apt install ./stegovault_*_all.deb` (uses your system Python libraries and installs a man page) |
-| **No Python, just a binary** | Download `stegovault-linux-x86_64`, `stegovault-macos-arm64` or `stegovault-windows-x86_64.exe` from [Releases](https://github.com/Nour833/StegoVault/releases) |
+| **Debian, Ubuntu, Kali** | Download the `.deb` from [Releases](https://github.com/46501/steganalysis/releases), then `sudo apt install ./stegovault_*_all.deb` (uses your system Python libraries and installs a man page) |
+| **No Python, just a binary** | Download `stegovault-linux-x86_64`, `stegovault-macos-arm64` or `stegovault-windows-x86_64.exe` from [Releases](https://github.com/46501/steganalysis/releases) |
 | **Docker** | `docker build -t stegovault .` then `docker run -p 5000:5000 stegovault` (the UI is token-protected; the token is in `docker logs`) |
-| **From source** | `git clone https://github.com/Nour833/StegoVault && cd StegoVault && pip install -e ".[web]"` |
+| **From source** | `git clone https://github.com/46501/steganalysis && cd steganalysis && pip install -e ".[web]"` |
 
 Then check the installation:
 
@@ -44,7 +44,7 @@ Then check the installation:
 $ stegovault doctor
 ```
 
-<img src="https://raw.githubusercontent.com/Nour833/StegoVault/main/docs/media/cli-doctor.png" alt="Output of stegovault doctor: every required component present, video encoder and ffmpeg found, ML model bundled" width="760">
+<img src="https://raw.githubusercontent.com/46501/steganalysis/main/docs/media/cli-doctor.png" alt="Output of stegovault doctor: every required component present, video encoder and ffmpeg found, ML model bundled" width="760">
 
 `doctor` lists what this machine can and cannot do (video support, FFmpeg for MP3/FLAC/OGG, the bundled ML model) and never touches the network.
 
@@ -52,7 +52,7 @@ $ stegovault doctor
 
 ## A one-minute tour
 
-<img src="https://raw.githubusercontent.com/Nour833/StegoVault/main/docs/media/cli-demo.gif" alt="Terminal recording: encode a secret into a photo, decode it, then run CTF mode on a file that holds an unencrypted payload and find it" width="760">
+<img src="https://raw.githubusercontent.com/46501/steganalysis/main/docs/media/cli-demo.gif" alt="Terminal recording: encode a secret into a photo, decode it, then run CTF mode on a file that holds an unencrypted payload and find it" width="760">
 
 ```bash
 # Keep the passphrase out of your shell history and `ps` (a plain -k works, with a warning)
@@ -109,7 +109,7 @@ The full list of what is and is not protected: [`docs/THREAT-MODEL.md`](docs/THR
 
 ## Detect and CTF mode
 
-<img src="https://raw.githubusercontent.com/Nour833/StegoVault/main/docs/media/cli-ctf.png" alt="CTF mode output: a detector table where the blind extractor reports DETECTED and recovers an unencrypted payload, with the other detectors clean" width="760">
+<img src="https://raw.githubusercontent.com/46501/steganalysis/main/docs/media/cli-ctf.png" alt="CTF mode output: a detector table where the blind extractor reports DETECTED and recovers an unencrypted payload, with the other detectors clean" width="760">
 
 | Detector | Looks for |
 |---|---|
@@ -128,8 +128,8 @@ The full list of what is and is not protected: [`docs/THREAT-MODEL.md`](docs/THR
 
 <table>
   <tr>
-    <td width="62%"><img src="https://raw.githubusercontent.com/Nour833/StegoVault/main/docs/media/web-encode.png" alt="The Encode screen: carrier and payload drop zones, a method selector grouped by carrier family, and a capacity table" width="100%"></td>
-    <td width="38%"><img src="https://raw.githubusercontent.com/Nour833/StegoVault/main/docs/media/web-mobile.png" alt="The Encode screen on a phone" width="100%"></td>
+    <td width="62%"><img src="https://raw.githubusercontent.com/46501/steganalysis/main/docs/media/web-encode.png" alt="The Encode screen: carrier and payload drop zones, a method selector grouped by carrier family, and a capacity table" width="100%"></td>
+    <td width="38%"><img src="https://raw.githubusercontent.com/46501/steganalysis/main/docs/media/web-mobile.png" alt="The Encode screen on a phone" width="100%"></td>
   </tr>
 </table>
 

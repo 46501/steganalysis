@@ -56,9 +56,9 @@ setup(
         "web": _read_reqs("requirements-web.txt"),
     },
     project_urls={
-        "Source": "https://github.com/nour833/StegoVault",
-        "Bug Tracker": "https://github.com/nour833/StegoVault/issues",
-        "Changelog": "https://github.com/nour833/StegoVault/blob/main/CHANGELOG.md",
+        "Source": "https://github.com/46501/steganalysis",
+        "Bug Tracker": "https://github.com/46501/steganalysis/issues",
+        "Changelog": "https://github.com/46501/steganalysis/blob/main/CHANGELOG.md",
     },
     entry_points={
         "console_scripts": [

@@ -1,0 +1,186 @@
+name: Release Binaries
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Existing tag to update (example: v1.5.0)"
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build ${{ matrix.asset_name }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            is_linux: true
+            produced_name: stegovault
+            asset_name: stegovault-linux-x86_64
+          - os: windows-latest
+            is_linux: false
+            produced_name: stegovault.exe
+            asset_name: stegovault-windows-x86_64.exe
+          - os: macos-14
+            is_linux: false
+            produced_name: stegovault
+            asset_name: stegovault-macos-arm64
+
+    container: ${{ matrix.is_linux && 'python:3.10-slim-bullseye' || null }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref }}
+
+      - name: Set up Python
+        if: ${{ !matrix.is_linux }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Verify tag/version alignment
+        shell: bash
+        run: |
+          EXPECTED_TAG="${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}"
+          EXPECTED_VERSION="${EXPECTED_TAG#v}"
+          CODE_VERSION="$(python -c 'from core.version import __version__; print(__version__)')"
+
+          echo "Release tag: ${EXPECTED_TAG}"
+          echo "Code version: ${CODE_VERSION}"
+
+          if [ "${EXPECTED_VERSION}" != "${CODE_VERSION}" ]; then
+            echo "Tag/version mismatch: expected ${EXPECTED_VERSION}, found ${CODE_VERSION}"
+            exit 1
+          fi
+
+      - name: Install system deps (Linux)
+        if: ${{ matrix.is_linux }}
+        run: |
+          apt-get update
+          apt-get install -y binutils
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyinstaller setuptools wheel
+          pip install -r requirements.txt
+          pip install -r requirements-web.txt
+
+      - name: Build binary
+        run: pyinstaller stegoforge.spec --clean -y
+
+      - name: Quick web import smoke test
+        run: python -c "from web.app import create_app; create_app()"
+
+      - name: Smoke test the built binary
+        shell: bash
+        run: |
+          "./dist/${{ matrix.produced_name }}" --help > /dev/null
+          "./dist/${{ matrix.produced_name }}" doctor
+
+      - name: Prepare artifact
+        shell: bash
+        run: |
+          mv "dist/${{ matrix.produced_name }}" "dist/${{ matrix.asset_name }}"
+          if [ "$RUNNER_OS" != "Windows" ]; then
+            chmod +x "dist/${{ matrix.asset_name }}"
+          fi
+          ls -lh "dist/${{ matrix.asset_name }}"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.asset_name }}
+          path: dist/${{ matrix.asset_name }}
+          if-no-files-found: error
+
+  build-deb:
+    name: Build lightweight Debian package
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Build the .deb
+        run: |
+          python -m pip install --upgrade pip setuptools
+          python scripts/build_deb.py --out dist-deb
+          dpkg-deb --info dist-deb/*.deb
+
+      - name: Install it with apt and run it (a broken package must not be published)
+        run: |
+          sudo apt-get update
+          # Hard dependencies only: the optional extras (ffmpeg alone pulls in ~100 packages) are not needed here and
+          # made this step depend on the mirror's mood. Retries and a lock timeout cover the rest.
+          sudo apt-get install -y --no-install-recommends -o Acquire::Retries=3 -o DPkg::Lock::Timeout=120 \
+            ./dist-deb/stegoforge_*.deb
+          cd "$(mktemp -d)"
+          stegoforge --help >/dev/null
+          stegoforge doctor
+
+      - name: Upload deb artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: stegovault-deb
+          path: "dist-deb/*.deb"
+          if-no-files-found: error
+
+  release:
+    name: Update release assets
+    runs-on: ubuntu-latest
+    needs: [build, build-deb]
+    steps:
+      - name: Resolve release tag
+        id: tag
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "value=${{ inputs.tag }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "value=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: release-assets
+          merge-multiple: true
+
+      - name: Validate artifacts
+        run: |
+          ls -lh release-assets
+          test -f release-assets/stegovault-linux-x86_64
+          test -f release-assets/stegovault-windows-x86_64.exe
+          test -f release-assets/stegovault-macos-arm64
+          test -n "$(find release-assets -name '*.deb')"
+
+      - name: Publish assets to release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.tag.outputs.value }}
+          files: |
+            release-assets/stegovault-linux-x86_64
+            release-assets/stegovault-windows-x86_64.exe
+            release-assets/stegovault-macos-arm64
+            release-assets/*.deb
+          overwrite_files: true
+          fail_on_unmatched_files: true
+          generate_release_notes: false

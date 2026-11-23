@@ -1,0 +1,33 @@
+{% extends "auth_base.html" %}
+
+{% block title %}Email Verification — StegoVault{% endblock %}
+
+{% block content %}
+<div class="auth-card-container">
+  <div class="auth-card" style="text-align: center;">
+    {% if success %}
+      <div style="width: 64px; height: 64px; margin: 0 auto 20px; border-radius: 50%; background: rgba(16, 185, 129, 0.15); display: flex; align-items: center; justify-content: center;">
+        <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="#10b981" stroke-width="2">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+        </svg>
+      </div>
+      <h1 class="auth-card-title">Email Verified!</h1>
+      <p class="auth-card-desc" style="margin-bottom: 28px;">{{ message }}</p>
+      <a href="/dashboard" class="welcome-btn-primary" style="display: inline-block;">Go to Dashboard &rarr;</a>
+    {% else %}
+      <div style="width: 64px; height: 64px; margin: 0 auto 20px; border-radius: 50%; background: rgba(239, 68, 68, 0.15); display: flex; align-items: center; justify-content: center;">
+        <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="#ef4444" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+      </div>
+      <h1 class="auth-card-title">Verification Failed</h1>
+      <p class="auth-card-desc" style="margin-bottom: 28px;">{{ error }}</p>
+      {% if current_user %}
+        <button type="button" id="resend-verification-btn" class="welcome-btn-primary" style="border: none; cursor: pointer;">Resend Verification Email</button>
+      {% else %}
+        <a href="/login" class="welcome-btn-primary" style="display: inline-block;">Sign In &rarr;</a>
+      {% endif %}
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,191 @@
+{% extends "auth_base.html" %}
+
+{% block title %}StegoVault — Cybersecurity Steganography Platform{% endblock %}
+
+{% block content %}
+<div class="welcome-hero">
+  <div class="welcome-hero-content">
+    <img src="/static/stegovault-logo.png" alt="StegoVault" class="welcome-hero-logo" width="170" height="170">
+    <div class="welcome-badge">Production Steganography Platform</div>
+    <h1 class="welcome-title">Zero-Leakage Steganography &amp; Forensic Analysis</h1>
+    <p class="welcome-subtitle">
+      Seal classified data inside images, audio, video, documents, and binaries with authenticated AES-256-GCM. 
+      Analyze hidden payloads with 11 advanced forensic detection algorithms.
+    </p>
+
+    <div class="welcome-cta-group">
+      {% if current_user %}
+        <a href="/dashboard" class="welcome-btn-primary">Open User Dashboard &rarr;</a>
+        <a href="/app" class="welcome-btn-secondary">Launch Workbench</a>
+      {% else %}
+        <a href="/register" class="welcome-btn-primary">Create Free Account &rarr;</a>
+        <a href="/login" class="welcome-btn-secondary">Sign In</a>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<div class="welcome-features-section">
+  <h2 class="welcome-section-title">Engineered for Security Professionals &amp; CTF Teams</h2>
+  <div class="welcome-features-grid">
+    <div class="feature-item-card">
+      <div class="feature-item-icon">🔐</div>
+      <h3>20 Embedding Methods</h3>
+      <p>From LSB depth 1-4 and adaptive content-aware masking to video-motion vectors and discrete cosine transform algorithms.</p>
+    </div>
+    <div class="feature-item-card">
+      <div class="feature-item-icon">🛡️</div>
+      <h3>Argon2id &amp; AES-256-GCM</h3>
+      <p>Payloads are cryptographically sealed with high-work-factor Argon2id KDF ($m=64\text{MB}$, $t=3$) before entering the carrier.</p>
+    </div>
+    <div class="feature-item-card">
+      <div class="feature-item-icon">🔬</div>
+      <h3>11 Forensic Detectors</h3>
+      <p>Chi-square distribution tests, Regular-Singular (RS) steganalysis, PRNU sensor fingerprinting, and automated CTF payload extractors.</p>
+    </div>
+    <div class="feature-item-card">
+      <div class="feature-item-icon">⚡</div>
+      <h3>Local-First Architecture</h3>
+      <p>Carriers, secret payloads, and encryption keys never leave your machine. Zero cloud telemetry or data leakage.</p>
+    </div>
+  </div>
+</div>
+
+<style>
+.welcome-hero {
+  text-align: center;
+  padding: 8px 20px 36px;
+  max-width: 860px;
+  margin: 0 auto;
+}
+.welcome-hero-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+.welcome-hero-logo {
+  display: block;
+  margin: 0 auto 16px;
+  width: 170px;
+  height: 170px;
+  object-fit: contain;
+  filter: drop-shadow(0 0 28px rgba(6, 182, 212, 0.55));
+  animation: logo-hover 3s ease-in-out infinite alternate;
+}
+@keyframes logo-hover {
+  from { transform: translateY(0); filter: drop-shadow(0 0 20px rgba(6, 182, 212, 0.4)); }
+  to { transform: translateY(-6px); filter: drop-shadow(0 0 32px rgba(6, 182, 212, 0.7)); }
+}
+.welcome-badge {
+  display: inline-block;
+  padding: 6px 14px;
+  background: rgba(6, 182, 212, 0.12);
+  border: 1px solid rgba(6, 182, 212, 0.3);
+  border-radius: 20px;
+  color: var(--auth-teal);
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  margin-bottom: 18px;
+}
+.welcome-title {
+  font-size: 2.8rem;
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.03em;
+  color: #ffffff;
+  margin: 0 0 16px;
+}
+.welcome-subtitle {
+  font-size: 1.12rem;
+  color: var(--auth-text-muted);
+  line-height: 1.6;
+  margin: 0 auto 36px;
+  max-width: 720px;
+}
+.welcome-cta-group {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+}
+.welcome-btn-primary {
+  padding: 14px 28px;
+  background: linear-gradient(135deg, #06b6d4, #0891b2);
+  color: #080b11;
+  font-weight: 700;
+  font-size: 1rem;
+  text-decoration: none;
+  border-radius: var(--auth-radius);
+  box-shadow: 0 8px 24px var(--auth-teal-glow);
+  transition: all 0.2s ease;
+}
+.welcome-btn-primary:hover {
+  background: linear-gradient(135deg, #22d3ee, #06b6d4);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 32px rgba(6, 182, 212, 0.6);
+}
+.welcome-btn-secondary {
+  padding: 14px 28px;
+  background: var(--auth-surface-2);
+  border: 1px solid var(--auth-line);
+  color: var(--auth-text);
+  font-weight: 600;
+  font-size: 1rem;
+  text-decoration: none;
+  border-radius: var(--auth-radius);
+  transition: all 0.15s ease;
+}
+.welcome-btn-secondary:hover {
+  background: var(--auth-surface-3);
+  border-color: var(--auth-teal);
+}
+.welcome-features-section {
+  max-width: 1100px;
+  margin: 40px auto 0;
+  padding-top: 40px;
+  border-top: 1px solid var(--auth-line);
+}
+.welcome-section-title {
+  text-align: center;
+  font-size: 1.45rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 32px;
+}
+.welcome-features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 20px;
+}
+.feature-item-card {
+  background: var(--auth-surface);
+  border: 1px solid var(--auth-line);
+  border-radius: var(--auth-radius);
+  padding: 24px;
+}
+.feature-item-icon {
+  font-size: 1.8rem;
+  margin-bottom: 12px;
+}
+.feature-item-card h3 {
+  font-size: 1.05rem;
+  font-weight: 600;
+  margin: 0 0 8px;
+  color: #ffffff;
+}
+.feature-item-card p {
+  font-size: 0.85rem;
+  color: var(--auth-text-muted);
+  line-height: 1.5;
+  margin: 0;
+}
+@media (max-width: 640px) {
+  .welcome-title { font-size: 2rem; }
+  .welcome-cta-group { flex-direction: column; width: 100%; }
+  .welcome-btn-primary, .welcome-btn-secondary { width: 100%; text-align: center; }
+}
+</style>
+{% endblock %}

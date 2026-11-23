@@ -1,0 +1,293 @@
+{% extends "auth_base.html" %}
+
+{% block title %}Account Settings — StegoVault{% endblock %}
+
+{% block content %}
+<div class="profile-grid">
+  <!-- Profile Sidebar -->
+  <aside class="profile-sidebar">
+    <div class="profile-avatar-large">
+      {{ user.full_name[:2].upper() }}
+    </div>
+    <div class="profile-user-name">{{ user.full_name }}</div>
+    <div class="profile-user-email">@{{ user.username }} &bull; {{ user.email }}</div>
+    <div style="text-align: center; margin-bottom: 20px;">
+      {% if user.email_verified %}
+        <span class="badge-verified">&#10003; Verified</span>
+      {% else %}
+        <span class="badge-unverified">&bull; Unverified</span>
+      {% endif %}
+    </div>
+    <div style="border-top: 1px solid var(--auth-line); padding-top: 14px; font-size: 0.82rem; color: var(--auth-text-dim);">
+      Member since:<br>
+      <strong style="color: var(--auth-text-muted);">{{ user.created_at }}</strong>
+    </div>
+  </aside>
+
+  <!-- Profile Content Sections -->
+  <div class="profile-content">
+    {% if error %}
+      <div class="auth-alert auth-alert-error" role="alert">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+        <span>{{ error }}</span>
+      </div>
+    {% endif %}
+
+    {% if success %}
+      <div class="auth-alert auth-alert-success" role="status">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+        </svg>
+        <span>{{ success }}</span>
+      </div>
+    {% endif %}
+
+    <!-- Personal Information Card -->
+    <div class="profile-section-card">
+      <h3>Personal Information</h3>
+      <form class="auth-form" method="POST" action="/profile">
+        <div class="auth-field">
+          <label class="auth-label" for="full_name">Full Name</label>
+          <input type="text" id="full_name" name="full_name" class="auth-input" value="{{ user.full_name }}" required>
+        </div>
+
+        <div class="auth-field">
+          <label class="auth-label" for="username">Username</label>
+          <input type="text" id="username" name="username" class="auth-input" value="{{ user.username }}" required>
+        </div>
+
+        <div class="auth-field">
+          <label class="auth-label" for="email">Email Address</label>
+          <input type="email" id="email" class="auth-input" value="{{ user.email }}" disabled style="opacity: 0.7; cursor: not-allowed;">
+          <span style="font-size: 0.75rem; color: var(--auth-text-dim);">To change your registered email, contact administrator.</span>
+        </div>
+
+        <button type="submit" class="welcome-btn-primary" style="align-self: flex-start; border: none; cursor: pointer; padding: 10px 20px;">
+          Save Profile Changes
+        </button>
+      </form>
+    </div>
+
+    <!-- Security & Password Change Card -->
+    <div class="profile-section-card">
+      <h3>Security &amp; Password</h3>
+      <form id="change-pw-form" class="auth-form">
+        <div class="auth-field">
+          <label class="auth-label" for="curr_pw">Current Password</label>
+          <div class="auth-input-wrapper">
+            <input type="password" id="curr_pw" name="current_password" class="auth-input" required autocomplete="current-password">
+            <button type="button" class="auth-toggle-password" data-target="curr_pw" aria-label="Toggle password visibility">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="auth-field">
+          <label class="auth-label" for="new_pw">New Password</label>
+          <div class="auth-input-wrapper">
+            <input type="password" id="new_pw" name="new_password" class="auth-input" required autocomplete="new-password">
+            <button type="button" class="auth-toggle-password" data-target="new_pw" aria-label="Toggle password visibility">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+              </svg>
+            </button>
+          </div>
+
+          <div class="pwd-strength-container">
+            <div class="pwd-strength-bar">
+              <div id="pw-strength-fill" class="pwd-strength-fill"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="auth-field">
+          <label class="auth-label" for="confirm_new_pw">Confirm New Password</label>
+          <div class="auth-input-wrapper">
+            <input type="password" id="confirm_new_pw" name="confirm_password" class="auth-input" required autocomplete="new-password">
+            <button type="button" class="auth-toggle-password" data-target="confirm_new_pw" aria-label="Toggle password visibility">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <button type="submit" class="welcome-btn-primary" style="align-self: flex-start; border: none; cursor: pointer; padding: 10px 20px;">
+          Update Password
+        </button>
+      </form>
+    </div>
+
+    <!-- Active Sessions Card -->
+    <div class="profile-section-card">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <h3 style="margin: 0;">Active Sessions</h3>
+        <button type="button" id="logout-all-btn" class="welcome-btn-secondary" style="font-size: 0.8rem; padding: 6px 12px; cursor: pointer;">
+          Log Out All Other Sessions
+        </button>
+      </div>
+      <p style="font-size: 0.82rem; color: var(--auth-text-muted); margin-top: 0;">
+        These are the browser sessions currently authenticated with your StegoVault account.
+      </p>
+
+      <table class="activity-table">
+        <thead>
+          <tr>
+            <th>IP Address</th>
+            <th>Browser / Client</th>
+            <th>Logged In (UTC)</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for s in sessions %}
+            <tr>
+              <td style="font-family: 'Geist Mono', monospace; font-size: 0.82rem;">{{ s.ip_address|default('127.0.0.1') }}</td>
+              <td style="font-size: 0.8rem; color: var(--auth-text-muted); max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                {{ s.user_agent|default('Unknown Device') }}
+              </td>
+              <td style="font-size: 0.8rem; color: var(--auth-text-dim);">{{ s.created_at }}</td>
+              <td>
+                {% if s.session_token_hash == current_session_hash %}
+                  <span class="badge-verified">Current Session</span>
+                {% else %}
+                  <span style="font-size: 0.75rem; color: var(--auth-text-dim);">Active</span>
+                {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Danger Zone Card -->
+    <div class="profile-section-card danger-zone">
+      <h3>Danger Zone</h3>
+      <p style="font-size: 0.85rem; color: var(--auth-text-muted); line-height: 1.5; margin: 0 0 16px;">
+        Permanently delete your StegoVault account, credentials, and telemetry records. This action cannot be undone.
+      </p>
+      <button type="button" class="btn-danger" onclick="openModal('delete-modal')">
+        Delete Account…
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Account Modal -->
+<div id="delete-modal" class="modal-backdrop" style="display: none;">
+  <div class="modal-box">
+    <h3 style="color: #ef4444; margin-top: 0;">Delete Account</h3>
+    <p style="font-size: 0.88rem; color: var(--auth-text-muted); line-height: 1.5;">
+      Are you sure you want to delete your account? All sessions and activity telemetry will be permanently removed.
+    </p>
+    <form id="delete-account-form" class="auth-form" style="margin-top: 20px;">
+      <div class="auth-field">
+        <label class="auth-label" for="del_pw">Confirm with your password</label>
+        <input type="password" id="del_pw" name="password" class="auth-input" required placeholder="Enter password to confirm">
+      </div>
+      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 14px;">
+        <button type="button" class="welcome-btn-secondary" onclick="closeModal('delete-modal')" style="border: 1px solid var(--auth-line); padding: 8px 16px; cursor: pointer;">
+          Cancel
+        </button>
+        <button type="submit" class="btn-danger">
+          Permanently Delete
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  initPasswordStrength('new_pw', 'pw-strength-fill');
+
+  // Change password async handler
+  document.getElementById('change-pw-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const form = e.target;
+    const btn = form.querySelector('button[type="submit"]');
+    btn.disabled = true;
+
+    try {
+      const data = {
+        current_password: form.current_password.value,
+        new_password: form.new_password.value,
+        confirm_password: form.confirm_password.value,
+      };
+      const res = await fetch('/api/user/change-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
+        body: JSON.stringify(data),
+      });
+      const json = await res.json();
+      if (res.ok) {
+        showToast(json.message || 'Password changed successfully!', 'success');
+        form.reset();
+      } else {
+        showToast(json.error || 'Failed to update password.', 'error');
+      }
+    } catch (err) {
+      showToast('Network error while updating password.', 'error');
+    } finally {
+      btn.disabled = false;
+    }
+  });
+
+  // Logout all other sessions
+  document.getElementById('logout-all-btn').addEventListener('click', async (e) => {
+    const btn = e.target;
+    btn.disabled = true;
+    try {
+      const res = await fetch('/api/user/logout-all', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
+      });
+      const json = await res.json();
+      if (res.ok) {
+        showToast(json.message || 'Logged out from other sessions!', 'success');
+        setTimeout(() => location.reload(), 1000);
+      } else {
+        showToast(json.error || 'Failed to log out sessions.', 'error');
+      }
+    } catch (err) {
+      showToast('Network error.', 'error');
+    } finally {
+      btn.disabled = false;
+    }
+  });
+
+  // Delete account async handler
+  document.getElementById('delete-account-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const form = e.target;
+    const btn = form.querySelector('button[type="submit"]');
+    btn.disabled = true;
+    try {
+      const res = await fetch('/api/user/delete-account', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
+        body: JSON.stringify({ password: form.password.value }),
+      });
+      const json = await res.json();
+      if (res.ok) {
+        showToast('Account deleted. Redirecting…', 'success');
+        setTimeout(() => { window.location.href = json.redirect_url || '/welcome'; }, 1000);
+      } else {
+        showToast(json.error || 'Failed to delete account.', 'error');
+        btn.disabled = false;
+      }
+    } catch (err) {
+      showToast('Network error.', 'error');
+      btn.disabled = false;
+    }
+  });
+</script>
+{% endblock %}

@@ -4,7 +4,6 @@ from __future__ import annotations
 import hashlib
 import re
 import secrets
-from typing import Tuple
 
 from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError, VerificationError, InvalidHashError
@@ -40,7 +39,7 @@ def needs_rehash(password_hash: str) -> bool:
         return True
 
 
-def validate_password_strength(password: str) -> Tuple[bool, str]:
+def validate_password_strength(password: str) -> tuple[bool, str]:
     """Validate password against security policy:
 
     - Minimum 8 characters
@@ -64,7 +63,7 @@ def validate_password_strength(password: str) -> Tuple[bool, str]:
     return True, ""
 
 
-def validate_username(username: str) -> Tuple[bool, str]:
+def validate_username(username: str) -> tuple[bool, str]:
     """Validate username format:
 
     - 3 to 30 characters
@@ -81,7 +80,7 @@ def validate_username(username: str) -> Tuple[bool, str]:
     return True, ""
 
 
-def validate_email(email: str) -> Tuple[bool, str]:
+def validate_email(email: str) -> tuple[bool, str]:
     """Validate email format."""
     if not email:
         return False, "Email address is required."
@@ -94,7 +93,7 @@ def validate_email(email: str) -> Tuple[bool, str]:
     return True, ""
 
 
-def generate_secure_token(nbytes: int = 32) -> Tuple[str, str]:
+def generate_secure_token(nbytes: int = 32) -> tuple[str, str]:
     """Generate a cryptographically secure random token and its SHA-256 hash.
 
     Returns:

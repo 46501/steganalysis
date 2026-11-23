@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import sqlite3
 from datetime import datetime, timezone, timedelta
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from core.db.database import get_db, transaction
 
@@ -13,7 +13,7 @@ def _now() -> str:
     return datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
 
 
-def _row_to_dict(row: sqlite3.Row | None) -> Optional[Dict[str, Any]]:
+def _row_to_dict(row: sqlite3.Row | None) -> dict[str, Any] | None:
     """Convert an SQLite Row to a standard Python dictionary."""
     if row is None:
         return None
@@ -39,10 +39,10 @@ def create_user(
             """,
             (full_name.strip(), username.strip(), email.strip().lower(), password_hash, now, now),
         )
-        return int(cursor.lastrowid)
+        return int(cursor.lastrowid or 0)
 
 
-def get_user_by_id(user_id: int, conn: sqlite3.Connection | None = None) -> Optional[Dict[str, Any]]:
+def get_user_by_id(user_id: int, conn: sqlite3.Connection | None = None) -> dict[str, Any] | None:
     """Retrieve user dictionary by primary key ID."""
     c = conn or get_db()
     cursor = c.cursor()
@@ -52,7 +52,7 @@ def get_user_by_id(user_id: int, conn: sqlite3.Connection | None = None) -> Opti
     return _row_to_dict(row)
 
 
-def get_user_by_email(email: str, conn: sqlite3.Connection | None = None) -> Optional[Dict[str, Any]]:
+def get_user_by_email(email: str, conn: sqlite3.Connection | None = None) -> dict[str, Any] | None:
     """Retrieve user dictionary by email (case-insensitive)."""
     c = conn or get_db()
     cursor = c.cursor()
@@ -62,7 +62,7 @@ def get_user_by_email(email: str, conn: sqlite3.Connection | None = None) -> Opt
     return _row_to_dict(row)
 
 
-def get_user_by_username(username: str, conn: sqlite3.Connection | None = None) -> Optional[Dict[str, Any]]:
+def get_user_by_username(username: str, conn: sqlite3.Connection | None = None) -> dict[str, Any] | None:
     """Retrieve user dictionary by username (case-insensitive)."""
     c = conn or get_db()
     cursor = c.cursor()
@@ -72,7 +72,7 @@ def get_user_by_username(username: str, conn: sqlite3.Connection | None = None) 
     return _row_to_dict(row)
 
 
-def get_user_by_login(identifier: str, conn: sqlite3.Connection | None = None) -> Optional[Dict[str, Any]]:
+def get_user_by_login(identifier: str, conn: sqlite3.Connection | None = None) -> dict[str, Any] | None:
     """Retrieve user by either email or username."""
     clean = identifier.strip()
     user = get_user_by_email(clean, conn=conn)
@@ -167,13 +167,13 @@ def create_session(
             """,
             (user_id, session_token_hash, ip_address, user_agent, exp_str, now_str),
         )
-        return int(cursor.lastrowid)
+        return int(cursor.lastrowid or 0)
 
 
 def get_session_by_hash(
     session_token_hash: str,
     conn: sqlite3.Connection | None = None,
-) -> Optional[Dict[str, Any]]:
+) -> dict[str, Any] | None:
     """Retrieve session record joined with user details if not expired."""
     c = conn or get_db()
     cursor = c.cursor()
@@ -221,7 +221,7 @@ def delete_all_user_sessions(
 def get_user_active_sessions(
     user_id: int,
     conn: sqlite3.Connection | None = None,
-) -> List[Dict[str, Any]]:
+) -> list[dict[str, Any]]:
     """Return all active, non-expired sessions for a user."""
     c = conn or get_db()
     cursor = c.cursor()
@@ -265,13 +265,13 @@ def create_email_verification_token(
             """,
             (user_id, token_hash, exp_str, now_str),
         )
-        return int(cursor.lastrowid)
+        return int(cursor.lastrowid or 0)
 
 
 def get_email_verification_token(
     token_hash: str,
     conn: sqlite3.Connection | None = None,
-) -> Optional[Dict[str, Any]]:
+) -> dict[str, Any] | None:
     """Retrieve an unused, valid email verification token record."""
     c = conn or get_db()
     cursor = c.cursor()
@@ -320,13 +320,13 @@ def create_password_reset_token(
             """,
             (user_id, token_hash, exp_str, now_str),
         )
-        return int(cursor.lastrowid)
+        return int(cursor.lastrowid or 0)
 
 
 def get_password_reset_token(
     token_hash: str,
     conn: sqlite3.Connection | None = None,
-) -> Optional[Dict[str, Any]]:
+) -> dict[str, Any] | None:
     """Retrieve an unused, valid password reset token."""
     c = conn or get_db()
     cursor = c.cursor()
@@ -391,7 +391,7 @@ def log_user_activity(
             """,
             (user_id, operation_type.lower(), clean_carrier, clean_status, now_str),
         )
-        return int(cursor.lastrowid)
+        return int(cursor.lastrowid or 0)
 
 
 def get_user_activity(
@@ -399,7 +399,7 @@ def get_user_activity(
     limit: int = 20,
     offset: int = 0,
     conn: sqlite3.Connection | None = None,
-) -> List[Dict[str, Any]]:
+) -> list[dict[str, Any]]:
     """Retrieve recent non-sensitive activity log for a user."""
     c = conn or get_db()
     cursor = c.cursor()
@@ -421,7 +421,7 @@ def get_user_activity(
 def get_user_activity_stats(
     user_id: int,
     conn: sqlite3.Connection | None = None,
-) -> Dict[str, int]:
+) -> dict[str, int]:
     """Retrieve aggregate counts of operations performed by user."""
     c = conn or get_db()
     cursor = c.cursor()

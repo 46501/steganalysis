@@ -4,9 +4,9 @@ from __future__ import annotations
 import os
 import sqlite3
 import threading
-from contextlib import contextmanager
+from contextlib import contextmanager, suppress
 from pathlib import Path
-from typing import Generator
+from collections.abc import Generator
 
 # Thread-local storage for connections
 _local = threading.local()
@@ -22,9 +22,21 @@ def get_db_path() -> Path:
         p.parent.mkdir(parents=True, exist_ok=True)
         return p
 
-    # Default to project root
+    # Default to project root if writable; fall back to user home directory
     project_root = Path(__file__).resolve().parent.parent.parent
-    return project_root / DEFAULT_DB_FILENAME
+    candidate = project_root / DEFAULT_DB_FILENAME
+    try:
+        if candidate.exists():
+            if os.access(candidate, os.W_OK):
+                return candidate
+        elif os.access(project_root, os.W_OK):
+            return candidate
+    except Exception:
+        pass
+
+    fallback = Path.home() / ".stegovault" / DEFAULT_DB_FILENAME
+    fallback.parent.mkdir(parents=True, exist_ok=True)
+    return fallback
 
 
 def get_db(db_target: sqlite3.Connection | Path | str | None = None) -> sqlite3.Connection:
@@ -77,10 +89,8 @@ def close_db(e=None):
     conns = getattr(_local, "conns", None)
     if conns:
         for conn in conns.values():
-            try:
+            with suppress(Exception):
                 conn.close()
-            except Exception:
-                pass
         conns.clear()
 
 
@@ -94,10 +104,8 @@ def transaction(conn: sqlite3.Connection | None = None) -> Generator[sqlite3.Cur
         yield cursor
         cursor.execute("COMMIT;")
     except Exception:
-        try:
+        with suppress(Exception):
             cursor.execute("ROLLBACK;")
-        except Exception:
-            pass
         raise
     finally:
         cursor.close()

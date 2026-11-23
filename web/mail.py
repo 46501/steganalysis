@@ -7,10 +7,10 @@ import sys
 from email.header import Header
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-from typing import Tuple, Dict, Any, Optional
+from typing import Any
 
 # In-memory store for development/testing when SMTP is not configured
-_DEV_MAILBOX: list[Dict[str, Any]] = []
+_DEV_MAILBOX: list[dict[str, Any]] = []
 
 
 def is_smtp_configured() -> bool:
@@ -19,7 +19,7 @@ def is_smtp_configured() -> bool:
     return bool(host and host.strip())
 
 
-def get_mail_config() -> Dict[str, Any]:
+def get_mail_config() -> dict[str, Any]:
     """Resolve SMTP settings from environment variables."""
     host = os.getenv("STEGOVAULT_SMTP_HOST") or os.getenv("SMTP_HOST", "")
     port_str = os.getenv("STEGOVAULT_SMTP_PORT") or os.getenv("SMTP_PORT", "587")
@@ -47,7 +47,7 @@ def send_email(
     subject: str,
     html_body: str,
     text_body: str,
-) -> Tuple[bool, str]:
+) -> tuple[bool, str]:
     """Send an email using configured SMTP, or record it in development mailbox.
 
     Returns:
@@ -99,7 +99,7 @@ def send_email(
         return False, err_msg
 
 
-def get_last_dev_email(to_email: str | None = None) -> Optional[Dict[str, Any]]:
+def get_last_dev_email(to_email: str | None = None) -> dict[str, Any] | None:
     """Retrieve the most recent email delivered to the dev mailbox (for automated testing)."""
     if not _DEV_MAILBOX:
         return None

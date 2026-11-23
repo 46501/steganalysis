@@ -133,7 +133,7 @@ def _is_toolchain_fill(chunk: np.ndarray) -> bool:
     A handful of other bytes is tolerated (a rewriter may patch a few of them). Zero is excluded on
     purpose: a short payload in an otherwise zero-filled region is exactly what this detector looks for.
     """
-    top = int(np.bincount(chunk, minlength=256).argmax())
+    top = int(np.argmax(np.bincount(chunk, minlength=256)))
     return top != 0 and float(np.count_nonzero(chunk == top)) >= _FILL_DOMINANCE * len(chunk)
 
 

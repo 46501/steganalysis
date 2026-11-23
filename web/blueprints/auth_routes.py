@@ -1,9 +1,7 @@
 """web/blueprints/auth_routes.py — Authentication, user management, and dashboard routes."""
 from __future__ import annotations
 
-import os
 from datetime import datetime, timezone, timedelta
-from typing import Any, Dict
 
 from flask import (
     Blueprint,
@@ -13,8 +11,6 @@ from flask import (
     url_for,
     jsonify,
     g,
-    make_response,
-    flash,
 )
 
 from core.auth import (
@@ -35,7 +31,6 @@ from web.auth_middleware import (
     anonymous_required,
     get_current_user,
     get_client_ip,
-    get_user_agent,
     is_authenticated,
 )
 from web.mail import send_email, is_smtp_configured

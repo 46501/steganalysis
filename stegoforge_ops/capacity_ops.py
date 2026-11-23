@@ -192,7 +192,7 @@ def op_batch_encode(
     if jobs is not None and (int(jobs) < 1 or int(jobs) > 32):
         raise ValueError("jobs must be 1-32")
     jobs = int(jobs or 1)
-    key = key or os.getenv("STEGOVAULT_KEY") or os.getenv("STEGOFORGE_KEY", "")
+    key = key or os.getenv("STEGOVAULT_KEY", "") or os.getenv("STEGOFORGE_KEY", "")
     if not key:
         raise ValueError("Encryption key required. Pass -k / --key or set STEGOVAULT_KEY.")
 

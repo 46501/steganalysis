@@ -107,7 +107,7 @@ def test_staged_web_app_serves_the_index(staged, tmp_path):
         "import sys; sys.path.insert(0, sys.argv[1])\n"
         "from web.app import create_app\n"
         "r = create_app().test_client().get('/')\n"
-        "print(r.status_code, b'StegoForge' in r.data)\n"
+        "print(r.status_code, b'StegoVault' in r.data)\n"
     )
     result = subprocess.run([sys.executable, "-E", "-c", code, root], capture_output=True, text=True, cwd=tmp_path, timeout=120)
     assert result.stdout.split() == ["200", "True"], result.stderr

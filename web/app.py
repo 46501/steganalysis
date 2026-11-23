@@ -375,7 +375,7 @@ def create_app():
     app.teardown_appcontext(close_db)
 
     # Authentication middleware & Blueprint registration
-    from web.auth_middleware import load_user_session, is_authenticated
+    from web.auth_middleware import load_user_session
     from web.blueprints.auth_routes import auth_views
     app.before_request(load_user_session)
     app.register_blueprint(auth_views)

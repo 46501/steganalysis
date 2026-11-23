@@ -4,10 +4,10 @@ from __future__ import annotations
 import os
 from datetime import datetime, timezone, timedelta
 from functools import wraps
-from typing import Optional, Dict, Any, Tuple
+from typing import Any
 from urllib.parse import quote as url_quote
 
-from flask import request, g, redirect, url_for, jsonify, Response, current_app
+from flask import request, g, redirect, url_for, jsonify, Response
 
 from core.auth import generate_secure_token, hash_token
 from core.db import queries
@@ -39,7 +39,7 @@ def get_user_agent() -> str:
     return (request.headers.get("User-Agent") or "")[:255]
 
 
-def get_current_user() -> Optional[Dict[str, Any]]:
+def get_current_user() -> dict[str, Any] | None:
     """Return the currently authenticated user dictionary or None."""
     return getattr(g, "current_user", None)
 
@@ -49,7 +49,7 @@ def login_user(
     remember_me: bool = False,
     ip_address: str | None = None,
     user_agent: str | None = None,
-) -> Tuple[str, datetime]:
+) -> tuple[str, datetime]:
     """Create a new server-side session and return the raw session token and expiry.
 
     Rotates previous sessions if configured and generates a 256-bit secure token.
@@ -93,7 +93,7 @@ def set_session_cookie(
     return response
 
 
-def logout_user(response: Optional[Response] = None) -> Optional[Response]:
+def logout_user(response: Response | None = None) -> Response | None:
     """Invalidate current session from database and clear the session cookie."""
     token = request.cookies.get(SESSION_COOKIE_NAME)
     if token:

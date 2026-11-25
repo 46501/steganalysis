@@ -248,10 +248,28 @@ class MLSteganalysisDetector(BaseDetector):
         # false positives (measured FPR 0.40 via prior boost). So the fallback
         # reports the texture signal only, never fires alone, and names the
         # priors consulted without scoring them.
-        img = Image.open(io.BytesIO(file_bytes)).convert("L")
-        arr = np.array(img, dtype=np.float32) / 255.0
-        hp = np.abs(arr[:, 1:] - arr[:, :-1]).mean() + np.abs(arr[1:, :] - arr[:-1, :]).mean()
-        conf = float(np.clip((hp - 0.20) * 1.8, 0.0, 1.0))
+        try:
+            img = Image.open(io.BytesIO(file_bytes)).convert("L")
+            arr = np.array(img, dtype=np.float32) / 255.0
+            if arr.size == 0 or arr.shape[0] < 2 or arr.shape[1] < 2:
+                conf = 0.0
+            else:
+                hp = float(np.abs(arr[:, 1:] - arr[:, :-1]).mean() + np.abs(arr[1:, :] - arr[:-1, :]).mean())
+                conf = float(np.clip((hp - 0.20) * 1.8, 0.0, 1.0))
+        except Exception as exc:
+            return DetectionResult(
+                method=self.name,
+                detected=False,
+                confidence=0.0,
+                details={
+                    "verdict": "ERROR",
+                    "error": str(exc),
+                    "model": "heuristic-fallback",
+                    "model_source": "fallback",
+                    "skipped": True,
+                    "fallback_reason": reason,
+                },
+            )
 
         # Fallback flag threshold is 0.5 (NOT the 0.35 used by real model
         # weights): photographic content — clean or stego — scores ~0.44,

@@ -5,6 +5,7 @@ datas = collect_data_files('onnxruntime')
 # Also pack StegoVault web assets (recursive Trees so subdirs are included)
 datas.append(('web/templates', 'web/templates'))
 datas.append(('web/static', 'web/static'))
+datas.append(('core/db/schema.sql', 'core/db'))
 # Bundle offline ML model so release works without network dependency.
 datas.append(('models/model_quantized.onnx', 'models'))
 datas.append(('assets.sha256', '.'))

@@ -42,11 +42,6 @@ def op_detect(
 
     file_bytes = file_path.read_bytes()
     file_sha256 = _hl.sha256(file_bytes).hexdigest()
-    file_path = Path(file)
-    if not file_path.exists():
-        raise OSError(f"File not found: {file}")
-
-    file_bytes = file_path.read_bytes()
     filename = file_path.name
     ext = file_path.suffix.lower()
     results = []

@@ -148,6 +148,10 @@
       <nav class="sidebar-nav tab-nav" role="tablist" aria-label="StegoVault modes" aria-orientation="vertical">
         <div class="nav-section">
           <div class="nav-section-title">Workspace</div>
+          <a class="tab-btn nav-link-btn" href="/dashboard" id="nav-dashboard" title="Dashboard">
+            <svg class="icon" aria-hidden="true"><use href="#i-dashboard" /></svg>
+            <span class="tab-label">Dashboard</span>
+          </a>
           <button class="tab-btn active" data-tab="encode" id="nav-encode" role="tab" aria-selected="true"
             aria-controls="tab-encode" title="Hide a payload (Encode)"><svg class="icon" aria-hidden="true">
               <use href="#i-layers" />
@@ -200,10 +204,6 @@
         <div class="nav-section nav-section-account">
           <div class="nav-section-title">Account</div>
           {% if current_user %}
-          <a class="tab-btn nav-link-btn" href="/dashboard" title="Dashboard">
-            <svg class="icon" aria-hidden="true"><use href="#i-dashboard" /></svg>
-            <span class="tab-label">Dashboard</span>
-          </a>
           <a class="tab-btn nav-link-btn" href="/profile" title="Account Settings">
             <svg class="icon" aria-hidden="true"><use href="#i-user" /></svg>
             <span class="tab-label">Profile</span>

@@ -105,11 +105,11 @@ function hideLoading() {
   document.body.classList.remove('busy');
 }
 
-const TAB_IDS = Array.from(document.querySelectorAll('.tab-btn')).map((b) => b.dataset.tab);
+const TAB_IDS = Array.from(document.querySelectorAll('.tab-btn[data-tab]')).map((b) => b.dataset.tab);
 
 function activateTab(tabId, { focus = false, updateHash = true } = {}) {
   if (!TAB_IDS.includes(tabId)) tabId = 'encode';
-  document.querySelectorAll('.tab-btn').forEach((b) => {
+  document.querySelectorAll('.tab-btn[data-tab]').forEach((b) => {
     const on = b.dataset.tab === tabId;
     b.classList.toggle('active', on);
     b.setAttribute('aria-selected', String(on));
@@ -140,7 +140,7 @@ function activateTab(tabId, { focus = false, updateHash = true } = {}) {
 
 // Tab navigation (WAI-ARIA tabs pattern: arrows, Home, End)
 (function initTabs() {
-  const tabs = Array.from(document.querySelectorAll('.tab-btn'));
+  const tabs = Array.from(document.querySelectorAll('.tab-btn[data-tab]'));
   tabs.forEach((btn, i) => {
     btn.addEventListener('click', () => activateTab(btn.dataset.tab));
     btn.addEventListener('keydown', (e) => {
